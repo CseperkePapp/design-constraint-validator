@@ -1,0 +1,38 @@
+{
+  "$schemaVersion": "1.0.0",
+
+  "color": {
+    "palette": {
+      "gray": {
+        "0":   { "$type": "color", "$value": "oklch(0.99 0.001 95)" },
+        "300": { "$type": "color", "$value": "oklch(0.75 0.01 95)" },
+        "400": { "$type": "color", "$value": "oklch(0.65 0.015 95)" },
+        "500": { "$type": "color", "$value": "oklch(0.55 0.02 95)" },
+        "600": { "$type": "color", "$value": "oklch(0.45 0.02 95)" },
+        "900": { "$type": "color", "$value": "oklch(0.20 0.02 95)" }
+      },
+      "brand": {
+        "400": { "$type": "color", "$value": "oklch(0.70 0.15 260)" },
+        "500": { "$type": "color", "$value": "oklch(0.66 0.16 260)" },
+        "600": { "$type": "color", "$value": "oklch(0.62 0.18 260)" },
+        "700": { "$type": "color", "$value": "oklch(0.56 0.19 260)" }
+      }
+    }
+  },
+
+  "typography": {
+    "size": {
+      "h1": { "$type": "fontSize", "$value": "20px" },
+      "h2": { "$type": "fontSize", "$value": "24px" },
+      "h3": { "$type": "fontSize", "$value": "18px" },
+      "h4": { "$type": "fontSize", "$value": "16px" },
+      "h5": { "$type": "fontSize", "$value": "14px" },
+      "h6": { "$type": "fontSize", "$value": "12px" },
+      "xl": { "$type": "fontSize", "$value": "20px" },
+      "lg": { "$type": "fontSize", "$value": "18px" },
+      "base": { "$type": "fontSize", "$value": "16px" },
+      "sm": { "$type": "fontSize", "$value": "14px" },
+      "xs": { "$type": "fontSize", "$value": "12px" }
+    }
+  }
+}

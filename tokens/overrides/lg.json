@@ -1,0 +1,20 @@
+{
+  "type": {
+    "size": {
+      "h1": "oklch(0.15 0.01 0) 3rem/1.1 'Segoe UI', system-ui",
+      "h2": "oklch(0.15 0.01 0) 2.25rem/1.2 'Segoe UI', system-ui",
+      "body": "oklch(0.20 0.01 0) 1.125rem/1.7 'Segoe UI', system-ui"
+    },
+    "weight": {
+      "body": "300"
+    }
+  },
+  "dimension": {
+    "spacing": {
+      "scale": {
+        "section": "4rem",
+        "component": "2rem"
+      }
+    }
+  }
+}

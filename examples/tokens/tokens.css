@@ -1,0 +1,36 @@
+@layer tokens {
+  :root {
+    /* ——— spacing ——— */
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+
+    /* ——— radii & borders ——— */
+    --radius-md: 0.5rem;
+    --border-1: 1px;
+
+    /* ——— motion ——— */
+    --duration-fast: 150ms;
+    --easing-standard: cubic-bezier(.2,.9,.1,1);
+
+    /* ——— elevation ——— */
+    --elevation-1: 0 1px 2px oklch(0.2 0 0 / 0.1), 0 1px 1px oklch(0.2 0 0 / 0.06);
+
+    /* ——— colors: roles ——— */
+    --color-text-default: oklch(0.20 0.02 95);
+    --color-text-muted:  oklch(0.55 0.02 95);
+    --color-bg-surface:  oklch(0.99 0.001 95);
+    --color-accent-default: oklch(0.62 0.18 260);
+    --color-accent-hover:   oklch(0.56 0.19 260);
+    --color-on-accent:      oklch(1 0 0);
+    --color-danger-default: oklch(0.60 0.25 25);
+    --color-on-danger:      oklch(1 0 0);
+    --color-focus-ring:     oklch(0.62 0.18 260);
+
+    /* ——— typography (not used by button, but handy) ——— */
+    --font-body: system-ui, 'Inter', sans-serif;
+    --font-size-body: clamp(1rem, 0.95rem + 0.5vw, 1.125rem);
+    --line-height-body: 1.6;
+  }
+}

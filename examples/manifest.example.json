@@ -1,0 +1,5 @@
+[
+  { "id": "color.palette.brand.500", "canonicalVar": "--color-brand-primary", "legacyVars": ["--brand-primary"] },
+  { "id": "color.palette.brand.600", "canonicalVar": "--color-brand-primary-bold" },
+  { "id": "typography.size.body", "canonicalVar": "--font-size-body", "legacyVars": ["--text-body-size"] }
+]

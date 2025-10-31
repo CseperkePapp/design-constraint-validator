@@ -1,0 +1,75 @@
+{
+  "name": "design-token-validator",
+  "version": "1.0.0",
+  "description": "Constraint validation engine for design tokens with mathematical rigor",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "dtv": "./cli/index.ts",
+    "design-token-validator": "./cli/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "lint": "eslint . --ext .js,.ts,.mjs,.cjs",
+    "format": "prettier -w .",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "prepublishOnly": "npm run check && npm run build"
+  },
+  "keywords": [
+    "design-tokens",
+    "design-systems",
+    "validation",
+    "constraints",
+    "accessibility",
+    "wcag",
+    "typography",
+    "color",
+    "cli-tool",
+    "constraint-validation"
+  ],
+  "author": "CseperkePapp",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CseperkePapp/design-token-validator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CseperkePapp/design-token-validator/issues"
+  },
+  "homepage": "https://github.com/CseperkePapp/design-token-validator#readme",
+  "dependencies": {
+    "yargs": "^17.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/yargs": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0",
+    "zod": "^3.0.0",
+    "fast-glob": "^3.3.2"
+  },
+  "files": [
+    "adapters",
+    "examples",
+    "dist",
+    "cli",
+    "core",
+    "themes",
+    "tokens",
+    "README.md",
+    "LICENSE"
+  ]
+}

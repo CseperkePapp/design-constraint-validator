@@ -1,0 +1,15 @@
+{
+  "$description": "Typography hierarchy order constraints - LG breakpoint specific",
+  "order": [
+    ["typography.size.h1", ">=", "typography.size.h2"],
+    ["typography.size.h2", ">=", "typography.size.h3"], 
+    ["typography.size.h3", ">=", "typography.size.h4"],
+    ["typography.size.h4", ">=", "typography.size.h5"],
+    ["typography.size.h5", ">=", "typography.size.h6"],
+    
+    ["typography.size.xl", ">=", "typography.size.lg"],
+    ["typography.size.lg", ">=", "typography.size.base"],
+    ["typography.size.base", ">=", "typography.size.sm"],
+    ["typography.size.sm", ">=", "typography.size.xs"]
+  ]
+}

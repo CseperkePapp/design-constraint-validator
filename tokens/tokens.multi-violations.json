@@ -1,0 +1,21 @@
+{
+  "$schemaVersion": "1.0.0",
+  "control": {
+    "size": {
+      "min": { "$type": "dimension", "$value": "30px" }
+    }
+  },
+  "typography": {
+    "size": {
+      "h1": { "$type": "fontSize", "$value": "16px" },
+      "h2": { "$type": "fontSize", "$value": "20px" },
+      "h3": { "$type": "fontSize", "$value": "18px" }
+    }
+  },
+  "layout": {
+    "padding": {
+      "card": { "$type": "dimension", "$value": "24px" },
+      "chip": { "$type": "dimension", "$value": "32px" }
+    }
+  }
+}

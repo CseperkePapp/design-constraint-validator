@@ -1,0 +1,6 @@
+{
+  "overrides": {
+    "typography.size.h1": "1rem",
+    "typography.size.h2": "1.25rem"
+  }
+}

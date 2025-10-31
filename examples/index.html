@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Larissa — Example</title>
+    <link rel="stylesheet" href="../dist/tokens.css" />
+    <link rel="stylesheet" href="../css/layout.css" />
+    <link rel="stylesheet" href="components/button.example.css" />
+    <link rel="stylesheet" href="../css/utilities.css" />
+    <style>
+      body {
+        font: 400 1rem/1.6 system-ui;
+        padding: 2rem;
+      }
+      .stack {
+        display: grid;
+        gap: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stack">
+      <h1>Larissa — Single Repo</h1>
+      <p>This page demonstrates tokens→CSS + components.</p>
+      <button class="btn" data-variant="primary" data-size="md">
+        <span class="btn__label">Primary Button</span>
+      </button>
+      <button class="btn" data-variant="secondary" data-size="sm">
+        <span class="btn__label">Secondary Small</span>
+      </button>
+      <button class="btn" data-variant="danger" data-size="md">
+        <span class="btn__label">Danger Button</span>
+      </button>
+      <button class="btn" data-variant="subtle" data-size="lg">
+        <span class="btn__label">Subtle Large</span>
+      </button>
+    </div>
+  </body>
+</html>

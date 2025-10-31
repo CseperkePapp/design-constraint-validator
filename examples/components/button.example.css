@@ -1,0 +1,83 @@
+@layer components {
+  .btn {
+    --btn-px: var(--space-4);
+    --btn-py: 0.625rem;
+    --btn-radius: var(--radius-md);
+    --btn-fs: 1rem;
+    --btn-lh: 1.25;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding-inline: var(--btn-px);
+    padding-block: var(--btn-py);
+    border-radius: var(--btn-radius);
+    border: var(--border-1) solid transparent;
+    font-size: var(--btn-fs);
+    line-height: var(--btn-lh);
+    font-weight: 600;
+    background: var(--color-accent-default);
+    color: var(--color-on-accent);
+    box-shadow: var(--elevation-1);
+    transition:
+      background var(--duration-fast) var(--easing-standard),
+      transform var(--duration-fast) var(--easing-standard);
+  }
+
+  .btn:hover:not([disabled]) {
+    background: var(--color-accent-hover);
+  }
+
+  .btn:active:not([disabled]) {
+    transform: translateY(1px);
+  }
+
+  .btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px color-mix(in oklch, var(--color-bg-surface) 50%, transparent),
+      0 0 0 4px var(--color-focus-ring);
+  }
+
+  .btn[data-size='sm'] {
+    --btn-px: var(--space-3, 0.75rem);
+    --btn-py: 0.5rem;
+    --btn-fs: 0.9375rem;
+  }
+
+  .btn[data-size='lg'] {
+    --btn-px: var(--space-5, 1.25rem);
+    --btn-py: 0.75rem;
+    --btn-fs: 1.0625rem;
+  }
+
+  .btn[data-variant='secondary'] {
+    background: var(--color-bg-surface);
+    color: var(--color-text-default);
+    border-color: color-mix(in oklch, var(--color-text-default) 20%, transparent);
+  }
+
+  .btn[data-variant='subtle'] {
+    background: color-mix(in oklch, var(--color-accent-default) 12%, transparent);
+    color: var(--color-accent-default);
+  }
+
+  .btn[data-variant='danger'] {
+    background: var(--color-danger-default);
+    color: var(--color-on-danger);
+  }
+
+  .btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn__icon {
+    inline-size: 1.25em;
+    block-size: 1.25em;
+    display: inline-flex;
+  }
+}

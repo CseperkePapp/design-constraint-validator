@@ -1,0 +1,15 @@
+{
+  "$description": "Color lightness hierarchy constraints - comprehensive brand and gray ladders with bridge constraints",
+  "order": [
+    ["color.palette.brand.400", ">=", "color.palette.brand.500"],
+    ["color.palette.brand.500", ">=", "color.palette.brand.600"],
+    ["color.palette.brand.600", ">=", "color.palette.brand.700"],
+
+    ["color.palette.gray.300", ">=", "color.palette.gray.400"],
+    ["color.palette.gray.400", ">=", "color.palette.gray.500"],
+    ["color.palette.gray.500", ">=", "color.palette.gray.600"],
+    ["color.palette.gray.600", ">=", "color.palette.gray.900"],
+
+    ["color.palette.brand.600", ">=", "color.palette.gray.500"]
+  ]
+}

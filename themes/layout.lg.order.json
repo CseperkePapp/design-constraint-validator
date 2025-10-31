@@ -1,0 +1,18 @@
+{
+  "$description": "Layout hierarchy order constraints - LG breakpoint specific",
+  "order": [
+    ["layout.container.xs", "<=", "layout.container.sm"],
+    ["layout.container.sm", "<=", "layout.container.md"],
+    ["layout.container.md", "<=", "layout.container.lg"],
+    ["layout.container.lg", "<=", "layout.container.xl"],
+
+    ["layout.padding.page", ">=", "layout.padding.section"],
+    ["layout.padding.section", ">=", "layout.padding.card"],
+    ["layout.padding.card", ">=", "layout.padding.chip"],
+
+    ["layout.grid.gutter", "<=", "layout.padding.section"],
+    ["layout.grid.gutter", "<=", "layout.padding.card"],
+
+    ["control.size.min", ">=", "layout.padding.card"]
+  ]
+}

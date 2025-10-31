@@ -1,0 +1,14 @@
+{
+  "$description": "Spacing scale order constraints - defines monotonic spacing hierarchy",
+  "order": [
+    ["size.spacing.12", ">=", "size.spacing.10"],
+    ["size.spacing.10", ">=", "size.spacing.8"],
+    ["size.spacing.8", ">=", "size.spacing.6"],
+    ["size.spacing.6", ">=", "size.spacing.4"],
+    ["size.spacing.4", ">=", "size.spacing.3"],
+    ["size.spacing.3", ">=", "size.spacing.2-5"],
+    ["size.spacing.2-5", ">=", "size.spacing.2"],
+    ["size.spacing.2", ">=", "size.spacing.1"],
+    ["size.spacing.1", ">=", "size.spacing.0-5"]
+  ]
+}

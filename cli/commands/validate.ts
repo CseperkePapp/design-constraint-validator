@@ -1,0 +1,115 @@
+import { flattenTokens, type FlatToken } from '../../core/flatten.js';
+import { createValidationEngine } from '../engine-helpers.js';
+import { loadConfig } from '../config.js';
+import { parseBreakpoints, loadTokensWithBreakpoint, type Breakpoint } from '../../core/breakpoints.js';
+import { loadCrossAxisPlugin } from '../../core/cross-axis-config.js';
+import type { ConstraintIssue } from '../../core/engine.js';
+import type { ValidateOptions } from '../types.js';
+
+export async function validateCommand(_options: ValidateOptions): Promise<void> {
+  try {
+    const bps = parseBreakpoints(process.argv);
+    const crossAxisDebug = process.argv.includes('--cross-axis-debug');
+    const plan: (Breakpoint | undefined)[] = bps.length ? bps : [undefined];
+    let anyErrors = false; let totalErrors = 0; let totalWarnings = 0;
+    const argv = process.argv.slice(2);
+    const failOnIdx = argv.indexOf('--fail-on');
+    type FailOn = 'off' | 'warn' | 'error';
+    const failOn: FailOn = failOnIdx >= 0 ? (argv[failOnIdx + 1] as FailOn) : 'error';
+    const sumIdx = argv.indexOf('--summary');
+    type SummaryFmt = 'table' | 'json' | 'none';
+    const summaryFmt: SummaryFmt = sumIdx >= 0 ? (argv[sumIdx + 1] as SummaryFmt) : 'none';
+    type VRow = { bp: string; rules: number; warnings: number; errors: number };
+    const rows: VRow[] = [];
+    function pushRow(bpLabel: string, stats: { rules: number; warnings: number; errors: number }) { rows.push({ bp: bpLabel, ...stats }); }
+    function printSummaryTable(rs: VRow[]) {
+      if (!rs.length) return;
+      const showTotalLine = !rs.some(r => r.bp === 'TOTAL');
+      const cols = ['scope','rules','warnings','errors'] as const;
+      const data = rs.map(r => ({ scope: r.bp, rules: String(r.rules), warnings: String(r.warnings), errors: String(r.errors) }));
+      const widths = cols.map(c => Math.max(c.length, ...data.map(d => d[c].length)));
+      const line = (vals: string[]) => vals.map((v,i)=>v.padEnd(widths[i])).join('  ');
+      console.log(line(cols as unknown as string[]));
+      console.log(line(widths.map(w => '-'.repeat(w))));
+      for (const d of data) console.log(line(cols.map(c => d[c])));
+      if (showTotalLine && rs.length > 1) {
+        const tot = rs.reduce((a,b)=>({ rules:a.rules+b.rules, warnings:a.warnings+b.warnings, errors:a.errors+b.errors }), { rules:0,warnings:0,errors:0 });
+        console.log(line(['TOTAL', String(tot.rules), String(tot.warnings), String(tot.errors)]));
+      }
+    }
+    const cfgRes = loadConfig(_options.config);
+    if (!cfgRes.ok) { console.error(cfgRes.error); process.exit(2); }
+    const config = cfgRes.value;
+    const perBpTimings: Array<{ bp: string; ms: number }> = [];
+    const tStartTotal = performance.now();
+    for (const bp of plan) {
+      const tStart = performance.now();
+      const tokens = loadTokensWithBreakpoint(bp);
+      const engine = createValidationEngine(tokens, bp, config);
+      const initIds = Object.keys(flattenTokens(tokens).flat).reduce<Record<string, true>>((a,k)=>{a[k]=true;return a;},{});
+      const knownIds = new Set(Object.keys(initIds));
+      // Load global + bp-specific cross-axis rules (bp file optional)
+      engine.use(loadCrossAxisPlugin('themes/cross-axis.rules.json', bp, { debug: crossAxisDebug, knownIds }));
+      if (bp) {
+        const bpRulesPath = `themes/cross-axis.${bp}.rules.json`;
+        engine.use(loadCrossAxisPlugin(bpRulesPath, bp, { debug: crossAxisDebug, knownIds }));
+      }
+      const { ThresholdPlugin } = await import('../../core/constraints/threshold.js');
+      engine.use(ThresholdPlugin([{ id: 'control.size.min', op: '>=', valuePx: 44, where: 'Touch target (WCAG / Apple HIG)' }]));
+      const allIds = new Set(Object.keys(initIds));
+      const issues = engine.evaluate(allIds);
+      const errs = issues.filter((i: ConstraintIssue) => i.level === 'error');
+      const warns = issues.filter((i: ConstraintIssue) => i.level !== 'error');
+      if (errs.length) anyErrors = true;
+      totalErrors += errs.length; totalWarnings += warns.length;
+      const rulesEvaluated = errs.length + warns.length; pushRow(bp ?? 'global', { rules: rulesEvaluated, warnings: warns.length, errors: errs.length });
+      const dur = performance.now() - tStart;
+      perBpTimings.push({ bp: bp ?? 'global', ms: dur });
+      console.log(`validate${bp ? ` [bp=${bp}]` : ''}: ${errs.length} error(s), ${warns.length} warning(s)${_options.perf ? ` (${dur.toFixed(2)}ms)` : ''}`);
+      for (const it of issues) { const tag = it.level === 'error' ? 'ERROR' : 'WARN '; console.log(`${tag} ${it.rule}  ${it.id}${it.where ? ' @ ' + it.where : ''}${bp ? ` [${bp}]` : ''} — ${it.message}`); }
+    }
+    const totalMs = performance.now() - tStartTotal;
+    // Append aggregate total row if multiple scopes and not already added
+    if (rows.length > 1) {
+      const agg = rows.reduce((a,b)=>({ rules:a.rules+b.rules, warnings:a.warnings+b.warnings, errors:a.errors+b.errors }), { rules:0,warnings:0,errors:0 });
+      rows.push({ bp: 'TOTAL', ...agg });
+    }
+    if (_options.perf) {
+      console.log('[perf] per-breakpoint timings:');
+      for (const t of perBpTimings) console.log(`  ${t.bp}: ${t.ms.toFixed(2)}ms`);
+      console.log(`[perf] total: ${totalMs.toFixed(2)}ms`);
+    }
+    if (summaryFmt === 'json') {
+      // Provide machine-readable aggregate separate from rows if TOTAL present
+      const totalRow = rows.find(r => r.bp === 'TOTAL');
+      const json = totalRow ? { rows, total: { rules: totalRow.rules, warnings: totalRow.warnings, errors: totalRow.errors } } : { rows };
+      console.log(JSON.stringify(json, null, 2));
+    } else if (summaryFmt === 'table') {
+      printSummaryTable(rows);
+    }
+    let code = anyErrors ? 1 : 0;
+    // Budget checks (do not override fail-on semantics unless budgets add failures)
+    const budgetTotal = (_options as any)['budget-total-ms'] ?? _options.budgetTotalMs;
+    const budgetPerBp = (_options as any)['budget-per-bp-ms'] ?? _options.budgetPerBpMs;
+    let budgetFailed = false;
+    if (budgetTotal != null && totalMs > budgetTotal) {
+      console.error(`[perf] total time ${totalMs.toFixed(2)}ms exceeded budget ${budgetTotal}ms`);
+      budgetFailed = true;
+    }
+    if (budgetPerBp != null) {
+      for (const t of perBpTimings) {
+        if (t.ms > budgetPerBp) {
+          console.error(`[perf] ${t.bp} time ${t.ms.toFixed(2)}ms exceeded per-breakpoint budget ${budgetPerBp}ms`);
+          budgetFailed = true;
+        }
+      }
+    }
+    if (failOn === 'off') code = 0; else if (failOn === 'warn') code = (totalErrors + totalWarnings) > 0 ? 1 : 0; else code = totalErrors > 0 ? 1 : 0;
+    if (budgetFailed) code = Math.max(code, 1);
+    process.exit(code);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('validate: failed:', msg);
+    process.exit(2);
+  }
+}

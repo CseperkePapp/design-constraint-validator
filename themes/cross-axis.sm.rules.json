@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "id": "body-size-min-sm",
+      "bp": "sm",
+      "level": "warn",
+      "where": "Small screen legibility",
+      "when": { "id": "typography.size.body", "op": ">=", "value": 0 },
+      "require": { "id": "typography.size.body", "op": ">=", "fallback": "15px" }
+    }
+  ]
+}

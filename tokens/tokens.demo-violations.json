@@ -1,0 +1,116 @@
+{
+  "$schemaVersion": "1.0.0",
+
+  "color": {
+    "palette": {
+      "gray": {
+        "0":   { "$type": "color", "$value": "oklch(0.99 0.001 95)" },
+        "300": { "$type": "color", "$value": "oklch(0.75 0.01 95)" },
+        "400": { "$type": "color", "$value": "oklch(0.65 0.015 95)" },
+        "500": { "$type": "color", "$value": "oklch(0.55 0.02 95)" },
+        "600": { "$type": "color", "$value": "oklch(0.45 0.02 95)" },
+        "900": { "$type": "color", "$value": "oklch(0.20 0.02 95)" }
+      },
+      "brand": {
+        "400": { "$type": "color", "$value": "oklch(0.70 0.15 260)" },
+        "500": { "$type": "color", "$value": "oklch(0.62 0.12 29)" },
+        "600": { "$type": "color", "$value": "oklch(0.80 0.10 29)" },
+        "700": { "$type": "color", "$value": "oklch(0.56 0.19 260)" }
+      },
+      "danger": {
+        "600": { "$type": "color", "$value": "oklch(0.60 0.25 25)" },
+        "700": { "$type": "color", "$value": "oklch(0.55 0.28 25)" }
+      },
+      "white": { "$type": "color", "$value": "oklch(1 0 0)" }
+    },
+
+    "role": {
+      "text": {
+        "default": { "$type": "color", "$value": "{color.palette.gray.900}" },
+        "muted":   { "$type": "color", "$value": "oklch(0.55 0.02 95)" }
+      },
+      "surface": {
+        "default": { "$type": "color", "$value": "{color.palette.gray.0}" },
+        "hover":   { "$type": "color", "$value": "oklch(0.95 0.001 95)" }
+      },
+      "accent": {
+        "default": { "$type": "color", "$value": "{color.palette.brand.500}" }
+      },
+      "danger": {
+        "default": { "$type": "color", "$value": "{color.palette.danger.600}" }
+      }
+    }
+  },
+
+  "spacing": {
+    "0":   { "$type": "dimension", "$value": "0px" },
+    "0.5": { "$type": "dimension", "$value": "2px" },
+    "1":   { "$type": "dimension", "$value": "4px" },
+    "2":   { "$type": "dimension", "$value": "8px" },
+    "2.5": { "$type": "dimension", "$value": "10px" },
+    "3":   { "$type": "dimension", "$value": "12px" },
+    "4":   { "$type": "dimension", "$value": "16px" },
+    "6":   { "$type": "dimension", "$value": "24px" },
+    "8":   { "$type": "dimension", "$value": "32px" },
+    "10":  { "$type": "dimension", "$value": "40px" },
+    "12":  { "$type": "dimension", "$value": "48px" }
+  },
+
+  "typography": {
+    "font": {
+      "body": { "$type": "fontFamily", "$value": "system-ui, 'Inter', sans-serif" }
+    },
+    "size": {
+      "h1": { "$type": "fontSize", "$value": "16px" },
+      "h2": { "$type": "fontSize", "$value": "20px" },
+      "h3": { "$type": "fontSize", "$value": "18px" },
+      "h4": { "$type": "fontSize", "$value": "16px" },
+      "h5": { "$type": "fontSize", "$value": "14px" },
+      "h6": { "$type": "fontSize", "$value": "12px" },
+      "xl": { "$type": "fontSize", "$value": "20px" },
+      "lg": { "$type": "fontSize", "$value": "18px" },
+      "base": { "$type": "fontSize", "$value": "16px" },
+      "sm": { "$type": "fontSize", "$value": "14px" },
+      "xs": { "$type": "fontSize", "$value": "12px" },
+      "body": { "$type": "fontSize", "$value": "clamp(1rem, 0.95rem + 0.5vw, 1.125rem)" }
+    },
+    "lineHeight": {
+      "body": { "$type": "lineHeight", "$value": 1.6 }
+    }
+  },
+
+  "motion": {
+    "duration": {
+      "fast": { "$type": "duration", "$value": "150ms" }
+    },
+    "easing": {
+      "standard": { "$type": "easing", "$value": "cubic-bezier(.2,.9,.1,1)" }
+    }
+  },
+
+  "elevation": {
+    "1": {
+      "$type": "shadow",
+      "$value": "0 1px 2px oklch(0.2 0 0 / 0.1), 0 1px 1px oklch(0.2 0 0 / 0.06)"
+    }
+  },
+
+  "layout": {
+    "container": {
+      "xs": { "$type": "dimension", "$value": "540px" },
+      "sm": { "$type": "dimension", "$value": "640px" },
+      "md": { "$type": "dimension", "$value": "768px" },
+      "lg": { "$type": "dimension", "$value": "1024px" },
+      "xl": { "$type": "dimension", "$value": "1280px" }
+    },
+    "padding": {
+      "page":    { "$type": "dimension", "$value": "48px" },
+      "section": { "$type": "dimension", "$value": "32px" },
+      "card":    { "$type": "dimension", "$value": "24px" },
+      "chip":    { "$type": "dimension", "$value": "8px"  }
+    },
+    "grid": {
+      "gutter":  { "$type": "dimension", "$value": "16px" }
+    }
+  }
+}

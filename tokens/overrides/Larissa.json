@@ -1,0 +1,22 @@
+{
+  "overrides": {
+    "color": {
+      "palette": {
+        "brand": {
+          "600": {
+            "$value": "oklch(0.620 0.180 171)"
+          }
+        }
+      }
+    },
+    "typography": {
+      "font": {
+        "body": {
+          "$value": "Lora"
+        }
+      }
+    }
+  },
+  "links": {},
+  "expressions": {}
+}

@@ -1,0 +1,36 @@
+{
+  "rules": [
+    {
+      "id": "body-weight-vs-size",
+      "level": "error",
+      "where": "Body legibility",
+      "when": { "id": "typography.weight.body", "op": "<=", "value": 400 },
+      "require": { "id": "typography.size.body", "op": ">=", "fallback": "16px" }
+    },
+    {
+      "id": "emphasis-weight-size-balance",
+      "level": "warn",
+      "where": "Legibility emphasis",
+      "when": { "id": "typography.weight.emphasis", "op": ">=", "value": 600 },
+      "require": { "id": "typography.size.body", "op": ">=", "fallback": "15px" }
+    },
+    {
+      "id": "heading-emphasis-h2",
+      "level": "warn",
+      "where": "Heading emphasis",
+      "compare": { "a": "typography.size.h2", "op": ">=", "b": "typography.size.body", "delta": "2px" }
+    },
+    {
+      "id": "heading-emphasis-h3",
+      "level": "warn",
+      "where": "Heading emphasis",
+      "compare": { "a": "typography.size.h3", "op": ">=", "b": "typography.size.body", "delta": "2px" }
+    },
+    {
+      "id": "layout-padding-vs-container",
+      "level": "warn",
+      "where": "Layout density",
+      "compare": { "a": "layout.padding.section", "op": "<=", "b": "layout.container.sm", "delta": "-560px" }
+    }
+  ]
+}

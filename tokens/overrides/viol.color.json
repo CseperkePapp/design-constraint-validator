@@ -1,0 +1,6 @@
+{
+  "overrides": {
+    "color.palette.brand.500": "oklch(62% 0.12 29)",
+    "color.palette.brand.600": "oklch(80% 0.10 29)"
+  }
+}

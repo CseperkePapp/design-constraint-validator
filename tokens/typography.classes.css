@@ -1,0 +1,11 @@
+.t-root { font-family: var(--t-font-family); }
+
+.t-h1 { font-size: var(--t-h1-size); line-height: var(--t-h1-leading); font-weight: var(--t-h1-weight); letter-spacing: var(--t-h1-track); margin: var(--t-block-gap) 0; }
+
+.t-h2 { font-size: var(--t-h2-size); line-height: var(--t-h2-leading); font-weight: var(--t-h2-weight); letter-spacing: var(--t-h2-track); margin: calc(var(--t-block-gap) * .9) 0; }
+
+.t-h3 { font-size: var(--t-h3-size); line-height: var(--t-h3-leading); font-weight: var(--t-h3-weight); letter-spacing: var(--t-h3-track); margin: calc(var(--t-block-gap) * .8) 0; }
+
+.t-body { font-size: var(--t-body-size); line-height: var(--t-body-leading); font-weight: var(--t-body-weight); letter-spacing: var(--t-body-track); }
+
+.t-button { font: inherit; font-weight: 600; }

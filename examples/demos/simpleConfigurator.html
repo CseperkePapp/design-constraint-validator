@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Larissa Simple Configurator</title>
+		<link rel="stylesheet" href="../dist/tokens.css" />
+		<style>
+			:root { font-family: var(--typography-font-sans); }
+			body { margin:0; padding: var(--size-spacing-6); background: var(--color-role-bg-surface); color: var(--color-role-text-default); display:grid; gap: var(--size-spacing-6); }
+			h1 { margin:0; font: var(--typography-weight-semibold) 2rem/var(--typography-lineheight-tight) var(--typography-font-sans); }
+			form { display:grid; gap: var(--size-spacing-4); max-width:32rem; padding: var(--size-spacing-6) var(--size-spacing-4); border: var(--size-border-1) solid color-mix(in oklch,var(--color-role-text-default) 18%,transparent); border-radius: var(--size-radius-md); background: var(--color-role-bg-elevated, var(--color-palette-gray-50)); box-shadow: var(--elevation-1); }
+			label { display:grid; gap: var(--size-spacing-2); font-size:.65rem; font-weight: var(--typography-weight-medium); letter-spacing:.06em; text-transform:uppercase; }
+			input[type=text] { font: var(--typography-weight-regular) var(--typography-size-base)/var(--typography-lineheight-tight) var(--typography-font-sans); padding: var(--size-spacing-2) var(--size-spacing-3); border: var(--size-border-1) solid color-mix(in oklch,var(--color-role-text-default) 25%,transparent); border-radius: var(--size-radius-md); background: var(--color-role-bg-surface); }
+			button { font: var(--typography-weight-medium) var(--typography-size-sm)/var(--typography-lineheight-tight) var(--typography-font-sans); padding: var(--size-spacing-2-5) var(--size-spacing-4); border:none; border-radius: var(--size-radius-md); cursor:pointer; background: var(--color-role-accent-default); color: var(--color-role-on-accent); }
+			button.secondary { background: color-mix(in oklch,var(--color-role-accent-default) 15%, transparent); color: var(--color-role-accent-default); }
+			table { border-collapse:collapse; width:100%; font-size:.7rem; }
+			th,td { text-align:left; padding: var(--size-spacing-2); border-bottom: var(--size-border-1) solid color-mix(in oklch,var(--color-role-text-default) 15%,transparent); }
+			th { font-weight: var(--typography-weight-medium); text-transform:uppercase; letter-spacing:.07em; font-size:.6rem; opacity:.7; }
+			code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Simple Configurator</h1>
+			<p style="margin: var(--size-spacing-2) 0 0; max-width:60ch;">Ephemeral runtime overrides of generated CSS custom properties. Proof: no hard‑coded design literals outside tokens.</p>
+		</header>
+		<form id="cfgForm">
+			<label> Token ID 
+				<input name="id" placeholder="typography.size.base" list="tokenIds" aria-describedby="idHelp" required />
+				<small id="idHelp" style="font: var(--typography-weight-regular) var(--typography-size-sm)/1.3 var(--typography-font-sans); color: var(--color-role-text-muted);">Use dot or dash form. List is extracted from loaded tokens.</small>
+			</label>
+			<datalist id="tokenIds"></datalist>
+			<label> New Value 
+				<input name="value" placeholder="1.05rem" aria-describedby="valHelp" required />
+				<small id="valHelp" style="font: var(--typography-weight-regular) var(--typography-size-sm)/1.3 var(--typography-font-sans); color: var(--color-role-text-muted);">Examples: 1.05rem • 18px • oklch(0.62 0.18 260)</small>
+			</label>
+			<div id="liveValue" style="font: var(--typography-weight-medium) var(--typography-size-sm)/1.3 var(--typography-font-sans); color: var(--color-role-text-muted);">Current: <code style="font-size:.65rem;">—</code></div>
+			<div style="display:flex; gap: var(--size-spacing-3); flex-wrap:wrap;">
+				<button type="submit">Apply</button>
+				<button type="button" data-action="remove" class="secondary">Remove</button>
+				<button type="button" data-action="reset" style="background:color-mix(in oklch,var(--color-role-accent-default) 25%,transparent);">Reset All</button>
+			</div>
+		</form>
+		<section style="display:grid; gap: var(--size-spacing-4);">
+			<h2 style="margin:0; font: var(--typography-weight-medium) 1rem/var(--typography-lineheight-tight) var(--typography-font-sans); letter-spacing:.05em; text-transform:uppercase;">Active Overrides</h2>
+			<table aria-label="override table"><thead><tr><th>ID</th><th>Value</th><th>CSS Var</th></tr></thead><tbody id="rows"><tr><td colspan="3" style="padding: var(--size-spacing-3); opacity:.55;">None</td></tr></tbody></table>
+			<div style="display:grid; gap: var(--size-spacing-2);">
+				<h3 style="margin:0;">Preview</h3>
+				<p id="preview" style="margin:0; max-width:50ch; color: var(--color-role-text-muted);">Modify <code>typography.size.base</code> or <code>color-role-accent-default</code>. Live preview below binds <code id="boundVar">typography.size.base</code>.</p>
+				<div id="previewBox" style="display:grid; gap: var(--size-spacing-2); padding: var(--size-spacing-4); border: var(--size-border-1) solid color-mix(in oklch,var(--color-role-text-default) 15%,transparent); border-radius: var(--size-radius-md); background: var(--color-role-bg-elevated, var(--color-palette-gray-50));">
+					<p style="margin:0;" id="sampleText">Sample text uses <code>var(--typography-size-base)</code>. Accent button below uses <code>--color-role-accent-default</code>.</p>
+					<button style="justify-self:start;">Primary Action</button>
+				</div>
+			</div>
+		</section>
+			<script>
+				// Enhanced Simple Configurator: live value display, auto-apply, token suggestions, bound preview.
+				const form = document.getElementById('cfgForm');
+				const idInput = form.querySelector('[name="id"]');
+				const valueInput = form.querySelector('[name="value"]');
+				const rows = document.getElementById('rows');
+				const liveValue = document.getElementById('liveValue');
+				const boundVarEl = document.getElementById('boundVar');
+				const sampleText = document.getElementById('sampleText');
+				const datalist = document.getElementById('tokenIds');
+				const overrides = new Map();
+				function canonical(id){ return id.replace(/_/g,'-').trim(); }
+				function cssVar(id){ return '--'+canonical(id).replace(/\./g,'-'); }
+				function currentValue(id){ return getComputedStyle(document.documentElement).getPropertyValue(cssVar(id)).trim(); }
+				function setOverride(id,val){ document.documentElement.style.setProperty(cssVar(id), val); overrides.set(canonical(id), val); render(); }
+				function removeOverride(id){ document.documentElement.style.removeProperty(cssVar(id)); overrides.delete(canonical(id)); render(); }
+				function render(){
+					rows.innerHTML='';
+					if(!overrides.size){ rows.innerHTML='<tr><td colspan="3" style="padding: var(--size-spacing-3); opacity:.55;">None</td></tr>'; }
+					overrides.forEach((val,id)=>{
+						const tr=document.createElement('tr'); tr.innerHTML=`<td><code>${id}</code></td><td><code>${val}</code></td><td><code>${cssVar(id).slice(2)}</code></td>`; rows.appendChild(tr);
+					});
+					// live value for current input
+					const id = idInput.value.trim();
+					if(id){
+						const cv = currentValue(id) || '∅ (unset)';
+						liveValue.innerHTML = 'Current: <code style="font-size:.65rem;">'+cssVar(id)+' = '+cv+'</code>';
+						boundVarEl.textContent = id;
+						// If the chosen token looks like a typography size, bind preview text size directly
+						if(/typography[-.]size[-.]/.test(id)) sampleText.style.fontSize = 'var('+cssVar(id)+')';
+						if(/color[-.]role[-.]accent[-.]default/.test(id)) sampleText.style.color = 'var('+cssVar(id)+')';
+					}
+				}
+				// Auto-apply on submit
+				form.addEventListener('submit', e=>{ e.preventDefault(); const id=idInput.value.trim(); const val=valueInput.value.trim(); if(!id||!val) return; setOverride(id,val); });
+				// Live apply when pressing Enter inside value field already handled by submit; also allow Ctrl+Enter to apply from ID field
+				idInput.addEventListener('keydown', e=>{ if(e.key==='Enter'&& e.ctrlKey){ form.requestSubmit(); }});
+				// Update live current value display while typing id
+				idInput.addEventListener('input', ()=> render());
+				// Quick apply when value field changes (blur or Enter)
+				valueInput.addEventListener('change', ()=>{ const id=idInput.value.trim(); const val=valueInput.value.trim(); if(id && val) setOverride(id,val); });
+				form.querySelector('[data-action=remove]').addEventListener('click',()=>{ const id=idInput.value.trim(); if(!id) return; removeOverride(id); });
+				form.querySelector('[data-action=reset]').addEventListener('click',()=>{ overrides.forEach((_,id)=>document.documentElement.style.removeProperty(cssVar(id))); overrides.clear(); sampleText.style.fontSize=''; sampleText.style.color=''; render(); });
+				// Populate datalist from computed style (token vars)
+				(function loadTokens(){
+					const style = getComputedStyle(document.documentElement);
+					const keys = Array.from(style).filter(k=>k.startsWith('--') && /^(--color-|--size-|--typography-)/.test(k));
+					keys.sort().forEach(k=>{ const opt=document.createElement('option'); opt.value = k.slice(2); datalist.appendChild(opt); });
+				})();
+				render();
+			</script>
+	</body>
+</html>
