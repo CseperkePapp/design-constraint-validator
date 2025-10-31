@@ -9,8 +9,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "dcv": "./cli/index.ts",
-    "design-constraint-validator": "./cli/index.ts"
+    "dcv": "./cli/index.js",
+    "design-constraint-validator": "./cli/index.js"
   },
   "scripts": {
     "test": "vitest run",
