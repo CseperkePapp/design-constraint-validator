@@ -505,11 +505,12 @@ $ npx dcv validate
 
 ## Documentation
 
-- [Getting Started](https://github.com/CseperkePapp/design-constraint-validator/wiki/Getting-Started)
-- [Constraint Types](https://github.com/CseperkePapp/design-constraint-validator/wiki/Constraints)
-- [CLI Reference](https://github.com/CseperkePapp/design-constraint-validator/wiki/CLI)
-- [Architecture](https://github.com/CseperkePapp/design-constraint-validator/wiki/Architecture)
-- [API](https://github.com/CseperkePapp/design-constraint-validator/wiki/API)
+- **[Getting Started](docs/Getting-Started.md)** - 5-minute quick start
+- **[Constraint Types](docs/Constraints.md)** - All constraint types
+- **[CLI Reference](docs/CLI.md)** - Complete command documentation
+- **[Configuration](docs/Configuration.md)** - Config file options
+- **[Architecture](docs/Architecture.md)** - How DCV works
+- **[API Reference](docs/API.md)** - Programmatic usage
 
 ---
 
