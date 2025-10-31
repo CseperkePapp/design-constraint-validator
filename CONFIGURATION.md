@@ -28,7 +28,6 @@ You can customize paths and behavior using a configuration file. The validator s
 2. `dcv.config.js`
 3. `.dcvrc.json`
 4. `package.json` (under `"dcv"` key)
-5. `dtv.config.json` / `larissa.config.json` (legacy support)
 
 ## Configuration Schema
 
