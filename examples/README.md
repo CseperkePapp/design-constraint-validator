@@ -1,39 +1,67 @@
 # Examples
 
-Self‑proof pages demonstrating that every visual primitive (color, spacing, radius, typography, elevation, motion) is expressed exclusively through generated token variables derived from Larissa's underlying poset → lattice graph.
+CLI-focused examples demonstrating Design Constraint Validator features.
 
-## Files
+## Directories
 
-- `index.html` – Basic component buttons consuming role + palette tokens.
-- `smoke.html` – System status style page (legacy M2 example) still driven by tokens.
-- `demos/demo_lean.html` – Minimal palette + role swatch board referencing only token vars (no hard‑coded design values).
-- `demos/demo_lab.html` – Interactive design lab; adjust accent role tokens via OKLCH sliders; recomputes UI live.
-- `demos/simpleConfigurator.html` – Simple one‑off override tool (ephemeral) for experimenting with individual token adjustments in the browser.
-- `demos/simpleConfigurator-new.html` – Advanced batch override + JSON export (array‑of‑ops) suited for piping into `larissa set --json - --write`.
-- `app/app.js` – Tiny script showing runtime theme variant toggling using role tokens only.
+### `minimal/`
+The simplest working example - great starting point for new users.
+- `tokens.json` - Basic color and typography tokens
+- `themes/wcag.json` - WCAG contrast constraints
+- `themes/typography.order.json` - Typography hierarchy
 
-## Conventions
+**Try it:**
+```bash
+cd examples/minimal
+dcv validate
+```
 
-- All layout / component spacing = `--size-spacing-*` tokens.
-- All color backgrounds & text = palette (`--color-palette-*`) or semantic role (`--color-role-*`) tokens.
-- No hex, rgb, hsl, oklch literals in styles except where generating an ephemeral override preview.
-- Typography uses weight / size / line-height tokens; where a size token does not yet exist a temporary scale is avoided (keeps proof strict).
-- Interactive overrides intentionally patch only CSS custom properties (no stylesheet rewriting) to mirror what the CLI `set` operation persists.
+### `failing/`
+Intentionally broken examples to demonstrate constraint violations.
+- `contrast-fail.tokens.json` - WCAG contrast failure
+- `monotonicity-fail.tokens.json` - Typography scale out-of-order
 
-## Extending
+**Try it:**
+```bash
+dcv validate examples/failing/contrast-fail.tokens.json
+dcv validate examples/failing/monotonicity-fail.tokens.json
+```
 
-Add new showcase pages under `demos/` ensuring:
+### `patches/`
+Examples of patch/override format for token mutations.
+- Demonstrates the `dcv patch` command
+- Shows how to export and apply token changes
 
-1. Zero raw design literals (numbers, colors) except ephemeral experimental inline JS output.
-2. Derive every visual style from an existing token variable.
-3. If a needed semantic layer token does not exist yet, add it via the domain graph and rebuild rather than inlining.
+**Try it:**
+```bash
+dcv patch --overrides examples/patches/basic-override.json
+```
 
-## Next Ideas
+### `tokens/`
+Additional token set examples for testing different scenarios.
 
-- Focused graph diff visualization embedding (Mermaid) for a before/after token edit.
-- Accessibility contrast matrix referencing role tokens.
-- Motion playground deriving durations / easings.
+## Usage Patterns
+
+### Validate tokens
+```bash
+dcv validate examples/minimal/tokens.json
+```
+
+### Explain violations
+```bash
+dcv why typography.size.body --format table
+```
+
+### Export dependency graph
+```bash
+dcv graph --format mermaid --hasse typography > graph.mmd
+```
+
+### Build CSS output
+```bash
+dcv build --format css --tokens examples/minimal/tokens.json
+```
 
 ---
 
-Generated: keep this doc short, practical, and trustworthy as a self‑audit checklist.
+For full CLI documentation, see [../README.md](../README.md)
