@@ -123,6 +123,6 @@ describe('CLI basic commands', () => {
     // Removed token should have no $value -> flatten later would exclude it; here raw tree has brand.700 object but without $value
     expect(appliedTokens.color.palette.brand['700']?.$value).toBeUndefined();
     expect(appliedTokens.color.palette.brand['600']?.$value).toBe('#ffffff');
-  });
+  }, 10000); // Increase timeout for this test (npx tsx can be slow)
 });
 
