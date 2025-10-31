@@ -31,7 +31,7 @@ export function createEngine(tokensRoot, config = {}) {
     if (colorOrders.length)
         engine.use(MonotonicLightness(colorOrders));
     if (config.constraints?.wcag) {
-        const wcagRules = config.constraints.wcag.map(r => ({ fg: r.foreground, bg: r.background, min: r.ratio || 4.5, where: r.description || 'Unknown' }));
+        const wcagRules = config.constraints.wcag.map((r) => ({ fg: r.foreground, bg: r.background, min: r.ratio || 4.5, where: r.description || 'Unknown' }));
         engine.use(WcagContrastPlugin(wcagRules));
     }
     const defaultWcagPairs = [
@@ -61,7 +61,7 @@ export function createValidationEngine(tokensRoot, bp, config) {
     if (col.length)
         engine.use(MonotonicLightness(col));
     if (config.constraints?.wcag) {
-        const wcagRules = config.constraints.wcag.map(rule => ({ fg: rule.foreground, bg: rule.background, min: rule.ratio || 4.5, where: rule.description || 'Unknown' }));
+        const wcagRules = config.constraints.wcag.map((rule) => ({ fg: rule.foreground, bg: rule.background, min: rule.ratio || 4.5, where: rule.description || 'Unknown' }));
         engine.use(WcagContrastPlugin(wcagRules));
     }
     return engine;

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Clean minimal Larissa CLI entrypoint (no legacy inline code)
+// Clean minimal DCV CLI entrypoint
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import { spawnSync } from 'node:child_process';

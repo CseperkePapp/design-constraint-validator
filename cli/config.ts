@@ -1,9 +1,9 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { validateConfig } from './config-schema.js';
 import { ok, err, type Result } from './result.js';
-import type { LarissaConfig } from './types.js';
+import type { DcvConfig } from './types.js';
 
-export function loadConfig(configPath?: string): Result<LarissaConfig, string> {
+export function loadConfig(configPath?: string): Result<DcvConfig, string> {
   const candidates = configPath ? [configPath] : [
     'dcv.config.json',
     'dcv.config.js',

@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-import './larissa.js';
+import './dcv.js';

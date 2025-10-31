@@ -70,7 +70,7 @@ function normalizeBatch(raw: unknown): BatchEntry[] {
 function parseValue(v: string): string | number { const num = Number(v); return !isNaN(num) && isFinite(num) ? num : v; }
 
 export async function setCommand(options: SetOptions): Promise<void> {
-  const debugSet = process.env.LARISSA_DEBUG_SET === '1' || process.argv.includes('--debug-set');
+  const debugSet = process.env.DCV_DEBUG_SET === '1' || process.argv.includes('--debug-set');
   const tokensPath = options.tokens || 'tokens/tokens.json';
   const cfgRes = loadConfig(options.config);
   if (!cfgRes.ok) { console.error(cfgRes.error); process.exit(2); }
@@ -167,7 +167,7 @@ export async function setCommand(options: SetOptions): Promise<void> {
     for (const ent of batchEntries) { if (!ent.id) continue; map.set(ent.id, ent); }
     const entries = Array.from(map.values());
     for (const ent of entries) ensureKnownOrSuggest(ent.id);
-    const debug = process.argv.includes('--debug-set') || process.env.LARISSA_DEBUG_SET === '1';
+    const debug = process.argv.includes('--debug-set') || process.env.DCV_DEBUG_SET === '1';
     if (debug) { console.log('[set:batch] parsed entries:'); for (const e of entries) console.log(' ', e); }
     const dryRun = process.argv.includes('--dry-run');
     for (const { id, value, unset } of entries) {

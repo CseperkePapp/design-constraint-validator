@@ -1,9 +1,9 @@
 import type { TokenValue } from '../core/flatten.js';
 import type { Breakpoint } from '../core/breakpoints.js';
-import type { LarissaConfigParsed } from './config-schema.js';
+import type { DcvConfigParsed } from './config-schema.js';
 
 export interface WcagRuleConfig { foreground: string; background: string; ratio?: number; description?: string }
-export type LarissaConfig = LarissaConfigParsed;
+export type DcvConfig = DcvConfigParsed;
 export type ValuesPatch = Record<string, TokenValue>;
 export interface OverridesLeaf { $value?: string | number | null }
 export type OverridesTree = { [k: string]: OverridesTree | OverridesLeaf } & OverridesLeaf;
