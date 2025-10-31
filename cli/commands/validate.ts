@@ -1,4 +1,4 @@
-import { flattenTokens, type FlatToken } from '../../core/flatten.js';
+import { flattenTokens } from '../../core/flatten.js';
 import { createValidationEngine } from '../engine-helpers.js';
 import { loadConfig } from '../config.js';
 import { parseBreakpoints, loadTokensWithBreakpoint, type Breakpoint } from '../../core/breakpoints.js';
@@ -41,9 +41,9 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     if (!cfgRes.ok) { console.error(cfgRes.error); process.exit(2); }
     const config = cfgRes.value;
     const perBpTimings: Array<{ bp: string; ms: number }> = [];
-    const tStartTotal = performance.now();
+    const tStartTotal = globalThis.performance.now();
     for (const bp of plan) {
-      const tStart = performance.now();
+      const tStart = globalThis.performance.now();
       const tokens = loadTokensWithBreakpoint(bp);
       const engine = createValidationEngine(tokens, bp, config);
       const initIds = Object.keys(flattenTokens(tokens).flat).reduce<Record<string, true>>((a,k)=>{a[k]=true;return a;},{});
@@ -63,12 +63,12 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       if (errs.length) anyErrors = true;
       totalErrors += errs.length; totalWarnings += warns.length;
       const rulesEvaluated = errs.length + warns.length; pushRow(bp ?? 'global', { rules: rulesEvaluated, warnings: warns.length, errors: errs.length });
-      const dur = performance.now() - tStart;
+      const dur = globalThis.performance.now() - tStart;
       perBpTimings.push({ bp: bp ?? 'global', ms: dur });
       console.log(`validate${bp ? ` [bp=${bp}]` : ''}: ${errs.length} error(s), ${warns.length} warning(s)${_options.perf ? ` (${dur.toFixed(2)}ms)` : ''}`);
       for (const it of issues) { const tag = it.level === 'error' ? 'ERROR' : 'WARN '; console.log(`${tag} ${it.rule}  ${it.id}${it.where ? ' @ ' + it.where : ''}${bp ? ` [${bp}]` : ''} — ${it.message}`); }
     }
-    const totalMs = performance.now() - tStartTotal;
+    const totalMs = globalThis.performance.now() - tStartTotal;
     // Append aggregate total row if multiple scopes and not already added
     if (rows.length > 1) {
       const agg = rows.reduce((a,b)=>({ rules:a.rules+b.rules, warnings:a.warnings+b.warnings, errors:a.errors+b.errors }), { rules:0,warnings:0,errors:0 });

@@ -12,6 +12,7 @@ export function createEngine(tokensRoot, config = {}) {
     const engine = new Engine(init, edges);
     function loadOrders(path) {
         try {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             return JSON.parse(require('node:fs').readFileSync(path, 'utf8')).order;
         }
         catch {

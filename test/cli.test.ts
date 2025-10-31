@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
 function run(cmd: string) {
@@ -106,6 +106,7 @@ describe('CLI basic commands', () => {
 
   it('patch apply supports removals', () => {
   // Create overrides file (brand.700 -> null removal, brand.600 modified)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require('node:fs');
   const overridesPath = 'dist/test-overrides-removal.json';
   fs.mkdirSync('dist', { recursive: true });
@@ -115,6 +116,7 @@ describe('CLI basic commands', () => {
     expect(parsed.changes.some((c: any) => c.id === 'color.palette.brand.700' && c.type === 'remove')).toBe(true);
     // Write patch doc to temp file then apply
     const tmpPath = 'dist/tmp.patch.json';
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('node:fs').writeFileSync(tmpPath, patchDoc);
     const applied = run(`npx tsx ./cli/dcv.ts patch:apply ${tmpPath} --tokens tokens/tokens.example.json --dry-run`);
     const appliedTokens = JSON.parse(applied);

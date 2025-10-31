@@ -12,7 +12,10 @@ export function createEngine(tokensRoot: TokenNode, config: DcvConfig = {}): Eng
   for (const [id, token] of Object.entries(flat)) init[id] = (token as FlatToken).value;
   const engine = new Engine(init, edges);
   function loadOrders(path: string) {
-    try { return JSON.parse(require('node:fs').readFileSync(path, 'utf8')).order as [string, '<='|'>=', string][]; } catch { return []; }
+    try { 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return JSON.parse(require('node:fs').readFileSync(path, 'utf8')).order as [string, '<='|'>=', string][]; 
+    } catch { return []; }
   }
   const typOrders = loadOrders('themes/typography.order.json');
   const spacingOrders = loadOrders('themes/spacing.order.json');

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../config.js';
 import { createEngine } from '../engine-helpers.js';
-import { flattenTokens, type FlatToken } from '../../core/flatten.js';
+import { flattenTokens } from '../../core/flatten.js';
 import type { OverridesTree, SetOptions, ValuesPatch } from '../types.js';
 import { loadTokens, outputResult } from './utils.js';
 
