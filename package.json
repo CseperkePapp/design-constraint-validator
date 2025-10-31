@@ -8,6 +8,14 @@
   },
   "main": "core/index.js",
   "types": "core/index.ts",
+  "exports": {
+    ".": {
+      "types": "./core/index.ts",
+      "import": "./core/index.js"
+    },
+    "./core/*": "./core/*",
+    "./cli/*": "./cli/*"
+  },
   "bin": {
     "dcv": "./cli/index.js",
     "design-constraint-validator": "./cli/index.js"
