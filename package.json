@@ -38,12 +38,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CseperkePapp/design-token-validator.git"
+    "url": "https://github.com/CseperkePapp/design-constraint-validator.git"
   },
   "bugs": {
-    "url": "https://github.com/CseperkePapp/design-token-validator/issues"
+    "url": "https://github.com/CseperkePapp/design-constraint-validator/issues"
   },
-  "homepage": "https://github.com/CseperkePapp/design-token-validator#readme",
+  "homepage": "https://github.com/CseperkePapp/design-constraint-validator#readme",
   "dependencies": {
     "yargs": "^17.0.0"
   },

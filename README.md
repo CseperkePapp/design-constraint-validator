@@ -1,7 +1,7 @@
 # design-token-validator
 
 [![npm version](https://badge.fury.io/js/design-token-validator.svg)](https://www.npmjs.com/package/design-token-validator)
-[![CI](https://github.com/CseperkePapp/design-token-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/CseperkePapp/design-token-validator/actions/workflows/ci.yml)
+[![CI](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Constraint validation engine for design tokens** with mathematical rigor and advanced debugging.
@@ -369,11 +369,11 @@ $ npx dtv validate
 
 ## Documentation
 
-- [Getting Started](https://github.com/CseperkePapp/design-token-validator/wiki/Getting-Started)
-- [Constraint Types](https://github.com/CseperkePapp/design-token-validator/wiki/Constraints)
-- [CLI Reference](https://github.com/CseperkePapp/design-token-validator/wiki/CLI)
-- [Architecture](https://github.com/CseperkePapp/design-token-validator/wiki/Architecture)
-- [API](https://github.com/CseperkePapp/design-token-validator/wiki/API)
+- [Getting Started](https://github.com/CseperkePapp/design-constraint-validator/wiki/Getting-Started)
+- [Constraint Types](https://github.com/CseperkePapp/design-constraint-validator/wiki/Constraints)
+- [CLI Reference](https://github.com/CseperkePapp/design-constraint-validator/wiki/CLI)
+- [Architecture](https://github.com/CseperkePapp/design-constraint-validator/wiki/Architecture)
+- [API](https://github.com/CseperkePapp/design-constraint-validator/wiki/API)
 
 ## Philosophy
 
