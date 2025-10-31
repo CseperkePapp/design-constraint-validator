@@ -1,0 +1,6 @@
+{
+  "order": [
+    ["typography.size.h1", ">=", "typography.size.h2"],
+    ["typography.size.h2", ">=", "typography.size.body"]
+  ]
+}

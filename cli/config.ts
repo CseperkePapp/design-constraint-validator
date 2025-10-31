@@ -5,9 +5,12 @@ import type { LarissaConfig } from './types.js';
 
 export function loadConfig(configPath?: string): Result<LarissaConfig, string> {
   const candidates = configPath ? [configPath] : [
-    'larissa.config.json',
-    'larissa.config.js',
-    '.larissarc.json',
+    'dtv.config.json',
+    'dtv.config.js',
+    '.dtvrc.json',
+    'larissa.config.json',  // legacy support
+    'larissa.config.js',    // legacy support
+    '.larissarc.json',      // legacy support
     'package.json'
   ];
   for (const p of candidates) {
@@ -15,9 +18,14 @@ export function loadConfig(configPath?: string): Result<LarissaConfig, string> {
     try {
       const rawTxt = readFileSync(p, 'utf8');
       let raw: unknown = JSON.parse(rawTxt);
-      if (p === 'package.json' && raw && typeof raw === 'object' && 'larissa' in raw) {
+      if (p === 'package.json' && raw && typeof raw === 'object') {
         const pkg = raw as Record<string, unknown>;
-        raw = pkg.larissa;
+        // Check for dtv config first, fall back to larissa for legacy support
+        if ('dtv' in pkg) {
+          raw = pkg.dtv;
+        } else if ('larissa' in pkg) {
+          raw = pkg.larissa;
+        }
       }
       const { value, errors } = validateConfig(raw);
       if (errors) return err(`Config validation failed in ${p}:\n  - ${errors.join('\n  - ')}`);

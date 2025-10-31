@@ -21,7 +21,7 @@ import { setCommand, buildCommand, validateCommand, graphCommand, whyCommand, pa
 })();
 
 const cli = yargs(hideBin(process.argv))
-  .scriptName('larissa')
+  .scriptName('dtv')
   .parserConfiguration({ 'camel-case-expansion': false })
   .option('quiet', { type: 'boolean' });
 

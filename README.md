@@ -34,6 +34,113 @@ npx dtv graph --hasse typography --format mermaid
 npx dtv why color.role.text.default
 ```
 
+## Getting Started
+
+### Your First Validation (5 minutes)
+
+**1. Install**
+```bash
+npm install -D design-token-validator
+```
+
+**2. Create `tokens.json`** in your project root:
+```json
+{
+  "color": {
+    "text": { "$value": "#1a1a1a" },
+    "background": { "$value": "#ffffff" }
+  },
+  "typography": {
+    "size": {
+      "h1": { "$value": "32px" },
+      "h2": { "$value": "24px" },
+      "body": { "$value": "16px" }
+    }
+  }
+}
+```
+
+**3. Create `themes/wcag.json`** (WCAG contrast constraint):
+```json
+{
+  "constraints": {
+    "wcag": [{
+      "foreground": "color.text",
+      "background": "color.background",
+      "ratio": 4.5
+    }]
+  }
+}
+```
+
+**4. Create `themes/typography.order.json`** (size hierarchy):
+```json
+{
+  "order": [
+    ["typography.size.h1", ">=", "typography.size.h2"],
+    ["typography.size.h2", ">=", "typography.size.body"]
+  ]
+}
+```
+
+**5. Validate**
+```bash
+npx dtv validate
+```
+
+**Output:**
+```
+✅ validate: 0 error(s), 0 warning(s)
+```
+
+Success! Your tokens pass all constraints.
+
+### What if validation fails?
+
+Try changing `h2` to `"40px"` (larger than h1) and run validation again:
+
+```bash
+npx dtv validate
+```
+
+**Output:**
+```
+validate: 1 error(s), 0 warning(s)
+ERROR monotonic  typography.size.h2 @ typography.order.json — typography.size.h1 >= typography.size.h2 violated: 32px < 40px
+```
+
+The validator explains exactly what failed and why.
+
+### Minimal Working Example
+
+See [examples/minimal/](examples/minimal/) for a complete minimal setup you can copy.
+
+## Example Output
+
+### ✅ Successful Validation
+```bash
+$ npx dtv validate
+✅ validate: 0 error(s), 0 warning(s)
+```
+
+### ❌ Failed Validation
+```bash
+$ npx dtv validate
+validate: 2 error(s), 1 warning(s)
+
+ERROR monotonic  typography.size.h2
+  typography.size.h1 >= typography.size.h2 violated: 32px < 40px
+  Defined in: themes/typography.order.json
+
+ERROR wcag  color.text vs color.background
+  Contrast ratio 4.5:1 required, got 2.1:1
+  Defined in: themes/wcag.json
+
+WARN threshold  control.size.min
+  Touch target should be >= 44px, got 30px
+  Defined in: themes/touch.json
+```
+
 ## Constraint Types
 
 ### 1. Monotonic Constraints
@@ -282,6 +389,86 @@ Design systems need more than naming conventions - they need mathematical guaran
 ## Related Projects
 
 This is the **core validation engine**. For a complete decision-driven design system with a 5-axis framework (Tone, Emphasis, Size, Density, Shape) and theme configurator UI, see **DecisionThemes** (coming soon).
+
+## FAQ
+
+### How does the tool find my tokens and constraints?
+
+By default, it looks for:
+- **Tokens**: `tokens.json` or `tokens/*.json`
+- **Constraints**: `themes/*.json` or `themes/**/*.json`
+
+You can customize paths in a `dtv.config.json` file. See [CONFIGURATION.md](CONFIGURATION.md) for details.
+
+### What's the relationship with DecisionThemes?
+
+`design-token-validator` is the **core validation engine** - it validates any design tokens against constraints.
+
+**DecisionThemes** (coming soon) is a complete design system framework that uses this validator under the hood, plus adds:
+- 5-axis decision framework (Tone, Emphasis, Size, Density, Shape)
+- Theme configurator UI
+- Decision → Token mapping
+
+Think of it as: **design-token-validator** = engine, **DecisionThemes** = full product built on the engine.
+
+### Can I use this with my existing tokens?
+
+Yes! As long as your tokens follow a structured JSON format. The tool supports:
+- [W3C Design Tokens Community Group](https://design-tokens.github.io/community-group/) format
+- Custom nested JSON structures
+- Token references with `{token.path}` syntax
+
+### How do I use incremental validation?
+
+Incremental validation automatically detects changed tokens and only validates those tokens plus their dependents. This feature is built-in - no configuration needed. When you run `dtv validate`, it will use cached results for unchanged tokens.
+
+### What breakpoints are supported?
+
+The tool supports responsive tokens with breakpoint-specific overrides. Place override files in `tokens/overrides/`:
+- `tokens/overrides/sm.json` - Small screens
+- `tokens/overrides/md.json` - Medium screens
+- `tokens/overrides/lg.json` - Large screens
+
+Validate specific breakpoints with `--breakpoint md` or all breakpoints with `--all-breakpoints`.
+
+### Can I use this in CI/CD?
+
+Absolutely! That's a primary use case:
+
+```yaml
+# .github/workflows/validate-tokens.yml
+name: Validate Design Tokens
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npx dtv validate --fail-on warn
+```
+
+The tool exits with non-zero code on validation failures, making it perfect for CI/CD gates.
+
+### How do I visualize my token dependencies?
+
+Use the `graph` command:
+
+```bash
+# Generate Mermaid diagram (renders on GitHub)
+dtv graph --hasse typography --format mermaid > typography.mmd
+
+# Generate Graphviz DOT
+dtv graph --hasse color --format dot > color.dot
+
+# Then render with Graphviz
+dot -Tpng color.dot -o color.png
+```
+
+### What Node.js version do I need?
+
+Node.js 18 or higher is required.
 
 ## Contributing
 

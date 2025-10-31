@@ -1,0 +1,11 @@
+{
+  "constraints": {
+    "wcag": [
+      {
+        "foreground": "color.text",
+        "background": "color.background",
+        "ratio": 4.5
+      }
+    ]
+  }
+}
