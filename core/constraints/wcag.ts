@@ -1,6 +1,6 @@
-import type { ConstraintPlugin } from "../engine";
-import type { TokenId } from "../flatten";
-import { parseCssColor, compositeOver, relativeLuminance, contrastRatio } from "../color";
+import type { ConstraintPlugin } from "../engine.js";
+import type { TokenId } from "../flatten.js";
+import { parseCssColor, compositeOver, relativeLuminance, contrastRatio } from "../color.js";
 
 export type ContrastPair = {
   fg: TokenId;

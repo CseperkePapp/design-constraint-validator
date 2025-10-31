@@ -1,6 +1,6 @@
 # Minimal Example
 
-This is the simplest possible working example of `design-token-validator`.
+This is the simplest possible working example of `design-constraint-validator`.
 
 ## File Structure
 
@@ -22,7 +22,7 @@ minimal/
 
 ```bash
 cd examples/minimal
-npx dtv validate
+npx dcv validate
 ```
 
 ### Expected Output
@@ -38,7 +38,7 @@ This means all your tokens pass the validation constraints!
 Try breaking a constraint to see what happens:
 
 1. Edit `tokens.json` and change h2 to `"40px"` (larger than h1's 32px)
-2. Run `npx dtv validate` again
+2. Run `npx dcv validate` again
 3. You'll see an error explaining the violation
 
 ## Next Steps

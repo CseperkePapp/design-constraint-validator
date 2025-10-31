@@ -1,4 +1,4 @@
-import type { FlatToken } from "./flatten";
+import type { FlatToken } from "./flatten.js";
 
 export type WhyReport = {
   id: string;

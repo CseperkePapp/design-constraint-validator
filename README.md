@@ -1,38 +1,174 @@
-# design-token-validator
+# Design Constraint Validator (DCV)
+> Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence.
 
-[![npm version](https://badge.fury.io/js/design-token-validator.svg)](https://www.npmjs.com/package/design-token-validator)
 [![CI](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D18.x-339933.svg)](#)
 
-**Constraint validation engine for design tokens** with mathematical rigor and advanced debugging.
+**Design Constraint Validator (DCV)** validates design constraints across token sets and styles:
+- ✅ **Accessibility:** WCAG text contrast, perceptual lightness floor/ceilings
+- ✅ **Order & Monotonicity:** increasing typography scales, spacing hierarchies
+- ✅ **Thresholds & Policies:** min/max ranges, cross-axis guards (size × weight × contrast)
+- ✅ **Graph Intelligence:** Hasse/poset graph export; "why" explanations with implicated edges
 
-> Validate design tokens against explicit constraints to ensure consistency and accessibility.
+This is **not** a schema linter; it's a **reasoning validator** for values and relationships.
 
-## Features
+---
 
-- ✨ **5 Constraint Types** - Monotonic, WCAG, Threshold, Lightness, Cross-Axis
-- ✨ **Responsive** - Multi-breakpoint validation (sm/md/lg)
-- ✨ **Explainable** - "Why?" command traces token provenance
-- ✨ **Visualize** - Export dependency graphs (Mermaid, Graphviz)
-- ✨ **CI-Friendly** - JSON output, exit codes, performance budgets
-- ✨ **Type-Safe** - Full TypeScript support
-- ✨ **Incremental** - Only validates changed tokens + dependents
+## Installation
+
+```bash
+# Local (recommended)
+npm i -D design-constraint-validator
+
+# One-off run
+npx dcv --help
+```
+
+**Node:** ≥ 18.x (ESM)
+
+---
 
 ## Quick Start
 
 ```bash
-# Install
-npm install -D design-token-validator
+# Validate a token set (JSON) with default constraints
+npx dcv validate ./tokens/example.tokens.json
 
-# Validate tokens
-npx dtv validate
+# Validate with a policy profile (e.g., AA)
+npx dcv validate ./tokens/example.tokens.json --policy ./themes/policies/aa.json
 
-# Visualize dependencies
-npx dtv graph --hasse typography --format mermaid
+# Explain failures (tabular)
+npx dcv why --format table
 
-# Understand token provenance
-npx dtv why color.role.text.default
+# Export graph (Mermaid or DOT)
+npx dcv graph --format mermaid > graph.mmd
 ```
+
+> Try the failing samples to see diagnostics:
+
+```bash
+npx dcv validate ./examples/failing/contrast-fail.tokens.json
+npx dcv validate ./examples/failing/monotonicity-fail.tokens.json
+```
+
+---
+
+## Input formats
+
+DCV accepts a **token JSON** (flat or nested) and optional **policy JSON**.
+Adapters normalize common ecosystems (Style Dictionary, Tokens Studio JSON, DTCG).
+
+* See: [`adapters/README.md`](adapters/README.md)
+* Example policies: `themes/policies/*.json` (AA/AAA presets, org policies)
+
+---
+
+## Example Output (Why / Explanations)
+
+```
+Constraint                    Status   Details
+────────────────────────────  ──────   ─────────────────────────────────────────────
+WCAG Contrast ≥ 4.5:1        FAIL     text.primary(#5A5A5A) on bg.body(#F5F5F5) ⇒ 3.8
+Typography monotonic scale   FAIL     h3(22) < body(18) < h2(21) < h1(34)  ✖ out-of-order: h2<h3
+Cross-axis (weight vs size)  PASS     all headings satisfy min weight for size bucket
+Perceptual L (OKLCH L)       PASS     text on dark surfaces ≥ 0.85 L
+Exit code: 1 (violations found)
+```
+
+---
+
+## Programmatic API (Node)
+
+```ts
+// ESM / TypeScript
+import { validate } from 'design-constraint-validator';
+
+const result = await validate({
+  tokensPath: './tokens/example.tokens.json',
+  policyPath: './themes/policies/aa.json'
+});
+
+if (result.ok) {
+  console.log('All constraints satisfied.');
+} else {
+  for (const v of result.violations) {
+    console.log(`[${v.kind}] ${v.message}`, v.context);
+  }
+  process.exitCode = 1;
+}
+```
+
+**Return shape (simplified):**
+
+```ts
+type ValidationResult = {
+  ok: boolean;
+  violations: Array<{
+    kind: 'wcag' | 'monotonic' | 'threshold' | 'crossAxis' | string;
+    message: string;
+    context?: Record<string, unknown>;
+    nodes?: string[];      // implicated token ids
+    edges?: [string,string][]; // graph edges
+  }>;
+  stats: { checked: number; durationMs: number };
+};
+```
+
+---
+
+## Why constraints, not conventions?
+
+Conventional linters catch **schema** issues ("has a value, has a type").
+**DCV** enforces **relationships** that matter to users and brand integrity:
+
+* Legible contrast under all themes and states
+* Proper hierarchical spacing/typography (monotonic scales)
+* Coherent cross-axis behavior (e.g., weight increases with size where needed)
+* Policy conformance (AA/AAA, internal thresholds)
+
+This transforms tokens from "bags of numbers" into a **formal design system**.
+
+---
+
+## Comparison (schema linters vs DCV)
+
+* **Schema linters** (e.g., DTCG schema validators) ensure JSON shape.
+* **DCV** validates **mathematical & policy constraints** over *values and relations*.
+
+> DCV is not affiliated with Anima's `design-tokens-validator` (schema-focused).
+
+---
+
+## Graphs
+
+Export the constraint graph for audits and docs:
+
+```bash
+npx dcv graph --format mermaid > graph.mmd
+```
+
+**Mermaid (illustrative):**
+
+```mermaid
+graph TD
+  BodySize --> H2Size
+  H2Size --> H1Size
+  BodyColor --> WCAG
+  H1Color --> WCAG
+```
+
+---
+
+## Adapters
+
+* **Style Dictionary** input
+* **Tokens Studio JSON** input
+* **DTCG** (Design Tokens Community Group) mapping
+
+See [`adapters/README.md`](adapters/README.md) for format notes.
+
+---
 
 ## Getting Started
 
@@ -40,7 +176,7 @@ npx dtv why color.role.text.default
 
 **1. Install**
 ```bash
-npm install -D design-token-validator
+npm install -D design-constraint-validator
 ```
 
 **2. Create `tokens.json`** in your project root:
@@ -85,7 +221,7 @@ npm install -D design-token-validator
 
 **5. Validate**
 ```bash
-npx dtv validate
+npx dcv validate
 ```
 
 **Output:**
@@ -100,7 +236,7 @@ Success! Your tokens pass all constraints.
 Try changing `h2` to `"40px"` (larger than h1) and run validation again:
 
 ```bash
-npx dtv validate
+npx dcv validate
 ```
 
 **Output:**
@@ -119,13 +255,13 @@ See [examples/minimal/](examples/minimal/) for a complete minimal setup you can 
 
 ### ✅ Successful Validation
 ```bash
-$ npx dtv validate
+$ npx dcv validate
 ✅ validate: 0 error(s), 0 warning(s)
 ```
 
 ### ❌ Failed Validation
 ```bash
-$ npx dtv validate
+$ npx dcv validate
 validate: 2 error(s), 1 warning(s)
 
 ERROR monotonic  typography.size.h2
@@ -212,16 +348,16 @@ Multi-domain relationships
 
 ```bash
 # Validate all tokens
-dtv validate
+dcv validate
 
 # Validate specific breakpoint
-dtv validate --breakpoint md
+dcv validate --breakpoint md
 
 # All breakpoints with summary
-dtv validate --all-breakpoints --summary table
+dcv validate --all-breakpoints --summary table
 
 # Fail on warnings
-dtv validate --fail-on warn
+dcv validate --fail-on warn
 ```
 
 ### Graph Visualization
@@ -230,19 +366,19 @@ Export token dependency graphs in text formats (Mermaid, Graphviz DOT):
 
 ```bash
 # Export Mermaid format (renders on GitHub)
-dtv graph --hasse typography --format mermaid > typography.mmd
+dcv graph --hasse typography --format mermaid > typography.mmd
 
 # Export Graphviz DOT format
-dtv graph --hasse color --format dot > color.dot
+dcv graph --hasse color --format dot > color.dot
 
 # JSON format for programmatic use
-dtv graph --hasse layout --format json > layout.json
+dcv graph --hasse layout --format json > layout.json
 
 # Show only violations
-dtv graph --hasse color --only-violations --format mermaid
+dcv graph --hasse color --only-violations --format mermaid
 
 # Highlight violations
-dtv graph --hasse layout --highlight-violations --format mermaid
+dcv graph --hasse layout --highlight-violations --format mermaid
 ```
 
 **Rendering Options:**
@@ -264,33 +400,33 @@ mmdc -i typography.mmd -o typography.png
 
 ```bash
 # Why does this token have this value?
-dtv why typography.size.h1
+dcv why typography.size.h1
 
 # JSON output
-dtv why color.role.text.default --format json
+dcv why color.role.text.default --format json
 ```
 
 ### Build Tokens
 
 ```bash
 # Build tokens
-dtv build
+dcv build
 
 # Build all formats
-dtv build --all-formats
+dcv build --all-formats
 
 # Watch mode
-dtv build --watch
+dcv build --watch
 ```
 
 ### Set Token Values
 
 ```bash
 # Set a single token
-dtv set typography.size.h1=32px
+dcv set typography.size.h1=32px
 
 # Set color with OKLCH
-dtv set color.palette.brand.500=oklch(0.65 0.15 280)
+dcv set color.palette.brand.500=oklch(0.65 0.15 280)
 ```
 
 ## Use Cases
@@ -334,7 +470,7 @@ dtv set color.palette.brand.500=oklch(0.65 0.15 280)
 
 **Validate:**
 ```bash
-$ npx dtv validate
+$ npx dcv validate
 
 ✅ validate [bp=base]: 0 error(s), 0 warning(s)
 ```
@@ -375,6 +511,18 @@ $ npx dtv validate
 - [Architecture](https://github.com/CseperkePapp/design-constraint-validator/wiki/Architecture)
 - [API](https://github.com/CseperkePapp/design-constraint-validator/wiki/API)
 
+---
+
+## Roadmap
+
+* Plugin API for **custom constraints**
+* **VS Code** diagnostics (inline explain)
+* **Cross-axis packs** (typography × weight × contrast)
+* **Receipts & provenance** (hashes, signable reports)
+* UI graph explorer (node inspector, violations focus)
+
+---
+
 ## Philosophy
 
 > **Constraints, not conventions.**
@@ -398,11 +546,11 @@ By default, it looks for:
 - **Tokens**: `tokens.json` or `tokens/*.json`
 - **Constraints**: `themes/*.json` or `themes/**/*.json`
 
-You can customize paths in a `dtv.config.json` file. See [CONFIGURATION.md](CONFIGURATION.md) for details.
+You can customize paths in a `dcv.config.json` file. See [CONFIGURATION.md](CONFIGURATION.md) for details.
 
 ### What's the relationship with DecisionThemes?
 
-`design-token-validator` is the **core validation engine** - it validates any design tokens against constraints.
+`design-constraint-validator` is the **core validation engine** - it validates any design tokens against constraints.
 
 **DecisionThemes** (coming soon) is a complete design system framework that uses this validator under the hood, plus adds:
 - 5-axis decision framework (Tone, Emphasis, Size, Density, Shape)
@@ -420,7 +568,7 @@ Yes! As long as your tokens follow a structured JSON format. The tool supports:
 
 ### How do I use incremental validation?
 
-Incremental validation automatically detects changed tokens and only validates those tokens plus their dependents. This feature is built-in - no configuration needed. When you run `dtv validate`, it will use cached results for unchanged tokens.
+Incremental validation automatically detects changed tokens and only validates those tokens plus their dependents. This feature is built-in - no configuration needed. When you run `dcv validate`, it will use cached results for unchanged tokens.
 
 ### What breakpoints are supported?
 
@@ -446,7 +594,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
       - run: npm ci
-      - run: npx dtv validate --fail-on warn
+      - run: npx dcv validate --fail-on warn
 ```
 
 The tool exits with non-zero code on validation failures, making it perfect for CI/CD gates.
@@ -457,10 +605,10 @@ Use the `graph` command:
 
 ```bash
 # Generate Mermaid diagram (renders on GitHub)
-dtv graph --hasse typography --format mermaid > typography.mmd
+dcv graph --hasse typography --format mermaid > typography.mmd
 
 # Generate Graphviz DOT
-dtv graph --hasse color --format dot > color.dot
+dcv graph --hasse color --format dot > color.dot
 
 # Then render with Graphviz
 dot -Tpng color.dot -o color.png

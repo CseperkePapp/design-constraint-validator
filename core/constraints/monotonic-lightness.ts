@@ -1,5 +1,5 @@
-import type { ConstraintPlugin } from "../engine";
-import { parseCssColor, relativeLuminance } from "../color";
+import type { ConstraintPlugin } from "../engine.js";
+import { parseCssColor, relativeLuminance } from "../color.js";
 
 export function parseLightness(v: unknown): number | null {
   if (typeof v !== "string") return null;

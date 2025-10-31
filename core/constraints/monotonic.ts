@@ -1,6 +1,6 @@
 // core/constraints/monotonic.ts
-import type { ConstraintPlugin } from "../engine";
-import type { Order } from "../poset";
+import type { ConstraintPlugin } from "../engine.js";
+import type { Order } from "../poset.js";
 
 export function MonotonicPlugin(
   orders: Order[], 

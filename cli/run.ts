@@ -1,8 +1,8 @@
 #!/usr/bin/env ts-node
 import { readFileSync } from "node:fs";
-import { flattenTokens } from "../core/flatten";
-import { Engine } from "../core/engine";
-import { WcagContrastPlugin } from "../core/constraints/wcag";
+import { flattenTokens } from "../core/flatten.js";
+import { Engine } from "../core/engine.js";
+import { WcagContrastPlugin } from "../core/constraints/wcag.js";
 
 const tokensRoot = JSON.parse(readFileSync("tokens/tokens.example.json","utf8"));
 const { flat, edges } = flattenTokens(tokensRoot);

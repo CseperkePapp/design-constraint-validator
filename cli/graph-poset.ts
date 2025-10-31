@@ -1,6 +1,6 @@
 // cli/graph-poset.ts
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
-import { buildPoset, transitiveReduction, toMermaidHasse, toDotHasse, validatePoset, type Order } from "../core/poset";
+import { buildPoset, transitiveReduction, toMermaidHasse, toDotHasse, validatePoset, type Order } from "../core/poset.js";
 
 export interface OrderFile {
   $description?: string;

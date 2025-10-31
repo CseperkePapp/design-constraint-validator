@@ -5,9 +5,12 @@ import type { LarissaConfig } from './types.js';
 
 export function loadConfig(configPath?: string): Result<LarissaConfig, string> {
   const candidates = configPath ? [configPath] : [
-    'dtv.config.json',
-    'dtv.config.js',
-    '.dtvrc.json',
+    'dcv.config.json',
+    'dcv.config.js',
+    '.dcvrc.json',
+    'dtv.config.json',      // legacy support
+    'dtv.config.js',        // legacy support
+    '.dtvrc.json',          // legacy support
     'larissa.config.json',  // legacy support
     'larissa.config.js',    // legacy support
     '.larissarc.json',      // legacy support
@@ -20,8 +23,10 @@ export function loadConfig(configPath?: string): Result<LarissaConfig, string> {
       let raw: unknown = JSON.parse(rawTxt);
       if (p === 'package.json' && raw && typeof raw === 'object') {
         const pkg = raw as Record<string, unknown>;
-        // Check for dtv config first, fall back to larissa for legacy support
-        if ('dtv' in pkg) {
+        // Check for dcv config first, fall back to dtv/larissa for legacy support
+        if ('dcv' in pkg) {
+          raw = pkg.dcv;
+        } else if ('dtv' in pkg) {
           raw = pkg.dtv;
         } else if ('larissa' in pkg) {
           raw = pkg.larissa;

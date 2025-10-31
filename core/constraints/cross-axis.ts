@@ -1,5 +1,5 @@
 // core/constraints/cross-axis.ts
-import type { ConstraintPlugin } from "../engine";
+import type { ConstraintPlugin } from "../engine.js";
 
 export type CrossAxisRule =
   | {

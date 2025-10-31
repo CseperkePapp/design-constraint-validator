@@ -1,4 +1,4 @@
-import type { ConstraintPlugin } from "../engine";
+import type { ConstraintPlugin } from "../engine.js";
 
 export type ThresholdRule = {
   id: string;                    // token id to check

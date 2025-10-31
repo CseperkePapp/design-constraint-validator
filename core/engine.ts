@@ -1,4 +1,4 @@
-import type { TokenId, TokenValue } from "./flatten";
+import type { TokenId, TokenValue } from "./flatten.js";
 
 export type ConstraintIssue = {
   id: TokenId | string;

@@ -1,0 +1,10 @@
+{
+  "typography": {
+    "scale": {
+      "body": { "value": 18 },
+      "h3":   { "value": 22 },
+      "h2":   { "value": 21 },
+      "h1":   { "value": 34 }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide explains how `design-token-validator` discovers and loads your tokens and constraints.
+This guide explains how `design-constraint-validator` discovers and loads your tokens and constraints.
 
 ## Default Behavior
 
@@ -24,17 +24,17 @@ By default, the validator automatically looks for:
 
 You can customize paths and behavior using a configuration file. The validator searches for config in this order:
 
-1. `dtv.config.json`
-2. `dtv.config.js`
-3. `.dtvrc.json`
-4. `package.json` (under `"dtv"` key)
-5. `larissa.config.json` (legacy support)
+1. `dcv.config.json`
+2. `dcv.config.js`
+3. `.dcvrc.json`
+4. `package.json` (under `"dcv"` key)
+5. `dtv.config.json` / `larissa.config.json` (legacy support)
 
 ## Configuration Schema
 
 ### Basic Example
 
-**dtv.config.json:**
+**dcv.config.json:**
 ```json
 {
   "tokens": "design-tokens.json",
@@ -45,7 +45,7 @@ You can customize paths and behavior using a configuration file. The validator s
 
 ### Full Example
 
-**dtv.config.json:**
+**dcv.config.json:**
 ```json
 {
   "tokens": "tokens.json",
@@ -72,9 +72,9 @@ You can also add configuration to your `package.json`:
 {
   "name": "my-project",
   "devDependencies": {
-    "design-token-validator": "^1.0.0"
+    "design-constraint-validator": "^1.0.0"
   },
-  "dtv": {
+  "dcv": {
     "tokens": "src/tokens.json",
     "themes": "src/constraints"
   }
@@ -294,12 +294,12 @@ Organize constraints by category:
 ### Per-Project vs Global Config
 
 **Per-project** (recommended):
-- `dtv.config.json` in project root
+- `dcv.config.json` in project root
 - Committed to git
 - Shared by team
 
 **Global** (advanced):
-- `~/.dtvrc.json` in home directory
+- `~/.dcvrc.json` in home directory
 - Applies to all projects without local config
 - Good for personal defaults
 
@@ -309,13 +309,13 @@ Override config options via environment:
 
 ```bash
 # Override tokens path
-DTV_TOKENS=custom-tokens.json npx dtv validate
+DCV_TOKENS=custom-tokens.json npx dcv validate
 
 # Override themes path
-DTV_THEMES=custom-constraints npx dtv validate
+DCV_THEMES=custom-constraints npx dcv validate
 
 # Quiet mode
-DTV_QUIET=true npx dtv validate
+DCV_QUIET=true npx dcv validate
 ```
 
 ## Troubleshooting
@@ -323,7 +323,7 @@ DTV_QUIET=true npx dtv validate
 ### "No tokens found"
 
 - Check `tokens.json` exists in project root
-- Or specify path in `dtv.config.json`
+- Or specify path in `dcv.config.json`
 - Verify JSON is valid
 
 ### "No constraints found"
@@ -362,7 +362,7 @@ my-project/
 │   ├── wcag.json
 │   ├── typography.order.json
 │   └── thresholds.json
-├── dtv.config.json
+├── dcv.config.json
 └── package.json
 ```
 
@@ -388,11 +388,11 @@ my-project/
 │   │   └── spacing.json
 │   └── cross-axis/
 │       └── size-weight.json
-├── dtv.config.json
+├── dcv.config.json
 └── package.json
 ```
 
-**dtv.config.json for large structure:**
+**dcv.config.json for large structure:**
 ```json
 {
   "tokens": "design-tokens",

@@ -13,7 +13,7 @@ export function emitJSON(values: Record<string, any>, manifest?: ManifestRow[]):
   return JSON.stringify(out, null, 2) + '\n';
 }
 // adapters/json.ts
-import type { TokenId, TokenValue, FlatToken } from '../core/flatten';
+import type { TokenId, TokenValue, FlatToken } from '../core/flatten.js';
 
 /**
  * Generates a JSON representation of the entire token set and dependency graph.

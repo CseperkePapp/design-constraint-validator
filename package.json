@@ -1,7 +1,7 @@
 {
-  "name": "design-token-validator",
+  "name": "design-constraint-validator",
   "version": "1.0.0",
-  "description": "Constraint validation engine for design tokens with mathematical rigor",
+  "description": "Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -9,8 +9,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "dtv": "./cli/index.ts",
-    "design-token-validator": "./cli/index.ts"
+    "dcv": "./cli/index.ts",
+    "design-constraint-validator": "./cli/index.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -23,16 +23,17 @@
     "prepublishOnly": "npm run check && npm run build"
   },
   "keywords": [
-    "design-tokens",
+    "design-constraints",
     "design-systems",
-    "validation",
-    "constraints",
+    "constraint-validation",
+    "design-tokens",
     "accessibility",
     "wcag",
+    "mathematical-validation",
     "typography",
     "color",
-    "cli-tool",
-    "constraint-validation"
+    "monotonicity",
+    "cli-tool"
   ],
   "author": "Cseperke Papp",
   "license": "MIT",

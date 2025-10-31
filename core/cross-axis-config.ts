@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { CrossAxisPlugin, type CrossAxisRule, type Ctx } from "./constraints/cross-axis";
+import { CrossAxisPlugin, type CrossAxisRule, type Ctx } from "./constraints/cross-axis.js";
 
 type When = { id: string; op: "<="|">="|"<"|">"|"=="|"!="; value: number };
 type Require = { id: string; op: "<="|">="|"<"|">"|"=="|"!="; ref?: string; fallback?: string|number };
