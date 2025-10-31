@@ -1,14 +1,26 @@
-# Contributing to design-token-validator
+# Contributing to Design Constraint Validator
 
 Thank you for your interest in contributing!
 
 ## Development Setup
 
 ```bash
-git clone https://github.com/CseperkePapp/design-token-validator.git
-cd design-token-validator
+git clone https://github.com/CseperkePapp/design-constraint-validator.git
+cd design-constraint-validator
 npm install
+npm run build
 npm test
+```
+
+## Quick Test
+
+```bash
+# Link locally to test the dcv command
+npm link
+
+# Test the CLI
+dcv --help
+dcv validate
 ```
 
 ## Running Tests

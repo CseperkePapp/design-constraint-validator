@@ -34,5 +34,8 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Build
+        run: npm run build
+
       - name: Validate example tokens
-        run: npx tsx cli/index.ts validate
+        run: node cli/index.js validate
