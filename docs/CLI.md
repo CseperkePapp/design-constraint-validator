@@ -79,6 +79,8 @@ dcv validate --budget-total-ms 5000
 - `0` - No violations (or `--fail-on off`)
 - `1` - Violations found (errors or warnings depending on `--fail-on`)
 
+> **💡 CI/CD Tip:** Use `--fail-on off` when you want validation to run without blocking builds. This is useful for demonstrating the tool works (like in our own CI) or for informational-only reporting. The validation errors will still be logged, but the command exits with code 0.
+
 **Output Formats:**
 
 **Table (default):**

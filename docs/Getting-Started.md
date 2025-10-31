@@ -194,6 +194,21 @@ See [Constraints](./Constraints.md) for examples of each type.
 
 **Solution:** Create a `themes/` folder with constraint files (`.json` files with `order` or `constraints` keys).
 
+### "Validation fails in CI but I want to see the errors"
+
+**Solution:** Use `--fail-on off` to run validation without failing the build:
+
+```bash
+dcv validate --fail-on off
+```
+
+This is useful for:
+- Demonstrating the tool works (like in DCV's own CI)
+- Informational-only reporting
+- Gradual adoption (report but don't block)
+
+The validation errors will still be logged, but the command exits with code 0.
+
 ### ESM Import Errors
 
 **Solution:** Ensure your `package.json` has `"type": "module"` or use `.mjs` extension.
