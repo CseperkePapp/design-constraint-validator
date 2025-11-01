@@ -1,6 +1,8 @@
 # Design Constraint Validator (DCV)
 > Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence.
 
+[![npm version](https://img.shields.io/npm/v/design-constraint-validator.svg)](https://www.npmjs.com/package/design-constraint-validator)
+[![npm downloads](https://img.shields.io/npm/dm/design-constraint-validator.svg)](https://www.npmjs.com/package/design-constraint-validator)
 [![CI](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.x-339933.svg)](#)
