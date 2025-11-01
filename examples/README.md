@@ -16,6 +16,42 @@ cd examples/minimal
 dcv validate
 ```
 
+### `tokens-studio/`
+Native Tokens Studio format support with `$type` / `$value` syntax.
+- Complete token file with colors, typography, spacing
+- Constraint files in `themes/` directory
+- Shows how to validate Figma Tokens Studio exports
+
+**Try it:**
+```bash
+dcv validate --tokens examples/tokens-studio/tokens.json
+```
+
+### `style-dictionary/`
+Style Dictionary integration guide with `value` property format.
+- Example tokens in Style Dictionary format
+- Build integration examples
+- CI/CD workflow templates
+
+**See:** [style-dictionary/README.md](style-dictionary/README.md)
+
+### `dtcg/`
+DTCG (Design Tokens Community Group) specification support.
+- Full DTCG-compliant token examples
+- Type inheritance and composite tokens
+- Reference resolution examples
+
+**See:** [dtcg/README.md](dtcg/README.md)
+
+### `advanced-constraints/`
+Advanced cross-axis constraint examples showing real-world scenarios.
+- Typography readability rules (weight × size)
+- Touch target accessibility (text size × tap target)
+- Responsive contrast rules (breakpoint × contrast)
+- Complete mobile ruleset
+
+**See:** [advanced-constraints/README.md](advanced-constraints/README.md)
+
 ### `failing/`
 Intentionally broken examples to demonstrate constraint violations.
 - `contrast-fail.tokens.json` - WCAG contrast failure
