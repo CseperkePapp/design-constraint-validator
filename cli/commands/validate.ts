@@ -5,6 +5,8 @@ import { parseBreakpoints, loadTokensWithBreakpoint, type Breakpoint } from '../
 import { loadCrossAxisPlugin } from '../../core/cross-axis-config.js';
 import type { ConstraintIssue } from '../../core/engine.js';
 import type { ValidateOptions } from '../types.js';
+import { createValidationResult, createValidationReceipt, writeJsonOutput } from '../json-output.js';
+import { readFileSync } from 'node:fs';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
   try {
@@ -15,10 +17,15 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     const argv = process.argv.slice(2);
     const failOnIdx = argv.indexOf('--fail-on');
     type FailOn = 'off' | 'warn' | 'error';
-    const failOn: FailOn = failOnIdx >= 0 ? (argv[failOnIdx + 1] as FailOn) : 'error';
+    const failOn: FailOn = _options.failOn ?? (failOnIdx >= 0 ? (argv[failOnIdx + 1] as FailOn) : 'error');
     const sumIdx = argv.indexOf('--summary');
     type SummaryFmt = 'table' | 'json' | 'none';
-    const summaryFmt: SummaryFmt = sumIdx >= 0 ? (argv[sumIdx + 1] as SummaryFmt) : 'none';
+    const summaryFmt: SummaryFmt = _options.summary ?? (sumIdx >= 0 ? (argv[sumIdx + 1] as SummaryFmt) : 'none');
+    const outputFormat = _options.format ?? 'text';
+    
+    // Collect all issues for JSON output
+    const allErrors: ConstraintIssue[] = [];
+    const allWarnings: ConstraintIssue[] = [];
     type VRow = { bp: string; rules: number; warnings: number; errors: number };
     const rows: VRow[] = [];
     function pushRow(bpLabel: string, stats: { rules: number; warnings: number; errors: number }) { rows.push({ bp: bpLabel, ...stats }); }
@@ -62,11 +69,20 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       const warns = issues.filter((i: ConstraintIssue) => i.level !== 'error');
       if (errs.length) anyErrors = true;
       totalErrors += errs.length; totalWarnings += warns.length;
+      
+      // Collect for JSON output
+      allErrors.push(...errs);
+      allWarnings.push(...warns);
+      
       const rulesEvaluated = errs.length + warns.length; pushRow(bp ?? 'global', { rules: rulesEvaluated, warnings: warns.length, errors: errs.length });
       const dur = globalThis.performance.now() - tStart;
       perBpTimings.push({ bp: bp ?? 'global', ms: dur });
-      console.log(`validate${bp ? ` [bp=${bp}]` : ''}: ${errs.length} error(s), ${warns.length} warning(s)${_options.perf ? ` (${dur.toFixed(2)}ms)` : ''}`);
-      for (const it of issues) { const tag = it.level === 'error' ? 'ERROR' : 'WARN '; console.log(`${tag} ${it.rule}  ${it.id}${it.where ? ' @ ' + it.where : ''}${bp ? ` [${bp}]` : ''} — ${it.message}`); }
+      
+      // Only print text output if not in JSON mode
+      if (outputFormat !== 'json') {
+        console.log(`validate${bp ? ` [bp=${bp}]` : ''}: ${errs.length} error(s), ${warns.length} warning(s)${_options.perf ? ` (${dur.toFixed(2)}ms)` : ''}`);
+        for (const it of issues) { const tag = it.level === 'error' ? 'ERROR' : 'WARN '; console.log(`${tag} ${it.rule}  ${it.id}${it.where ? ' @ ' + it.where : ''}${bp ? ` [${bp}]` : ''} — ${it.message}`); }
+      }
     }
     const totalMs = globalThis.performance.now() - tStartTotal;
     // Append aggregate total row if multiple scopes and not already added
@@ -74,18 +90,45 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       const agg = rows.reduce((a,b)=>({ rules:a.rules+b.rules, warnings:a.warnings+b.warnings, errors:a.errors+b.errors }), { rules:0,warnings:0,errors:0 });
       rows.push({ bp: 'TOTAL', ...agg });
     }
-    if (_options.perf) {
-      console.log('[perf] per-breakpoint timings:');
-      for (const t of perBpTimings) console.log(`  ${t.bp}: ${t.ms.toFixed(2)}ms`);
-      console.log(`[perf] total: ${totalMs.toFixed(2)}ms`);
+    // Get package version for stats
+    let engineVersion = '1.0.0';
+    try {
+      // eslint-disable-next-line no-undef
+      const pkgPath = new URL('../../package.json', import.meta.url);
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+      engineVersion = pkg.version;
+    } catch {
+      // Ignore package.json read errors, use default version
     }
-    if (summaryFmt === 'json') {
-      // Provide machine-readable aggregate separate from rows if TOTAL present
-      const totalRow = rows.find(r => r.bp === 'TOTAL');
-      const json = totalRow ? { rows, total: { rules: totalRow.rules, warnings: totalRow.warnings, errors: totalRow.errors } } : { rows };
-      console.log(JSON.stringify(json, null, 2));
-    } else if (summaryFmt === 'table') {
-      printSummaryTable(rows);
+    
+    // Handle JSON output mode
+    if (outputFormat === 'json') {
+      const result = createValidationResult(allErrors, allWarnings, totalMs, engineVersion);
+      
+      // If receipt requested, generate full receipt
+      if (_options.receipt) {
+        const tokensFile = _options.tokens ?? 'tokens/tokens.example.json';
+        const constraintsDir = 'themes';
+        const receipt = createValidationReceipt(result, tokensFile, constraintsDir, bps[0], failOn);
+        writeJsonOutput(receipt, _options.receipt);
+      } else {
+        writeJsonOutput(result, _options.output);
+      }
+    } else {
+      // Text output mode
+      if (_options.perf) {
+        console.log('[perf] per-breakpoint timings:');
+        for (const t of perBpTimings) console.log(`  ${t.bp}: ${t.ms.toFixed(2)}ms`);
+        console.log(`[perf] total: ${totalMs.toFixed(2)}ms`);
+      }
+      if (summaryFmt === 'json') {
+        // Provide machine-readable aggregate separate from rows if TOTAL present
+        const totalRow = rows.find(r => r.bp === 'TOTAL');
+        const json = totalRow ? { rows, total: { rules: totalRow.rules, warnings: totalRow.warnings, errors: totalRow.errors } } : { rows };
+        console.log(JSON.stringify(json, null, 2));
+      } else if (summaryFmt === 'table') {
+        printSummaryTable(rows);
+      }
     }
     let code = anyErrors ? 1 : 0;
     // Budget checks (do not override fail-on semantics unless budgets add failures)

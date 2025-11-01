@@ -47,6 +47,11 @@ export interface ValidateOptions extends GlobalOptions {
     perf?: boolean;
     budgetTotalMs?: number;
     budgetPerBpMs?: number;
+    format?: 'text' | 'json';
+    output?: string;
+    receipt?: string;
+    failOn?: 'off' | 'warn' | 'error';
+    summary?: 'none' | 'table' | 'json';
 }
 export interface GraphOptions extends GlobalOptions {
     output?: string;

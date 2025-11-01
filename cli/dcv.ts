@@ -52,6 +52,9 @@ cli.command<BuildOptions>('build', 'Build token outputs', y => y
 cli.command<ValidateOptions>('validate', 'Validate constraints', y => y
   .option('fail-on', { type: 'string', choices: ['off','warn','error'], default: 'error' })
   .option('summary', { type: 'string', choices: ['none','table','json'], default: 'none' })
+  .option('format', { type: 'string', choices: ['text','json'], default: 'text', describe: 'Output format' })
+  .option('output', { type: 'string', describe: 'Write JSON output to file' })
+  .option('receipt', { type: 'string', describe: 'Generate validation receipt with audit trail' })
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' })
   .option('breakpoint', { type: 'string' })
   .option('all-breakpoints', { type: 'boolean' })

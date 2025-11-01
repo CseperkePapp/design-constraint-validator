@@ -1184,24 +1184,6 @@ export declare const TokensSchema: z.ZodObject<{
             }>;
         };
         role: {
-            focus?: z.objectOutputType<{
-                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
-                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
-                    $value: z.ZodAny;
-                }, "strip", z.ZodTypeAny, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>>;
-            }, z.ZodTypeAny, "passthrough"> | undefined;
             text?: z.objectOutputType<{
                 default: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
@@ -1220,6 +1202,24 @@ export declare const TokensSchema: z.ZodObject<{
                     $value?: any;
                 }>>;
                 muted: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
+                    $value: z.ZodAny;
+                }, "strip", z.ZodTypeAny, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>>;
+            }, z.ZodTypeAny, "passthrough"> | undefined;
+            focus?: z.objectOutputType<{
+                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
                     $value: z.ZodAny;
                 }, "strip", z.ZodTypeAny, {
@@ -1322,24 +1322,6 @@ export declare const TokensSchema: z.ZodObject<{
             }>;
         };
         role: {
-            focus?: z.objectInputType<{
-                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
-                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
-                    $value: z.ZodAny;
-                }, "strip", z.ZodTypeAny, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>>;
-            }, z.ZodTypeAny, "passthrough"> | undefined;
             text?: z.objectInputType<{
                 default: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
@@ -1358,6 +1340,24 @@ export declare const TokensSchema: z.ZodObject<{
                     $value?: any;
                 }>>;
                 muted: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
+                    $value: z.ZodAny;
+                }, "strip", z.ZodTypeAny, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>>;
+            }, z.ZodTypeAny, "passthrough"> | undefined;
+            focus?: z.objectInputType<{
+                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
                     $value: z.ZodAny;
                 }, "strip", z.ZodTypeAny, {
@@ -1928,24 +1928,6 @@ export declare const TokensSchema: z.ZodObject<{
             }>;
         };
         role: {
-            focus?: z.objectOutputType<{
-                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
-                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
-                    $value: z.ZodAny;
-                }, "strip", z.ZodTypeAny, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>>;
-            }, z.ZodTypeAny, "passthrough"> | undefined;
             text?: z.objectOutputType<{
                 default: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
@@ -1964,6 +1946,24 @@ export declare const TokensSchema: z.ZodObject<{
                     $value?: any;
                 }>>;
                 muted: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
+                    $value: z.ZodAny;
+                }, "strip", z.ZodTypeAny, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>>;
+            }, z.ZodTypeAny, "passthrough"> | undefined;
+            focus?: z.objectOutputType<{
+                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
                     $value: z.ZodAny;
                 }, "strip", z.ZodTypeAny, {
@@ -2130,24 +2130,6 @@ export declare const TokensSchema: z.ZodObject<{
             }>;
         };
         role: {
-            focus?: z.objectInputType<{
-                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
-                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
-                    $value: z.ZodAny;
-                }, "strip", z.ZodTypeAny, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }, {
-                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                    $value?: any;
-                }>>;
-            }, z.ZodTypeAny, "passthrough"> | undefined;
             text?: z.objectInputType<{
                 default: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
@@ -2166,6 +2148,24 @@ export declare const TokensSchema: z.ZodObject<{
                     $value?: any;
                 }>>;
                 muted: z.ZodOptional<z.ZodEffects<z.ZodObject<{
+                    $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
+                    $value: z.ZodAny;
+                }, "strip", z.ZodTypeAny, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }, {
+                    $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                    $value?: any;
+                }>>;
+            }, z.ZodTypeAny, "passthrough"> | undefined;
+            focus?: z.objectInputType<{
+                ring: z.ZodOptional<z.ZodEffects<z.ZodObject<{
                     $type: z.ZodEnum<["color", "dimension", "borderRadius", "fontSize", "shadow", "duration", "easing", "fontFamily", "lineHeight"]>;
                     $value: z.ZodAny;
                 }, "strip", z.ZodTypeAny, {
