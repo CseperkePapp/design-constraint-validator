@@ -261,61 +261,300 @@ Converts hex/rgb to OKLCH automatically.
 
 ---
 
-## 5. Cross-Axis Constraints
+## 5. Cross-Axis Constraints ⚡
 
-Multi-domain relationships (advanced).
+**Multi-property conditional rules** - enforce relationships between different token properties.
 
-### Use Cases
-- "Light font weights require larger sizes"
-- "Small text requires higher contrast"
-- "Dense layouts need more spacing"
+### What Makes Cross-Axis Special?
 
-### Configuration
+Unlike other validators that check tokens in isolation, cross-axis constraints validate **combinations** of properties:
+
+| Single-Property Check | Cross-Axis Check |
+|----------------------|------------------|
+| ✅ Font size ≥ 14px | ✅ **IF** weight ≤ 400 **THEN** size ≥ 16px |
+| ✅ Touch target ≥ 44px | ✅ **IF** text size < 18px **THEN** target ≥ 44px |
+| ✅ Contrast ≥ 4.5:1 | ✅ **IF** on mobile **THEN** contrast ≥ 7:1 |
+
+This enables **sophisticated design system governance** that standard validators can't achieve.
+
+---
+
+### Real-World Use Cases
+
+#### 1. Typography Readability
+**Rule:** Light font weights need larger sizes for legibility
 
 **themes/cross-axis.rules.json:**
 ```json
 {
   "rules": [
     {
+      "id": "readable-light-text",
       "when": {
         "id": "typography.weight.body",
-        "op": "<=",
-        "value": 400
+        "test": "(v) => v <= 400"
       },
       "require": {
         "id": "typography.size.body",
-        "op": ">=",
-        "value": "16px"
-      },
-      "description": "Light weights need larger sizes for readability"
+        "test": "(v) => v >= 16",
+        "msg": "(v, ctx) => `Light weight (${ctx.get('typography.weight.body')}) requires size ≥16px, got ${v}px`"
+      }
     }
   ]
 }
 ```
 
-### Example Tokens
-
+**Tokens that violate:**
 ```json
 {
   "typography": {
-    "weight": {
-      "body": { "$value": 300 }
-    },
-    "size": {
-      "body": { "$value": "14px" }
-    }
+    "weight": { "body": { "$value": 300 } },
+    "size": { "body": { "$value": "14px" } }
   }
 }
 ```
 
-### Error Example
-
+**Error:**
 ```
 ERROR cross-axis  typography.size.body
-  When typography.weight.body ≤ 400, typography.size.body must be ≥ 16px
-  Got: weight=300, size=14px
-  Light weights need larger sizes for readability
+  Light weight (300) requires size ≥16px, got 14px
 ```
+
+---
+
+#### 2. Accessible Touch Targets
+**Rule:** Small button text requires larger tap targets (WCAG 2.5.5 + Apple HIG)
+
+```json
+{
+  "rules": [
+    {
+      "id": "touch-target-accessibility",
+      "when": {
+        "id": "typography.size.button",
+        "test": "(v) => v < 18"
+      },
+      "require": {
+        "id": "control.size.min",
+        "test": "(v) => v >= 44",
+        "msg": "() => `Button text <18px requires ≥44px touch target for accessibility`"
+      }
+    }
+  ]
+}
+```
+
+---
+
+#### 3. Responsive Contrast
+**Rule:** Mobile screens need higher contrast due to outdoor viewing
+
+```json
+{
+  "rules": [
+    {
+      "id": "mobile-high-contrast",
+      "contrast": {
+        "text": "color.text.body",
+        "bg": "color.bg.default",
+        "min": "(bp) => bp === 'sm' ? 7 : 4.5",
+        "ratio": "(text, bg, ctx) => calculateContrast(text, bg)"
+      }
+    }
+  ]
+}
+```
+
+---
+
+#### 4. Heading Emphasis
+**Rule:** Headings must be visually distinct from body text
+
+```json
+{
+  "rules": [
+    {
+      "id": "heading-emphasis",
+      "when": {
+        "id": "typography.size.h2",
+        "test": "(v, ctx) => v - ctx.getPx('typography.size.body') < 4"
+      },
+      "require": {
+        "id": "typography.weight.h2",
+        "test": "(v, ctx) => v >= ctx.get('typography.weight.body') + 200",
+        "msg": "() => `Small heading size delta requires heavier weight for emphasis`"
+      }
+    }
+  ]
+}
+```
+
+---
+
+#### 5. Dense Layout Spacing
+**Rule:** Tighter line-height needs more paragraph spacing
+
+```json
+{
+  "rules": [
+    {
+      "id": "compensate-tight-leading",
+      "when": {
+        "id": "typography.lineHeight.body",
+        "test": "(v) => v < 1.4"
+      },
+      "require": {
+        "id": "spacing.paragraph",
+        "test": "(v, ctx) => v >= ctx.getPx('typography.size.body') * 1.5",
+        "msg": "() => `Tight line-height (<1.4) requires larger paragraph spacing for readability`"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### Syntax Reference
+
+**Basic Structure:**
+```typescript
+{
+  id: string;              // Unique identifier
+  level?: "error" | "warn"; // Severity (default: "error")
+  when: {
+    id: string;            // Token to test
+    test: string | Function; // Condition (JS function)
+  };
+  require: {
+    id: string;            // Token to validate
+    test: string | Function; // Validation (JS function)
+    msg: string | Function;  // Error message
+  };
+}
+```
+
+**Available in test functions:**
+- `v` - Current token value (parsed as number)
+- `ctx.get(id)` - Get any token value
+- `ctx.getPx(id)` - Get dimension as pixels
+- `ctx.bp` - Current breakpoint (if any)
+
+---
+
+### Breakpoint-Specific Rules
+
+Cross-axis constraints can vary by breakpoint:
+
+**themes/cross-axis.sm.rules.json:** (mobile-only)
+```json
+{
+  "rules": [
+    {
+      "id": "mobile-touch-targets",
+      "when": { "id": "typography.size.body", "test": "v => v < 16" },
+      "require": { 
+        "id": "control.size.min", 
+        "test": "v => v >= 48",
+        "msg": "() => `Mobile requires ≥48px touch targets (Apple HIG)`"
+      }
+    }
+  ]
+}
+```
+
+**themes/cross-axis.lg.rules.json:** (desktop)
+```json
+{
+  "rules": [
+    {
+      "id": "desktop-dense-ui",
+      "when": { "id": "layout.density", "test": "v => v === 'compact'" },
+      "require": { 
+        "id": "spacing.padding",
+        "test": "v => v >= 12",
+        "msg": "() => `Compact layouts need minimum 12px padding`"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### Why Cross-Axis Matters
+
+**Without cross-axis validation:**
+```
+✅ Font weight 300 - Valid
+✅ Font size 12px - Valid
+❌ Together? Unreadable! (But passes validation)
+```
+
+**With cross-axis validation:**
+```
+✅ Font weight 300
+✅ Font size 16px
+✅ Combination valid - Readable!
+
+OR
+
+❌ Font weight 300 + Font size 12px
+ERROR: Light weight requires ≥16px size
+```
+
+**Real Impact:**
+- 🎯 Catches **subtle design bugs** before production
+- 📱 Enforces **responsive best practices** automatically
+- ♿ Validates **accessibility combinations** (not just isolated checks)
+- 📚 Documents **design intent** in code (no more wiki pages)
+
+---
+
+### Advanced Example: Complete Mobile Ruleset
+
+**themes/cross-axis.sm.rules.json:**
+```json
+{
+  "rules": [
+    {
+      "id": "mobile-readable-body",
+      "when": { "id": "typography.weight.body", "test": "v => v < 500" },
+      "require": { 
+        "id": "typography.size.body",
+        "test": "v => v >= 16",
+        "msg": "() => `Mobile body text with light weight needs ≥16px`"
+      }
+    },
+    {
+      "id": "mobile-touch-buttons",
+      "when": { "id": "typography.size.button", "test": "v => v < 18" },
+      "require": {
+        "id": "control.size.button",
+        "test": "v => v >= 44",
+        "msg": "() => `Mobile buttons <18px text need ≥44px tap target`"
+      }
+    },
+    {
+      "id": "mobile-high-contrast",
+      "contrast": {
+        "text": "color.text.secondary",
+        "bg": "color.bg.default",
+        "min": "() => 7",
+        "ratio": "(t, b, ctx) => calculateContrast(t, b)"
+      },
+      "level": "warn"
+    }
+  ]
+}
+```
+
+This creates a **comprehensive mobile accessibility ruleset** that validates:
+- Typography readability
+- Touch target sizes
+- Color contrast ratios
+
+All automatically enforced on every validation run.
 
 ---
 

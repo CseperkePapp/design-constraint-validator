@@ -36,6 +36,8 @@ npx dcv --help
 
 **Using AI assistants?** See [AI Guide](docs/AI-GUIDE.md) for ChatGPT/Claude/Copilot help.
 
+**Want to see the power of cross-axis constraints?** Check out the [Advanced Constraints Example](examples/advanced-constraints/README.md) showing real-world responsive design validation.
+
 ---
 
 ## Quick Start
@@ -370,15 +372,54 @@ Color palette progression
 }
 ```
 
-### 5. Cross-Axis Constraints
-Multi-domain relationships
+### 5. Cross-Axis Constraints ⚡
+**Multi-property conditional rules** - the most powerful constraint type
+
+Cross-axis constraints enforce relationships between **different token properties**, enabling sophisticated design system rules that standard validators can't handle.
+
+**Real-World Examples:**
 
 ```json
 {
-  "when": { "id": "typography.weight.body", "op": "<=", "value": 400 },
-  "require": { "id": "typography.size.body", "op": ">=", "fallback": "16px" }
+  "rules": [
+    {
+      "id": "readable-light-text",
+      "when": { "id": "typography.weight.body", "test": "v <= 400" },
+      "require": { 
+        "id": "typography.size.body", 
+        "test": "v >= 16",
+        "msg": "Light font weights (≤400) require larger sizes (≥16px) for readability"
+      }
+    },
+    {
+      "id": "accessible-touch-targets",
+      "when": { "id": "typography.size.button", "test": "v < 18" },
+      "require": { 
+        "id": "control.size.min", 
+        "test": "v >= 44",
+        "msg": "Small button text (<18px) requires larger tap targets (≥44px) for accessibility"
+      }
+    },
+    {
+      "id": "high-contrast-small-text",
+      "contrast": {
+        "text": "color.text.secondary",
+        "bg": "color.bg.default",
+        "min": "bp => bp === 'sm' ? 7 : 4.5",
+        "msg": "Small screens require higher contrast for readability"
+      }
+    }
+  ]
 }
 ```
+
+**Why This Matters:**
+- ✅ Enforces **responsive design principles** (adapt rules per breakpoint)
+- ✅ Validates **accessibility combinations** (WCAG + touch targets + text size)
+- ✅ Catches **subtle bugs** that single-property checks miss
+- ✅ Documents **design intent** in machine-readable format
+
+See [Cross-Axis Guide](docs/Constraints.md#5-cross-axis-constraints) for complete syntax and examples.
 
 ## CLI Commands
 
