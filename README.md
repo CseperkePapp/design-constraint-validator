@@ -730,4 +730,4 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
 
-MIT © Cseperke Papp
+[MIT](LICENSE) © Cseperke Papp
