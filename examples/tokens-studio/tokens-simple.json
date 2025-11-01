@@ -1,0 +1,18 @@
+{
+  "color": {
+    "palette": {
+      "primary": {
+        "100": { "$type": "color", "$value": "#bbdefb" },
+        "500": { "$type": "color", "$value": "#2196f3" },
+        "900": { "$type": "color", "$value": "#0d47a1" }
+      }
+    }
+  },
+  "typography": {
+    "fontSize": {
+      "h1": { "$type": "dimension", "$value": "32px" },
+      "h2": { "$type": "dimension", "$value": "24px" },
+      "h3": { "$type": "dimension", "$value": "20px" }
+    }
+  }
+}

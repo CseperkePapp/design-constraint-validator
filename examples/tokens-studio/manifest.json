@@ -1,0 +1,94 @@
+{
+  "constraints": [
+    {
+      "type": "monotonic",
+      "ids": [
+        "color.palette.primary.50",
+        "color.palette.primary.100",
+        "color.palette.primary.200",
+        "color.palette.primary.300",
+        "color.palette.primary.400",
+        "color.palette.primary.500",
+        "color.palette.primary.600",
+        "color.palette.primary.700",
+        "color.palette.primary.800",
+        "color.palette.primary.900"
+      ],
+      "direction": "decreasing",
+      "property": "lightness",
+      "label": "Primary palette lightness should decrease"
+    },
+    {
+      "type": "monotonic",
+      "ids": [
+        "typography.fontSize.heading.h1",
+        "typography.fontSize.heading.h2",
+        "typography.fontSize.heading.h3",
+        "typography.fontSize.heading.h4",
+        "typography.fontSize.heading.h5",
+        "typography.fontSize.heading.h6"
+      ],
+      "direction": "decreasing",
+      "label": "Heading sizes should decrease from h1 to h6"
+    },
+    {
+      "type": "monotonic",
+      "ids": [
+        "typography.fontSize.body.large",
+        "typography.fontSize.body.base",
+        "typography.fontSize.body.small",
+        "typography.fontSize.body.xsmall"
+      ],
+      "direction": "decreasing",
+      "label": "Body font sizes should decrease"
+    },
+    {
+      "type": "monotonic",
+      "ids": [
+        "spacing.scale.0",
+        "spacing.scale.1",
+        "spacing.scale.2",
+        "spacing.scale.3",
+        "spacing.scale.4",
+        "spacing.scale.5",
+        "spacing.scale.6",
+        "spacing.scale.8",
+        "spacing.scale.10",
+        "spacing.scale.12"
+      ],
+      "direction": "increasing",
+      "label": "Spacing scale should increase"
+    },
+    {
+      "type": "wcag",
+      "level": "AA",
+      "context": "normal",
+      "pairs": [
+        {
+          "fg": "color.semantic.text.primary",
+          "bg": "color.semantic.background.default"
+        },
+        {
+          "fg": "color.semantic.text.secondary",
+          "bg": "color.semantic.background.default"
+        },
+        {
+          "fg": "color.semantic.text.inverse",
+          "bg": "color.semantic.background.brand"
+        }
+      ],
+      "label": "Semantic color pairs must meet WCAG AA"
+    },
+    {
+      "type": "threshold",
+      "property": "fontSize",
+      "ids": [
+        "typography.fontSize.body.large",
+        "typography.fontSize.body.base",
+        "typography.fontSize.body.small"
+      ],
+      "min": "14px",
+      "label": "Body text must be at least 14px for readability"
+    }
+  ]
+}

@@ -30,3 +30,8 @@ Thumbs.db
 # Temp
 temp-*.json
 *.tmp
+
+# SBOM (generated in CI)
+sbom.json
+sbom.xml
+sbom-test.json

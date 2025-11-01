@@ -1,0 +1,15 @@
+{
+  "order": [
+    "spacing.scale.0",
+    "spacing.scale.1",
+    "spacing.scale.2",
+    "spacing.scale.3",
+    "spacing.scale.4",
+    "spacing.scale.5",
+    "spacing.scale.6",
+    "spacing.scale.8",
+    "spacing.scale.10",
+    "spacing.scale.12"
+  ],
+  "direction": "increasing"
+}

@@ -1,0 +1,11 @@
+{
+  "order": [
+    "typography.fontSize.heading.h1",
+    "typography.fontSize.heading.h2",
+    "typography.fontSize.heading.h3",
+    "typography.fontSize.heading.h4",
+    "typography.fontSize.heading.h5",
+    "typography.fontSize.heading.h6"
+  ],
+  "direction": "decreasing"
+}

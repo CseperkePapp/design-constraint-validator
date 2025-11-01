@@ -1,0 +1,16 @@
+{
+  "order": [
+    "color.palette.primary.50",
+    "color.palette.primary.100",
+    "color.palette.primary.200",
+    "color.palette.primary.300",
+    "color.palette.primary.400",
+    "color.palette.primary.500",
+    "color.palette.primary.600",
+    "color.palette.primary.700",
+    "color.palette.primary.800",
+    "color.palette.primary.900"
+  ],
+  "direction": "decreasing",
+  "property": "lightness"
+}

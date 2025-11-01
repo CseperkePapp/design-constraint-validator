@@ -1,0 +1,33 @@
+{
+  "constraints": [
+    {
+      "type": "wcag",
+      "level": "AA",
+      "context": "normal",
+      "pairs": [
+        {
+          "fg": "color.semantic.text.primary",
+          "bg": "color.semantic.background.default"
+        },
+        {
+          "fg": "color.semantic.text.secondary",
+          "bg": "color.semantic.background.default"
+        },
+        {
+          "fg": "color.semantic.text.inverse",
+          "bg": "color.semantic.background.brand"
+        }
+      ]
+    },
+    {
+      "type": "threshold",
+      "property": "fontSize",
+      "ids": [
+        "typography.fontSize.body.large",
+        "typography.fontSize.body.base",
+        "typography.fontSize.body.small"
+      ],
+      "min": "14px"
+    }
+  ]
+}

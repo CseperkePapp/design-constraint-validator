@@ -4,6 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/design-constraint-validator.svg)](https://www.npmjs.com/package/design-constraint-validator)
 [![npm downloads](https://img.shields.io/npm/dm/design-constraint-validator.svg)](https://www.npmjs.com/package/design-constraint-validator)
 [![CI](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml)
+[![SBOM](https://img.shields.io/badge/SBOM-CycloneDX-brightgreen)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/sbom.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.x-339933.svg)](#)
 
@@ -723,6 +724,22 @@ export type {
   ConstraintViolation 
 } from 'design-constraint-validator';
 ```
+
+---
+
+## Security & Supply Chain
+
+### SBOM (Software Bill of Materials)
+
+DCV generates CycloneDX-compliant SBOMs for supply chain transparency:
+
+- **CI Builds:** SBOM artifacts generated on every CI run (available for 90 days)
+- **Releases:** SBOM files (JSON + XML) automatically attached to GitHub releases
+- **Manual Generation:** Run `npx @cyclonedx/cyclonedx-npm` in the project root
+
+**Download latest SBOM:**
+- [From GitHub Actions](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/sbom.yml)
+- [From Latest Release](https://github.com/CseperkePapp/design-constraint-validator/releases/latest)
 
 ---
 
