@@ -654,6 +654,76 @@ dot -Tpng color.dot -o color.png
 
 Node.js 18 or higher is required.
 
+---
+
+## Programmatic API
+
+Use DCV as a library in your Node.js code:
+
+```typescript
+import { validate, flattenTokens } from 'design-constraint-validator';
+
+// Load and flatten tokens
+const tokens = await flattenTokens('./tokens/tokens.json', {
+  overridesDir: './tokens/overrides',
+  breakpoint: 'md'
+});
+
+// Run validation
+const result = await validate(tokens, {
+  constraintsDir: './themes',
+  failOn: 'error'
+});
+
+// Check results
+console.log(JSON.stringify(result, null, 2));
+// {
+//   "ok": false,
+//   "counts": { "checked": 42, "violations": 3, "warnings": 0 },
+//   "violations": [
+//     {
+//       "ruleId": "wcag-contrast",
+//       "level": "error",
+//       "message": "Insufficient contrast ratio: 2.3:1 (requires 4.5:1)",
+//       "nodes": ["color.text.primary", "color.bg.surface"]
+//     }
+//   ],
+//   "stats": { "durationMs": 124 }
+// }
+
+if (!result.ok) {
+  process.exit(1);
+}
+```
+
+### Available Exports
+
+```typescript
+// Core engine
+export { validate, validateConstraint } from 'design-constraint-validator';
+
+// Token utilities
+export { flattenTokens, applyPatch } from 'design-constraint-validator';
+
+// Constraint plugins
+export { 
+  wcagConstraint,
+  monotonicConstraint,
+  thresholdConstraint,
+  crossAxisConstraint 
+} from 'design-constraint-validator';
+
+// Types
+export type { 
+  Token, 
+  ValidationResult, 
+  Constraint,
+  ConstraintViolation 
+} from 'design-constraint-validator';
+```
+
+---
+
 ## Contributing
 
 Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
