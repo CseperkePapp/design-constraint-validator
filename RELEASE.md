@@ -153,8 +153,33 @@ npm unpublish design-constraint-validator@1.0.1
 
 Better approach: Publish a new version with the fix.
 
-## CI/CD (Future)
+## Automated Releases (GitHub Actions)
 
-Consider setting up automated releases with GitHub Actions:
-- When a tag is pushed, automatically publish to npm
-- Requires setting up `NPM_TOKEN` in GitHub secrets
+An automated release workflow is configured in `.github/workflows/release.yml`. When you push a version tag (e.g., `v1.0.1`), it will:
+1. Run all checks (`npm run check`)
+2. Build the package (`npm run build`)
+3. Publish to npm (if `NPM_TOKEN` is configured)
+
+### Setup
+
+1. Create an npm access token:
+   - Visit https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+   - Click "Generate New Token" → "Automation"
+   - Copy the token
+
+2. Add it to GitHub secrets:
+   - Go to https://github.com/CseperkePapp/design-constraint-validator/settings/secrets/actions
+   - Click "New repository secret"
+   - Name: `NPM_TOKEN`
+   - Value: paste your npm token
+   - Click "Add secret"
+
+3. Push a tag to trigger the workflow:
+   ```bash
+   npm version patch  # or minor/major
+   git push --tags
+   ```
+
+The workflow will handle publishing automatically.
+
+**Note:** VS Code may show warnings in `release.yml` about `secrets.NPM_TOKEN` being "unrecognized". This is a false positive from the editor's schema validator—the workflow will run correctly once the secret is configured in GitHub.
