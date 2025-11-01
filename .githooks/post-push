@@ -1,0 +1,19 @@
+#!/bin/sh
+# Post-push hook - reminds about npm publish after pushing tags
+
+# Check if any tags were pushed
+if git log --format=%d $2..$3 | grep -q 'tag:'; then
+  echo ""
+  echo "=========================================="
+  echo "📦 TAG PUSHED - NPM PUBLISH REMINDER"
+  echo "=========================================="
+  echo ""
+  echo "You pushed a version tag. Remember to publish to npm:"
+  echo ""
+  echo "  npm login"
+  echo "  npm publish"
+  echo ""
+  echo "Or see RELEASE.md for detailed steps."
+  echo "=========================================="
+  echo ""
+fi
