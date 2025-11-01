@@ -67,6 +67,20 @@ Use GitHub Issues with:
 - Expected vs actual behavior
 - Environment (Node version, OS)
 
+## Releasing (Maintainers Only)
+
+See [RELEASE.md](./RELEASE.md) for the complete release process.
+
+**Quick reminder:**
+```bash
+npm run release:patch   # Bug fixes (1.0.0 → 1.0.1)
+npm run release:minor   # New features (1.0.0 → 1.1.0)  
+npm run release:major   # Breaking changes (1.0.0 → 2.0.0)
+# Then manually run: npm publish
+```
+
+⚠️ **Remember:** GitHub (git push) and npm (npm publish) are separate - pushing to GitHub does NOT automatically publish to npm!
+
 ## Questions?
 
 Open a GitHub Discussion!
