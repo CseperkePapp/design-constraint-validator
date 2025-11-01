@@ -33,6 +33,8 @@ npx dcv --help
 
 **Node:** ≥ 18.x (ESM)
 
+**Using AI assistants?** See [AI Guide](docs/AI-GUIDE.md) for ChatGPT/Claude/Copilot help.
+
 ---
 
 ## Quick Start
