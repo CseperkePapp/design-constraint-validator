@@ -2,6 +2,8 @@
 
 DCV natively supports Tokens Studio JSON format using `$type` and `$value` syntax.
 
+> **🎨 Figma Users:** Tokens Studio is a Figma plugin that lets you manage design tokens directly in Figma. DCV validates these tokens to ensure consistency and accessibility. Export from Tokens Studio → validate with DCV → sync back to Figma!
+
 ## Quick Start
 
 1. **Export tokens from Tokens Studio** (Figma plugin)
