@@ -1,0 +1,1 @@
+{"version":3,"file":"monotonic-lightness.d.ts","sourceRoot":"","sources":["monotonic-lightness.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,gBAAgB,EAAE,MAAM,cAAc,CAAC;AAGrD,wBAAgB,cAAc,CAAC,CAAC,EAAE,OAAO,GAAG,MAAM,GAAG,IAAI,CAOxD;AAED,MAAM,MAAM,KAAK,GAAG,CAAC,MAAM,EAAE,IAAI,GAAG,IAAI,EAAE,MAAM,CAAC,CAAC;AAElD,wBAAgB,kBAAkB,CAAC,MAAM,EAAE,KAAK,EAAE,GAAG,gBAAgB,CAuBpE"}

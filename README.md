@@ -49,6 +49,11 @@ npx dcv graph --format mermaid > graph.mmd
 
 > Try the failing samples to see diagnostics:
 
+Note: When installed from npm, the `examples/` folder is not included to keep the package lean. You can browse and run examples directly from the repo:
+
+- Failing examples: https://github.com/CseperkePapp/design-constraint-validator/tree/main/examples/failing
+- Minimal example: https://github.com/CseperkePapp/design-constraint-validator/tree/main/examples/minimal
+
 ```bash
 npx dcv validate ./examples/failing/contrast-fail.tokens.json
 npx dcv validate ./examples/failing/monotonicity-fail.tokens.json
@@ -99,6 +104,30 @@ if (result.ok) {
   }
   process.exitCode = 1;
 }
+```
+
+### Quick try (REPL)
+
+```bash
+node
+```
+
+```js
+// In Node REPL (ESM)
+const dcv = await import('design-constraint-validator');
+const tokens = { typography: { size: { h1: { $value: '32px' }, h2: { $value: '24px' } } } };
+const themes = { order: [["typography.size.h1", ">=", "typography.size.h2"]] };
+const res = await dcv.validate({ tokensObject: tokens, policyObject: themes });
+console.log(res.ok ? 'OK' : res.violations);
+```
+
+### Subpath imports (typed)
+
+If you prefer lower-level primitives:
+
+```ts
+import { flattenTokens } from 'design-constraint-validator/core/flatten.js';
+import { Engine } from 'design-constraint-validator/core/index.js';
 ```
 
 **Return shape (simplified):**
