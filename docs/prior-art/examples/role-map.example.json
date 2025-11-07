@@ -1,0 +1,16 @@
+{
+  "roles": [
+    {
+      "id": "text.body",
+      "fgToken": "--ds-color-text-primary",
+      "bgToken": "--ds-surface-1",
+      "selectors": ["p", ".text-body"]
+    },
+    {
+      "id": "button.primary",
+      "fgToken": "--ds-color-text-on-accent",
+      "bgToken": "--ds-color-bg-accent",
+      "selectors": ["button.primary", "a.btn-primary"]
+    }
+  ]
+}
