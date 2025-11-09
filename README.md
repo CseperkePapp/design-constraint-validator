@@ -582,6 +582,22 @@ $ npx dcv validate
 └─────────────────────────────────────┘
 ```
 
+## Method & Prior Art
+
+The Design Constraint Validator (DCV) engine is based on a specific
+theming and validation method that we have published as **defensive prior art**.
+
+If you want to understand the underlying architecture (Decision Themes /
+Value Themes, deterministic compute, post-compute validation and receipts),
+see:
+
+- `docs/prior-art/Decision-Themes-Deterministic-Compute-and-Dual-Namespaces.md`
+- `docs/prior-art/DCV-Post-Compute-Validation-and-Receipts.md`
+
+These documents are intended to keep the method openly implementable and
+to prevent it from being locked up by later patents.
+
+
 ## Documentation
 
 - **[Getting Started](docs/Getting-Started.md)** - 5-minute quick start
@@ -590,6 +606,7 @@ $ npx dcv validate
 - **[Configuration](docs/Configuration.md)** - Config file options
 - **[Architecture](docs/Architecture.md)** - How DCV works
 - **[API Reference](docs/API.md)** - Programmatic usage
+- **[Prior Art / Method](docs/prior-art/)** - (DT/VT, deterministic compute, receipts)
 
 ---
 
