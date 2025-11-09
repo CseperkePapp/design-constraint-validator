@@ -33,7 +33,11 @@
     "release:notes": "npm run changelog && git add CHANGELOG.md && git commit -m \"docs(changelog): update\"",
     "release:patch": "npm version patch && git push && git push --tags && echo '\n⚠️  Now run: npm publish'",
     "release:minor": "npm version minor && git push && git push --tags && echo '\n⚠️  Now run: npm publish'",
-    "release:major": "npm version major && git push && git push --tags && echo '\n⚠️  Now run: npm publish'"
+    "release:major": "npm version major && git push && git push --tags && echo '\n⚠️  Now run: npm publish'",
+    "demo": "cd ../designLab-DEMO && npm run dev",
+    "demo:build": "cd ../designLab-DEMO && npm run build",
+    "demo:v2": "cd designLab-v2 && npm run dev",
+    "demo:v2:build": "cd designLab-v2 && npm run build"
   },
   "keywords": [
     "design-constraints",
