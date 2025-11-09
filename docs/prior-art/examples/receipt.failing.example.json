@@ -1,0 +1,69 @@
+{
+  "ok": false,
+  "counts": { "checked": 97, "violations": 2, "warnings": 1 },
+  "violations": [
+    {
+      "ruleId": "wcag-contrast",
+      "level": "error",
+      "message": "Insufficient contrast: 2.6:1 (requires ≥4.5:1 for body text, AA).",
+      "nodes": ["--ds-color-text-primary", "--ds-surface-1"],
+      "context": {
+        "standard": "AA",
+        "expectedRatio": 4.5,
+        "actualRatio": 2.6,
+        "foreground": "oklch(0.78 0.03 240)",
+        "background": "oklch(0.92 0.02 240)",
+        "sampledSelectors": ["p", ".text-body"]
+      }
+    },
+    {
+      "ruleId": "wcag-contrast",
+      "level": "error",
+      "message": "Button text on accent fails contrast: 2.0:1 (requires ≥3.0:1 for large or ≥4.5:1 for normal).",
+      "nodes": ["--ds-color-text-on-accent", "--ds-color-bg-accent"],
+      "context": {
+        "standard": "AA",
+        "expectedRatioLarge": 3.0,
+        "expectedRatioNormal": 4.5,
+        "actualRatio": 2.0,
+        "foreground": "oklch(0.74 0.02 260)",
+        "background": "oklch(0.72 0.10 260)",
+        "sampledSelectors": ["button.primary", "a.btn-primary"]
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "ruleId": "mono-typography",
+      "level": "warn",
+      "message": "Typography scale not strictly monotonic: h2 (34px) is too close to h1 (48px).",
+      "nodes": ["--ds-font-size-h1", "--ds-font-size-h2"],
+      "context": {
+        "minStepPx": 16,
+        "actualStepPx": 14,
+        "recommendation": "Increase h1 or reduce h2 to maintain perceptual separation."
+      }
+    }
+  ],
+  "stats": {
+    "durationMs": 158,
+    "engineVersion": "1.0.0",
+    "timestamp": "2025-11-07T10:10:00.000Z"
+  },
+  "environment": {
+    "nodeVersion": "v20.10.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "inputs": {
+    "tokensFile": "./docs/prior-art/examples/effective-config.low-contrast.example.json",
+    "tokensHash": "sha256:ec_lowcontrast_7f9a2c4d",
+    "constraintsDir": "./policies",
+    "constraintHashes": {
+      "wcag.json": "sha256:pol_wcag_abc123",
+      "typography.order.json": "sha256:pol_mono_def456"
+    },
+    "breakpoint": "md"
+  },
+  "config": { "failOn": "error" }
+}

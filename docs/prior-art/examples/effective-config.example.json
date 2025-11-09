@@ -1,0 +1,16 @@
+{
+  "hash": "sha256:ec_example_1234567890abcdef",
+  "resolved": {
+    "--ds-font-size-h1": "48px",
+    "--ds-font-size-h2": "34.6px",
+    "--ds-font-size-body": "16px",
+    "--ds-space-1": "4px",
+    "--ds-space-2": "8px",
+    "--ds-space-3": "12px",
+    "--ds-surface-1": "oklch(0.98 0.02 240)",
+    "--ds-color-text-primary": "oklch(0.62 0.08 240)",
+    "--ds-color-bg-accent": "oklch(0.62 0.18 260)",
+    "--ds-color-text-on-accent": "oklch(0.98 0.02 260)"
+  },
+  "source": { "vt": "CalmEditorial", "dt": "AA-Editorial" }
+}

@@ -1,0 +1,14 @@
+{
+  "hash": "sha256:ec_lowcontrast_7f9a2c4d",
+  "resolved": {
+    "--ds-font-size-h1": "48px",
+    "--ds-font-size-h2": "34px",
+    "--ds-font-size-body": "14px",
+    "--ds-space-2": "8px",
+    "--ds-surface-1": "oklch(0.92 0.02 240)",
+    "--ds-color-text-primary": "oklch(0.78 0.03 240)", 
+    "--ds-color-bg-accent": "oklch(0.72 0.10 260)",
+    "--ds-color-text-on-accent": "oklch(0.74 0.02 260)"
+  },
+  "source": { "vt": "VividProduct", "dt": "AA-Compact" }
+}

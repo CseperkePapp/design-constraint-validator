@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "counts": { "checked": 94, "violations": 0, "warnings": 0 },
+  "stats": {
+    "durationMs": 132,
+    "engineVersion": "1.0.0",
+    "timestamp": "2025-11-07T10:00:00.000Z"
+  },
+  "environment": {
+    "nodeVersion": "v20.10.0",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "inputs": {
+    "tokensFile": "./docs/prior-art/examples/effective-config.example.json",
+    "tokensHash": "sha256:ec_example_1234567890abcdef",
+    "constraintsDir": "./policies",
+    "constraintHashes": {
+      "wcag.json": "sha256:pol_wcag_abc123",
+      "typography.order.json": "sha256:pol_mono_def456"
+    },
+    "breakpoint": "md"
+  },
+  "config": { "failOn": "error" }
+}
