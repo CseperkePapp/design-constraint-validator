@@ -8,17 +8,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.x-339933.svg)](#)
 
-## DCV & DecisionThemes
-
-DCV is the **standalone validation engine** — use it for any token system.
-
-**DecisionThemes** (Q1 2026) is the full framework:  
-- 5-axis decision model (Tone, Emphasis, Size, Density, Shape)  
-- VT/DT pipeline (values + formulas)  
-- Studio UI + Hub marketplace  
-
-DCV powers DecisionThemes' constraints — but shines alone.
-
 > **Note:** DCV's CI intentionally includes validation errors in example tokens to demonstrate the tool works. See our [CI workflow](.github/workflows/ci.yml) for how we use `--fail-on off` to report violations without blocking builds.
 
 **Design Constraint Validator (DCV)** validates design constraints across token sets and styles:
@@ -30,6 +19,19 @@ DCV powers DecisionThemes' constraints — but shines alone.
 This is **not** a schema linter; it's a **reasoning validator** for values and relationships.
 
 ---
+## DCV & DecisionThemes
+
+DCV is the **standalone validation engine** — use it for any token system.
+
+**DecisionThemes** (Q1 2026) is the full framework built on DCV:  
+- **5-axis decision model** (Tone, Emphasis, Size, Density, Shape)  
+- **VT/DT pipeline** (values + formulas → deterministic configs)  
+- **Studio UI** + **Hub marketplace** for sharing Decision Systems  
+
+DCV powers DecisionThemes' constraints — but shines alone.  
+[Preview DecisionThemes → www.decisionthemes.com](https://www.decisionthemes.com)  
+(Private repo for now; open-source soon.)
+
 
 ## Installation
 
