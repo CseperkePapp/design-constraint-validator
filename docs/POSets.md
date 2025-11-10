@@ -13,3 +13,4 @@ Example Policy (`policies/poset.json`):
     ["typography.size.h2", ">=", "typography.size.h3"]
   ]
 }
+npx dcv validate tokens.json --policy poset.json → Flags if h1 < h3.
