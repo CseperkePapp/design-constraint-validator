@@ -562,7 +562,7 @@ $ npx dcv validate
 ```
 
 ## Architecture
-
+![Diargram](./images/mermaid-diagram-DCV.svg)
 ```
 ┌─────────────────────────────────────┐
 │     Token Dependency Graph (DAG)    │
