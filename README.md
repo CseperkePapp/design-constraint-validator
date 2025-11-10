@@ -199,15 +199,13 @@ graph TD
 ```
 
 ---
-
 ## Adapters
+DCV supports inputs from:
+- Style Dictionary
+- Tokens Studio JSON
+- DTCG
 
-* **Style Dictionary** input
-* **Tokens Studio JSON** input
-* **DTCG** (Design Tokens Community Group) mapping
-
-See [`adapters/README.md`](adapters/README.md) for format notes.
-
+Full details: [adapters/README.md](adapters/README.md)
 ---
 
 ## Getting Started
