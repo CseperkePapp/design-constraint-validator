@@ -35,3 +35,6 @@ temp-*.json
 sbom.json
 sbom.xml
 sbom-test.json
+
+# Local-only docs/audit folder
+/docs/audit/
