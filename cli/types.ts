@@ -11,6 +11,7 @@ export type OverridesTree = { [k: string]: OverridesTree | OverridesLeaf } & Ove
 export interface GlobalOptions {
   tokens?: string;
   config?: string;
+  theme?: string;
   verbose?: boolean;
   quiet?: boolean;
   breakpoint?: 'sm' | 'md' | 'lg';

@@ -1,12 +1,13 @@
-import { flattenTokens } from '../../core/flatten.js';
+import { flattenTokens, type TokenNode } from '../../core/flatten.js';
 import { createValidationEngine } from '../engine-helpers.js';
 import { loadConfig } from '../config.js';
-import { parseBreakpoints, loadTokensWithBreakpoint, type Breakpoint } from '../../core/breakpoints.js';
-import { loadCrossAxisPlugin } from '../../core/cross-axis-config.js';
+import { parseBreakpoints, loadTokensWithBreakpoint, mergeTokens, type Breakpoint } from '../../core/breakpoints.js';
 import type { ConstraintIssue } from '../../core/engine.js';
 import type { ValidateOptions } from '../types.js';
 import { createValidationResult, createValidationReceipt, writeJsonOutput } from '../json-output.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { attachRuntimeConstraints } from '../constraints-loader.js';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
   try {
@@ -51,18 +52,30 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     const tStartTotal = globalThis.performance.now();
     for (const bp of plan) {
       const tStart = globalThis.performance.now();
-      const tokens = loadTokensWithBreakpoint(bp);
-      const engine = createValidationEngine(tokens, bp, config);
-      const initIds = Object.keys(flattenTokens(tokens).flat).reduce<Record<string, true>>((a,k)=>{a[k]=true;return a;},{});
-      const knownIds = new Set(Object.keys(initIds));
-      // Load global + bp-specific cross-axis rules (bp file optional)
-      engine.use(loadCrossAxisPlugin('themes/cross-axis.rules.json', bp, { debug: crossAxisDebug, knownIds }));
-      if (bp) {
-        const bpRulesPath = `themes/cross-axis.${bp}.rules.json`;
-        engine.use(loadCrossAxisPlugin(bpRulesPath, bp, { debug: crossAxisDebug, knownIds }));
+      let tokens: TokenNode = loadTokensWithBreakpoint(bp);
+      // Optional theme overlay (tokens/themes/<name>.json), mirroring build behavior
+      if (_options.theme) {
+        const themePath = join('tokens/themes', `${_options.theme}.json`);
+        if (existsSync(themePath)) {
+          try {
+            const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
+            tokens = mergeTokens(tokens, themeTokens);
+          } catch {
+            // If theme file is invalid JSON, ignore and proceed with base tokens
+          }
+        }
       }
-      const { ThresholdPlugin } = await import('../../core/constraints/threshold.js');
-      engine.use(ThresholdPlugin([{ id: 'control.size.min', op: '>=', valuePx: 44, where: 'Touch target (WCAG / Apple HIG)' }]));
+      const engine = createValidationEngine(tokens, bp, config);
+      const initIds = Object.keys(flattenTokens(tokens).flat).reduce<Record<string, true>>(
+        (a, k) => {
+          a[k] = true;
+          return a;
+        },
+        {},
+      );
+      const knownIds = new Set(Object.keys(initIds));
+
+      attachRuntimeConstraints(engine, { config, knownIds, bp, crossAxisDebug });
       const allIds = new Set(Object.keys(initIds));
       const issues = engine.evaluate(allIds);
       const errs = issues.filter((i: ConstraintIssue) => i.level === 'error');

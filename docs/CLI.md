@@ -7,9 +7,8 @@ Complete reference for all `dcv` commands and options.
 These options work with all commands:
 
 ```bash
---tokens <path>        # Path to tokens file (default: tokens.json)
+--tokens <path>        # Path to tokens file (default: tokens/tokens.example.json)
 --config <path>        # Path to config file (default: dcv.config.json)
---verbose             # Show detailed output
 --quiet               # Minimal output
 --breakpoint <bp>     # Validate specific breakpoint (sm|md|lg)
 --all-breakpoints     # Validate all breakpoints
@@ -32,18 +31,22 @@ dcv validate [options]
 **Options:**
 
 ```bash
---fail-on <level>     # When to exit with error code
-                      # error (default) | warn | off
+--fail-on <level>         # When to exit with error code
+                          # error (default) | warn | off
 
---summary <format>    # Summary output format
-                      # table (default) | json
+--summary <format>        # Validation summary output format
+                          # none (default) | table | json
 
---strict              # Strict mode (fail on any issue)
+--format <output>         # Overall output format
+                          # text (default) | json
 
---perf                # Show performance metrics
+--output <path>           # Write JSON output to file
+--receipt <path>          # Write full validation receipt (audit trail)
+--theme <name>            # Apply named theme tokens (tokens/themes/<name>.json)
+--perf                    # Show performance metrics
 
---budget-total-ms <n>     # Maximum total validation time
---budget-per-bp-ms <n>    # Maximum time per breakpoint
+--budget-total-ms <n>     # Maximum total validation time (ms)
+--budget-per-bp-ms <n>    # Maximum time per breakpoint (ms)
 ```
 
 **Examples:**
@@ -61,8 +64,14 @@ dcv validate --breakpoint md
 # Validate all breakpoints
 dcv validate --all-breakpoints
 
-# JSON output for CI/CD
-dcv validate --summary json
+# Validate with a named theme overlay
+dcv validate --theme dark
+
+# JSON summary for CI/CD logs
+dcv validate --summary table
+
+# Machine-readable JSON output
+dcv validate --format json
 
 # Never fail (reporting only)
 dcv validate --fail-on off
@@ -236,7 +245,7 @@ dcv why <tokenId> [options]
 **Options:**
 
 ```bash
---format <fmt>    # Output format: table (default) | json
+--format <fmt>    # Output format: json (default) | table
 ```
 
 **Examples:**
@@ -248,8 +257,6 @@ dcv why typography.size.h1
 # JSON output
 dcv why typography.size.h1 --format json
 
-# Explain with breakpoint context
-dcv why typography.size.h1 --breakpoint md
 ```
 
 **Output:**
@@ -264,28 +271,25 @@ Dependencies:
   typography.size.h2 (24px) - Must be >= this value
   typography.size.h3 (20px) - Indirectly via h2
 
-Constraints:
+Constraints (example only):
   ✓ typography.size.h1 >= typography.size.h2 (32px >= 24px)
   ✓ Contrast with color.text.heading (7.2:1 > 4.5:1)
 ```
 
 **JSON:**
+
+When `--format json` is used, `dcv why` outputs a `WhyReport` object of the form:
+
 ```json
 {
-  "token": "typography.size.h1",
+  "id": "typography.size.h1",
   "value": "32px",
-  "source": "tokens.json",
-  "dependencies": [
-    { "id": "typography.size.h2", "value": "24px", "relation": "must be >= " }
-  ],
-  "constraints": [
-    {
-      "type": "monotonic",
-      "satisfied": true,
-      "rule": "typography.size.h1 >= typography.size.h2",
-      "actual": "32px >= 24px"
-    }
-  ]
+  "raw": "{typography.size.h2}",
+  "refs": ["typography.size.h2"],
+  "provenance": "base",
+  "dependsOn": ["typography.size.h2"],
+  "dependents": [],
+  "chain": ["typography.size.h1", "typography.size.h2", "typography.size.h3"]
 }
 ```
 

@@ -166,7 +166,7 @@ Validation behavior settings.
 ```json
 {
   "validation": {
-    "failOn": "warn",    // "error" | "warn" | "never"
+    "failOn": "warn",    // "error" | "warn" | "off"
     "quiet": false        // Suppress output
   }
 }

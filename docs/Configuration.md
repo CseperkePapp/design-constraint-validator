@@ -18,14 +18,14 @@ DCV searches for configuration files in this order:
 
 ## Default Behavior (Zero Config)
 
-Without a config file, DCV uses these defaults:
+Without a config file, DCV uses these defaults for the CLI:
 
 ```javascript
 {
-  tokens: "tokens.json",           // or tokens/*.json
-  themes: "themes",                 // all *.json in themes/
-  overrides: "tokens/overrides",   // breakpoint overrides
-  breakpoints: ["sm", "md", "lg"]  // standard breakpoints
+  tokens: "tokens/tokens.example.json", // or tokens/*.json via config
+  themes: "themes",                     // all *.json in themes/
+  overrides: "tokens/overrides",        // breakpoint overrides
+  breakpoints: ["sm", "md", "lg"]       // standard breakpoints
 }
 ```
 
@@ -80,7 +80,9 @@ Without a config file, DCV uses these defaults:
         "ratio": 4.5,
         "description": "Body text (AA)"
       }
-    ]
+    ],
+    "enableBuiltInThreshold": true,
+    "enableBuiltInWcagDefaults": true
   }
 }
 ```
@@ -258,6 +260,87 @@ Default graph generation settings.
 - `violationColor` - Color for violations (hex)
 - `labelViolations` - Add violation messages as labels
 - `labelTruncate` - Truncate labels to N characters
+
+---
+
+### Constraints
+
+#### `constraints`
+**Type:** `object`
+
+Configure constraint behavior and built-in policies.
+
+```json
+{
+  "constraints": {
+    "wcag": [
+      { "foreground": "color.text.default", "background": "color.bg.surface", "ratio": 4.5 }
+    ],
+    "enableBuiltInThreshold": true,
+    "enableBuiltInWcagDefaults": true
+  }
+}
+```
+
+**Options:**
+- `wcag` - Array of WCAG contrast rules (foreground/background pairs with optional ratio and description).
+- `enableBuiltInThreshold`  
+  - `true` (default) - Enforce the built-in touch target rule `control.size.min >= 44px`.
+  - `false` - Disable the built-in threshold rule.
+- `enableBuiltInWcagDefaults`  
+  - `true` (default) - Apply built-in WCAG pairs for common role-based token IDs (for example `color.role.text.default` on `color.role.bg.surface`) in addition to any explicit `wcag` rules.
+  - `false` - Do not apply built-in WCAG defaults; only your explicit `wcag` rules run.
+
+---
+
+### Policy Profiles (Example)
+
+You can use different `dcv` configurations to represent policy profiles for different environments.
+
+**Local development (`dcv.config.local.json`):**
+```json
+{
+  "validation": {
+    "failOn": "off",
+    "summary": "table"
+  },
+  "constraints": {
+    "wcag": [
+      { "foreground": "color.text.default", "background": "color.bg.surface", "ratio": 4.5 }
+    ],
+    "enableBuiltInThreshold": false,
+    "enableBuiltInWcagDefaults": true
+  }
+}
+```
+
+**CI policy (`dcv.config.ci.json`):**
+```json
+{
+  "validation": {
+    "failOn": "error",
+    "summary": "json"
+  },
+  "constraints": {
+    "wcag": [
+      { "foreground": "color.text.default", "background": "color.bg.surface", "ratio": 4.5 },
+      { "foreground": "color.text.heading", "background": "color.bg.surface", "ratio": 7.0 }
+    ],
+    "enableBuiltInThreshold": true,
+    "enableBuiltInWcagDefaults": true
+  }
+}
+```
+
+You can then point `dcv` at the appropriate config file:
+
+```bash
+# Local
+dcv validate --config dcv.config.local.json
+
+# CI
+dcv validate --config dcv.config.ci.json
+```
 
 ---
 

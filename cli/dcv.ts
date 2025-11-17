@@ -56,6 +56,7 @@ cli.command<ValidateOptions>('validate', 'Validate constraints', y => y
   .option('output', { type: 'string', describe: 'Write JSON output to file' })
   .option('receipt', { type: 'string', describe: 'Generate validation receipt with audit trail' })
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' })
+  .option('theme', { type: 'string', describe: 'Apply named theme tokens before validation' })
   .option('breakpoint', { type: 'string' })
   .option('all-breakpoints', { type: 'boolean' })
   .option('perf', { type: 'boolean', describe: 'Print timing info' })

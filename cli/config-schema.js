@@ -5,13 +5,19 @@ export const WcagRuleSchema = z.object({
     ratio: z.number().positive().optional(),
     description: z.string().optional()
 });
-export const ConstraintsSchema = z.object({
-    wcag: z.array(WcagRuleSchema).optional()
-}).passthrough();
-export const DcvConfigSchema = z.object({
+export const ConstraintsSchema = z
+    .object({
+    wcag: z.array(WcagRuleSchema).optional(),
+    enableBuiltInThreshold: z.boolean().optional(),
+    enableBuiltInWcagDefaults: z.boolean().optional(),
+})
+    .passthrough();
+export const DcvConfigSchema = z
+    .object({
     version: z.string().optional(),
-    constraints: ConstraintsSchema.optional()
-}).passthrough();
+    constraints: ConstraintsSchema.optional(),
+})
+    .passthrough();
 export function validateConfig(raw) {
     const res = DcvConfigSchema.safeParse(raw);
     if (!res.success) {

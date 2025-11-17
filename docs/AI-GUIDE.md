@@ -95,11 +95,12 @@ When user asks "what's the output format?":
   "ok": boolean,
   "counts": { "checked": number, "violations": number, "warnings": number },
   "violations": [{
-    "ruleId": string,      // e.g., "wcag-contrast", "threshold"
-    "level": "error"|"warn",
+    "ruleId": string,      // e.g., "wcag-contrast", "mono-typography", "threshold"
+    "level": "error" | "warn",
     "message": string,
-    "nodes": string[],     // affected token IDs
-    "context": {}          // constraint-specific data
+    "nodes"?: string[],    // affected token IDs
+    "edges"?: [string, string][], // optional graph edges for context
+    "context"?: {}         // constraint-specific data (ratios, thresholds, etc.)
   }],
   "stats": { "durationMs": number, "engineVersion": string, "timestamp": string }
 }

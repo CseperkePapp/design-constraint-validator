@@ -10,6 +10,8 @@ Complete documentation for Design Constraint Validator.
 - **[Configuration](./Configuration.md)** - Config file options
 - **[Architecture](./Architecture.md)** - How DCV works internally
 - **[API Reference](./API.md)** - Programmatic usage
+- **[Concepts](./Concepts.md)** - Core terms and defaults
+- **[Adapters](./Adapters.md)** - Input/output formats and mappers
 
 ## Overview
 
@@ -22,10 +24,12 @@ Start with **[Getting Started](./Getting-Started.md)** - it will have you valida
 - **[Constraints](./Constraints.md)** - Learn all 5 constraint types
 - **[CLI Reference](./CLI.md)** - Master all commands
 - **[Configuration](./Configuration.md)** - Customize DCV for your project
+- **[Concepts](./Concepts.md)** - Understand tokens, constraints, policies, receipts
 
 ### For Developers
 - **[API Reference](./API.md)** - Use DCV programmatically
 - **[Architecture](./Architecture.md)** - Understand how it works internally
+- **[Adapters](./Adapters.md)** - Integrate with token pipelines and outputs
 
 ## Additional Resources
 

@@ -604,3 +604,17 @@ Coming soon: Plugin API for custom constraint types.
 - **[CLI Reference](./CLI.md)** - Command options
 - **[Configuration](./Configuration.md)** - Customize paths
 - **[Architecture](./Architecture.md)** - How constraints are validated
+
+---
+
+## Built-in Rules
+
+DCV includes a small number of built-in constraints that are always active:
+
+- **Touch target threshold**
+  - `control.size.min >= 44px` (Touch target, WCAG 2.1 / Apple HIG).
+  - Enforced even if you do not define any explicit threshold JSON files.
+- **Default WCAG pairs**
+  - A few common role-based color pairs (for example `color.role.text.default` on `color.role.bg.surface`) are checked for contrast automatically when those IDs exist.
+
+These defaults provide useful safety nets out-of-the-box. For full control, define your own WCAG and threshold constraints in `themes/` and adjust `--fail-on`/config as needed.

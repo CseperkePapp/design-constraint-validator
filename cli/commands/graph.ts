@@ -2,6 +2,8 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import type { GraphOptions } from '../types.js';
 import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import { exportGraphImage } from '../../core/image-export.js';
+import { attachRuntimeConstraints } from '../constraints-loader.js';
+import { loadConfig } from '../config.js';
 
 // Local helper for non-poset dependency graphs
 function generateDependencyGraph(edges: Array<[string, string]>, format: string): string {
@@ -67,38 +69,79 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
         let highlight: { nodes: Set<string>; edges: Set<string>; color?: string } | undefined; let edgeLabels: Map<string,string> | undefined;
         if (onlyViolations || highlightViolations || labelViolations) {
           const { loadTokensWithBreakpoint } = await import('../../core/breakpoints.js');
-            const tokens = loadTokensWithBreakpoint(breakpoint); const { flattenTokens } = await import('../../core/flatten.js');
-            const { Engine } = await import('../../core/engine.js');
-            const { MonotonicPlugin, parseSize } = await import('../../core/constraints/monotonic.js');
-            const { MonotonicLightness } = await import('../../core/constraints/monotonic-lightness.js');
-            const { ThresholdPlugin } = await import('../../core/constraints/threshold.js');
-            const { flat, edges } = flattenTokens(tokens); const init: Record<string,string|number> = {}; Object.values(flat).forEach(t => { const ft = t as FlatToken; init[ft.id] = ft.value; });
-            const engine = new Engine(init, edges);
-            const allIdsInHasse = new Set<string>([...h.keys(), ...Array.from(h.values()).flatMap(s=>[...s])]);
-            let issues: any[] = [];
-            if (name === 'color') {
-              const colorOrders = order as [string, '<='|'>=', string][]; issues = MonotonicLightness(colorOrders).evaluate(engine, allIdsInHasse);
-            } else {
-              const numericOrders = order as [string, '<='|'>=', string][]; issues = MonotonicPlugin(numericOrders, parseSize, 'monotonic').evaluate(engine, allIdsInHasse);
+          const tokens = loadTokensWithBreakpoint(breakpoint);
+          const { flattenTokens } = await import('../../core/flatten.js');
+          const { Engine } = await import('../../core/engine.js');
+          const { MonotonicPlugin, parseSize } = await import('../../core/constraints/monotonic.js');
+          const { MonotonicLightness } = await import('../../core/constraints/monotonic-lightness.js');
+
+          const { flat, edges: depEdges } = flattenTokens(tokens);
+          const init: Record<string, string | number> = {};
+          Object.values(flat).forEach((t) => {
+            const ft = t as FlatToken;
+            init[ft.id] = ft.value;
+          });
+          const engine = new Engine(init, depEdges);
+
+          const allIdsInHasse = new Set<string>([...h.keys(), ...Array.from(h.values()).flatMap((s) => [...s])]);
+          let issues: any[] = [];
+          if (name === 'color') {
+            const colorOrders = order as [string, '<=' | '>=', string][];
+            issues = MonotonicLightness(colorOrders).evaluate(engine, allIdsInHasse);
+          } else {
+            const numericOrders = order as [string, '<=' | '>=', string][];
+            issues = MonotonicPlugin(numericOrders, parseSize, 'monotonic').evaluate(engine, allIdsInHasse);
+          }
+
+          // Attach threshold (and any other runtime constraints) respecting config flags
+          const cfgRes = loadConfig(undefined);
+          if (cfgRes.ok) {
+            const config = cfgRes.value;
+            const knownIds = new Set(Object.keys(flat as Record<string, FlatToken>));
+            attachRuntimeConstraints(engine, { config, knownIds, bp: breakpoint });
+            const runtimeIssues = engine.evaluate(allIdsInHasse);
+            issues.push(...runtimeIssues);
+          }
+
+          const severityRank = { error: 2, warn: 1 } as const;
+          const filteredIssues = issues.filter((it) => {
+            const level = (it.level as 'warn' | 'error') || 'error';
+            return severityRank[level] >= severityRank[minSeverity];
+          });
+          const edgeViol = new Set<string>();
+          const nodeViol = new Set<string>();
+          if (labelViolations) edgeLabels = new Map<string, string>();
+          for (const it of filteredIssues) {
+            if (typeof it.id === 'string' && it.id.includes('|')) {
+              const [a, b] = it.id.split('|');
+              edgeViol.add(`${a}|${b}`);
+              nodeViol.add(a);
+              nodeViol.add(b);
+              if (labelViolations && edgeLabels) {
+                let label = it.message ?? 'violation';
+                if (labelTruncate > 0 && label.length > labelTruncate) {
+                  label = label.slice(0, labelTruncate - 1) + '…';
+                }
+                edgeLabels.set(`${a}|${b}`, label);
+              }
+            } else if (typeof it.id === 'string') {
+              nodeViol.add(it.id);
             }
-            const thresholdIssues = ThresholdPlugin([{ id: 'control.size.min', op: '>=', valuePx: 44, where: 'Touch target (WCAG / Apple HIG)' }]).evaluate(engine, allIdsInHasse); issues.push(...thresholdIssues);
-            const severityRank = { error: 2, warn: 1 } as const;
-            const filteredIssues = issues.filter(it => { const level = (it.level as 'warn'|'error') || 'error'; return severityRank[level] >= severityRank[minSeverity]; });
-            const edgeViol = new Set<string>(); const nodeViol = new Set<string>(); if (labelViolations) edgeLabels = new Map<string,string>();
-            for (const it of filteredIssues) {
-              if (typeof it.id === 'string' && it.id.includes('|')) { const [a,b] = it.id.split('|'); edgeViol.add(`${a}|${b}`); nodeViol.add(a); nodeViol.add(b); if (labelViolations && edgeLabels) { let label = it.message ?? 'violation'; if (labelTruncate > 0 && label.length > labelTruncate) label = label.slice(0, labelTruncate - 1) + '…'; edgeLabels.set(`${a}|${b}`, label); } }
-              else if (typeof it.id === 'string') nodeViol.add(it.id);
-            }
-            highlight = { nodes: nodeViol, edges: edgeViol, color: violationColor };
-            if (onlyViolations) {
-              const pruned: Map<string, Set<string>> = new Map();
-              for (const [u, vs] of h) {
-                for (const v of vs) {
-                  if (edgeViol.has(`${u}|${v}`) || nodeViol.has(u) || nodeViol.has(v)) { if (!pruned.has(u)) pruned.set(u, new Set()); pruned.get(u)!.add(v); if (!pruned.has(v)) pruned.set(v, new Set()); }
+          }
+          highlight = { nodes: nodeViol, edges: edgeViol, color: violationColor };
+          if (onlyViolations) {
+            const pruned: Map<string, Set<string>> = new Map();
+            for (const [u, vs] of h) {
+              for (const v of vs) {
+                if (edgeViol.has(`${u}|${v}`) || nodeViol.has(u) || nodeViol.has(v)) {
+                  if (!pruned.has(u)) pruned.set(u, new Set());
+                  pruned.get(u)!.add(v);
+                  if (!pruned.has(v)) pruned.set(v, new Set());
                 }
               }
-              h = pruned;
             }
+            h = pruned;
+          }
         }
         const bpLabel = breakpoint ? ` @${breakpoint}` : '';
         const title = `${name}${suffix ? ' ' + suffix : ''}${bpLabel} (Hasse)`;
