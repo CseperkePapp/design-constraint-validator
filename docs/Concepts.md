@@ -25,7 +25,8 @@ Core concepts and terms used across the Design Constraint Validator (DCV) codeba
 ## Themes, Breakpoints, Overrides
 
 - **Theme (tokens)**: A coherent set of tokens representing a visual theme (for example light vs dark). DCV does not compute themes; it validates whatever token set you provide.
-- **Themes directory (`themes/`)**: By default, DCV expects constraint definitions under `themes/`. The name is historical; conceptually this directory holds constraints/policies, not visual themes.
+- **Themes directory (`themes/`)**: By default, DCV expects constraint definitions under `themes/`. **Important naming note:** The name is historical and can be confusing. This directory holds **constraints/policies**, not visual themes. You may configure a different directory name (like `constraints/` or `policies/`) in your config.
+- **EffectiveConfig**: The fully-resolved, flattened token set after all references, overrides, and merges have been applied. This is what DCV validates. The term comes from the prior-art documentation and emphasizes that validation happens on "effective" (final) values, not intermediate build artifacts.
 - **Breakpoints**: Named responsive contexts (e.g. `sm`, `md`, `lg`) for which override token files may exist.
   - Base tokens are typically in `tokens/tokens.json` or similar.
   - Overrides live in `tokens/overrides/<breakpoint>.json`.
@@ -93,4 +94,47 @@ The current implementation includes a few important defaults and conventions:
   - Each `dcv validate` CLI run currently performs a full validation of the effective token set for each breakpoint; there is no cross-run caching.
 
 These defaults are intentionally conservative: they provide useful safeguards out-of-the-box while still allowing projects to add explicit constraints via JSON files and configuration.
+
+---
+
+## Terminology Clarifications
+
+### failOn Values
+
+The `--fail-on` CLI flag and `failOn` config option accept three values:
+
+- **`off`**: Do not fail the build on any violations (exit code 0 even with errors). Useful for reporting-only mode in CI.
+- **`warn`**: Fail on warnings and errors (exit code 1 if warnings or errors are present).
+- **`error`** (default): Fail only on errors (exit code 1 if errors present, 0 if only warnings).
+
+**Note:** Earlier documentation may have referenced `"never"` as a value - this has been standardized to `"off"`.
+
+### JSON Output Field Names
+
+For consistency, DCV's JSON output uses the following field names:
+
+- **`ruleId`**: The identifier of the constraint rule that was violated (e.g., `"wcag-contrast"`, `"monotonic-order"`).
+- **`level`**: The severity level, either `"error"` or `"warn"`.
+- **`message`**: Human-readable description of the violation.
+- **`nodes`**: Array of token IDs involved in the violation (optional).
+- **`edges`**: Array of graph edges `[from, to]` implicated in the violation (optional).
+- **`context`**: Additional structured data about the violation (optional).
+
+**Historical note:** Some older documentation or examples may have used `kind` instead of `ruleId` or `severity` instead of `level`. The canonical names are `ruleId` and `level` as documented in [JSON-OUTPUT.md](./JSON-OUTPUT.md).
+
+### Policy vs Constraints vs Themes
+
+These terms can be confusing. Here's how they relate:
+
+- **Constraints**: Individual rules that tokens must satisfy (e.g., a WCAG contrast rule, a monotonic ordering rule).
+- **Policy** or **Policy file**: A collection of constraints, often representing a standard (AA/AAA) or organizational requirements. A policy is typically expressed as one or more JSON files containing constraint definitions.
+- **Themes directory**: The default location (`themes/`) where constraint JSON files are stored. Despite the name suggesting "visual themes," this directory contains **constraint definitions** (policies). The naming is historical from the broader Decision Themes framework documented in the prior-art papers.
+
+**Clarification for users**: When documentation refers to "constraint files" or "policy files," these are the same thing: JSON files defining rules for DCV to check. They live in the `themes/` directory by default (configurable).
+
+### Manifest
+
+In DCV context, "manifest" typically refers to a **CSS variable mapping file** used by the `dcv build --mapper` command. This JSON file maps canonical token names to CSS variable names (or other naming schemes) for output generation. It's not a core validation concept but a build-time utility.
+
+Example: `examples/manifest.example.json` might map `typography.size.h1` → `--text-xl` for generated CSS.
 
