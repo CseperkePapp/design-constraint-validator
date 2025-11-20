@@ -1,10 +1,11 @@
 import { flattenTokens } from '../../core/flatten.js';
-import { createValidationEngine } from '../engine-helpers.js';
+import { Engine } from '../../core/engine.js';
 import { loadConfig } from '../config.js';
-import { parseBreakpoints, loadTokensWithBreakpoint } from '../../core/breakpoints.js';
-import { loadCrossAxisPlugin } from '../../core/cross-axis-config.js';
+import { parseBreakpoints, loadTokensWithBreakpoint, mergeTokens } from '../../core/breakpoints.js';
 import { createValidationResult, createValidationReceipt, writeJsonOutput } from '../json-output.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { setupConstraints } from '../constraint-registry.js';
 export async function validateCommand(_options) {
     try {
         const bps = parseBreakpoints(process.argv);
@@ -51,19 +52,31 @@ export async function validateCommand(_options) {
         const tStartTotal = globalThis.performance.now();
         for (const bp of plan) {
             const tStart = globalThis.performance.now();
-            const tokens = loadTokensWithBreakpoint(bp);
-            const engine = createValidationEngine(tokens, bp, config);
-            const initIds = Object.keys(flattenTokens(tokens).flat).reduce((a, k) => { a[k] = true; return a; }, {});
-            const knownIds = new Set(Object.keys(initIds));
-            // Load global + bp-specific cross-axis rules (bp file optional)
-            engine.use(loadCrossAxisPlugin('themes/cross-axis.rules.json', bp, { debug: crossAxisDebug, knownIds }));
-            if (bp) {
-                const bpRulesPath = `themes/cross-axis.${bp}.rules.json`;
-                engine.use(loadCrossAxisPlugin(bpRulesPath, bp, { debug: crossAxisDebug, knownIds }));
+            let tokens = loadTokensWithBreakpoint(bp);
+            // Optional theme overlay (tokens/themes/<name>.json), mirroring build behavior
+            if (_options.theme) {
+                const themePath = join('tokens/themes', `${_options.theme}.json`);
+                if (existsSync(themePath)) {
+                    try {
+                        const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
+                        tokens = mergeTokens(tokens, themeTokens);
+                    }
+                    catch {
+                        // If theme file is invalid JSON, ignore and proceed with base tokens
+                    }
+                }
             }
-            const { ThresholdPlugin } = await import('../../core/constraints/threshold.js');
-            engine.use(ThresholdPlugin([{ id: 'control.size.min', op: '>=', valuePx: 44, where: 'Touch target (WCAG / Apple HIG)' }]));
-            const allIds = new Set(Object.keys(initIds));
+            // Create engine with flattened tokens
+            const { flat, edges } = flattenTokens(tokens);
+            const init = {};
+            for (const t of Object.values(flat)) {
+                init[t.id] = t.value;
+            }
+            const engine = new Engine(init, edges);
+            const knownIds = new Set(Object.keys(init));
+            // Discover and attach all constraints via centralized registry
+            setupConstraints(engine, { config, bp, constraintsDir: 'themes' }, { knownIds, crossAxisDebug });
+            const allIds = new Set(Object.keys(init));
             const issues = engine.evaluate(allIds);
             const errs = issues.filter((i) => i.level === 'error');
             const warns = issues.filter((i) => i.level !== 'error');

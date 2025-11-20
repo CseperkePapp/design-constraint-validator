@@ -1,3 +1,29 @@
+/**
+ * @deprecated This module is deprecated. Use constraint-registry.ts instead.
+ *
+ * Phase 3A (Architectural Cleanup): This file contains legacy constraint loading logic
+ * that has been replaced by the centralized constraint-registry.ts module.
+ *
+ * Migration guide:
+ * - Replace createEngine() or createValidationEngine() with:
+ *   ```ts
+ *   import { Engine } from '../core/engine.js';
+ *   import { flattenTokens, type FlatToken } from '../core/flatten.js';
+ *   import { setupConstraints } from './constraint-registry.js';
+ *
+ *   const { flat, edges } = flattenTokens(tokens);
+ *   const init = {};
+ *   for (const t of Object.values(flat)) {
+ *     init[(t as FlatToken).id] = (t as FlatToken).value;
+ *   }
+ *   const engine = new Engine(init, edges);
+ *   const knownIds = new Set(Object.keys(init));
+ *   setupConstraints(engine, { config, bp }, { knownIds });
+ *   ```
+ *
+ * This file will be removed in a future major version.
+ */
+
 import { flattenTokens, type TokenNode, type FlatToken } from '../core/flatten.js';
 import { Engine } from '../core/engine.js';
 import { MonotonicPlugin, parseSize as parseSizePx } from '../core/constraints/monotonic.js';
@@ -68,6 +94,10 @@ function applyWcagPlugins(engine: Engine, config: DcvConfig): void {
   }
 }
 
+/**
+ * @deprecated Use constraint-registry.ts setupConstraints() instead.
+ * This function will be removed in a future major version.
+ */
 export function createEngine(tokensRoot: TokenNode, config: DcvConfig = {}): Engine {
   const { flat, edges } = flattenTokens(tokensRoot);
   const init: Record<string, string | number> = {};
@@ -78,6 +108,10 @@ export function createEngine(tokensRoot: TokenNode, config: DcvConfig = {}): Eng
   return engine;
 }
 
+/**
+ * @deprecated Use constraint-registry.ts setupConstraints() instead.
+ * This function will be removed in a future major version.
+ */
 export function createValidationEngine(tokensRoot: TokenNode, bp: Breakpoint | undefined, config: DcvConfig): Engine {
   const { flat, edges } = flattenTokens(tokensRoot);
   const init: Record<string, string | number> = {};

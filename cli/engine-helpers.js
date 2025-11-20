@@ -1,15 +1,35 @@
+/**
+ * @deprecated This module is deprecated. Use constraint-registry.ts instead.
+ *
+ * Phase 3A (Architectural Cleanup): This file contains legacy constraint loading logic
+ * that has been replaced by the centralized constraint-registry.ts module.
+ *
+ * Migration guide:
+ * - Replace createEngine() or createValidationEngine() with:
+ *   ```ts
+ *   import { Engine } from '../core/engine.js';
+ *   import { flattenTokens, type FlatToken } from '../core/flatten.js';
+ *   import { setupConstraints } from './constraint-registry.js';
+ *
+ *   const { flat, edges } = flattenTokens(tokens);
+ *   const init = {};
+ *   for (const t of Object.values(flat)) {
+ *     init[(t as FlatToken).id] = (t as FlatToken).value;
+ *   }
+ *   const engine = new Engine(init, edges);
+ *   const knownIds = new Set(Object.keys(init));
+ *   setupConstraints(engine, { config, bp }, { knownIds });
+ *   ```
+ *
+ * This file will be removed in a future major version.
+ */
 import { flattenTokens } from '../core/flatten.js';
 import { Engine } from '../core/engine.js';
 import { MonotonicPlugin, parseSize as parseSizePx } from '../core/constraints/monotonic.js';
 import { MonotonicLightness } from '../core/constraints/monotonic-lightness.js';
 import { WcagContrastPlugin } from '../core/constraints/wcag.js';
 import { loadOrders as loadOrdersBP, loadTokensWithBreakpoint } from '../core/breakpoints.js';
-export function createEngine(tokensRoot, config = {}) {
-    const { flat, edges } = flattenTokens(tokensRoot);
-    const init = {};
-    for (const [id, token] of Object.entries(flat))
-        init[id] = token.value;
-    const engine = new Engine(init, edges);
+function applyMonotonicPlugins(engine, bp) {
     function loadOrders(path) {
         try {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -19,10 +39,11 @@ export function createEngine(tokensRoot, config = {}) {
             return [];
         }
     }
-    const typOrders = loadOrders('themes/typography.order.json');
-    const spacingOrders = loadOrders('themes/spacing.order.json');
-    const layoutOrders = loadOrders('themes/layout.order.json');
-    const colorOrders = loadOrders('themes/color.order.json');
+    const suffix = bp ? `.${bp}` : '';
+    const typOrders = loadOrders(`themes/typography${suffix}.order.json`);
+    const spacingOrders = loadOrders(`themes/spacing${suffix}.order.json`);
+    const layoutOrders = loadOrders(`themes/layout${suffix}.order.json`);
+    const colorOrders = loadOrders(`themes/color${suffix}.order.json`);
     if (typOrders.length)
         engine.use(MonotonicPlugin(typOrders, parseSizePx, 'monotonic-typography'));
     if (spacingOrders.length)
@@ -31,24 +52,71 @@ export function createEngine(tokensRoot, config = {}) {
         engine.use(MonotonicPlugin(layoutOrders, parseSizePx, 'monotonic-layout'));
     if (colorOrders.length)
         engine.use(MonotonicLightness(colorOrders));
-    if (config.constraints?.wcag) {
-        const wcagRules = config.constraints.wcag.map((r) => ({ fg: r.foreground, bg: r.background, min: r.ratio || 4.5, where: r.description || 'Unknown' }));
+}
+function applyWcagPlugins(engine, config) {
+    const constraintsCfg = config.constraints ?? {};
+    if (constraintsCfg.wcag) {
+        const wcagRules = constraintsCfg.wcag.map((r) => ({
+            fg: r.foreground,
+            bg: r.background,
+            min: r.ratio || 4.5,
+            where: r.description || 'Unknown',
+        }));
         engine.use(WcagContrastPlugin(wcagRules));
     }
-    const defaultWcagPairs = [
-        { fg: 'color.role.text.default', bg: 'color.role.bg.surface', min: 4.5, where: 'Body text on surface' },
-        { fg: 'color.role.accent.default', bg: 'color.role.bg.surface', min: 3.0, where: 'Accent on surface' },
-        { fg: 'color.role.focus.ring', bg: 'color.role.bg.surface', min: 3.0, where: 'Focus ring on surface', backdrop: '#ffffff' }
-    ];
-    engine.use(WcagContrastPlugin(defaultWcagPairs));
+    const enableDefaults = constraintsCfg.enableBuiltInWcagDefaults === undefined
+        ? true
+        : !!constraintsCfg.enableBuiltInWcagDefaults;
+    if (enableDefaults) {
+        const defaultWcagPairs = [
+            {
+                fg: 'color.role.text.default',
+                bg: 'color.role.bg.surface',
+                min: 4.5,
+                where: 'Body text on surface',
+            },
+            {
+                fg: 'color.role.accent.default',
+                bg: 'color.role.bg.surface',
+                min: 3.0,
+                where: 'Accent on surface',
+            },
+            {
+                fg: 'color.role.focus.ring',
+                bg: 'color.role.bg.surface',
+                min: 3.0,
+                where: 'Focus ring on surface',
+                backdrop: '#ffffff',
+            },
+        ];
+        engine.use(WcagContrastPlugin(defaultWcagPairs));
+    }
+}
+/**
+ * @deprecated Use constraint-registry.ts setupConstraints() instead.
+ * This function will be removed in a future major version.
+ */
+export function createEngine(tokensRoot, config = {}) {
+    const { flat, edges } = flattenTokens(tokensRoot);
+    const init = {};
+    for (const [id, token] of Object.entries(flat))
+        init[id] = token.value;
+    const engine = new Engine(init, edges);
+    applyMonotonicPlugins(engine, undefined);
+    applyWcagPlugins(engine, config);
     return engine;
 }
+/**
+ * @deprecated Use constraint-registry.ts setupConstraints() instead.
+ * This function will be removed in a future major version.
+ */
 export function createValidationEngine(tokensRoot, bp, config) {
     const { flat, edges } = flattenTokens(tokensRoot);
     const init = {};
     for (const t of Object.values(flat))
         init[t.id] = t.value;
     const engine = new Engine(init, edges);
+    // Use breakpoint-aware order loading where available
     const typ = loadOrdersBP('typography', bp);
     const spc = loadOrdersBP('spacing', bp);
     const lay = loadOrdersBP('layout', bp);
@@ -61,10 +129,7 @@ export function createValidationEngine(tokensRoot, bp, config) {
         engine.use(MonotonicPlugin(lay, parseSizePx, 'monotonic-layout'));
     if (col.length)
         engine.use(MonotonicLightness(col));
-    if (config.constraints?.wcag) {
-        const wcagRules = config.constraints.wcag.map((rule) => ({ fg: rule.foreground, bg: rule.background, min: rule.ratio || 4.5, where: rule.description || 'Unknown' }));
-        engine.use(WcagContrastPlugin(wcagRules));
-    }
+    applyWcagPlugins(engine, config);
     return engine;
 }
 export { loadTokensWithBreakpoint };

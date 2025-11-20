@@ -18,6 +18,7 @@ export type OverridesTree = {
 export interface GlobalOptions {
     tokens?: string;
     config?: string;
+    theme?: string;
     verbose?: boolean;
     quiet?: boolean;
     breakpoint?: 'sm' | 'md' | 'lg';

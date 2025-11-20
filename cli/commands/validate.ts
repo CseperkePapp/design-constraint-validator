@@ -1,5 +1,5 @@
-import { flattenTokens, type TokenNode } from '../../core/flatten.js';
-import { createValidationEngine } from '../engine-helpers.js';
+import { flattenTokens, type TokenNode, type FlatToken } from '../../core/flatten.js';
+import { Engine } from '../../core/engine.js';
 import { loadConfig } from '../config.js';
 import { parseBreakpoints, loadTokensWithBreakpoint, mergeTokens, type Breakpoint } from '../../core/breakpoints.js';
 import type { ConstraintIssue } from '../../core/engine.js';
@@ -7,7 +7,7 @@ import type { ValidateOptions } from '../types.js';
 import { createValidationResult, createValidationReceipt, writeJsonOutput } from '../json-output.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { attachRuntimeConstraints } from '../constraints-loader.js';
+import { setupConstraints } from '../constraint-registry.js';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
   try {
@@ -65,18 +65,23 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
           }
         }
       }
-      const engine = createValidationEngine(tokens, bp, config);
-      const initIds = Object.keys(flattenTokens(tokens).flat).reduce<Record<string, true>>(
-        (a, k) => {
-          a[k] = true;
-          return a;
-        },
-        {},
-      );
-      const knownIds = new Set(Object.keys(initIds));
+      // Create engine with flattened tokens
+      const { flat, edges } = flattenTokens(tokens);
+      const init: Record<string, string | number> = {};
+      for (const t of Object.values(flat)) {
+        init[(t as FlatToken).id] = (t as FlatToken).value;
+      }
+      const engine = new Engine(init, edges);
+      const knownIds = new Set(Object.keys(init));
 
-      attachRuntimeConstraints(engine, { config, knownIds, bp, crossAxisDebug });
-      const allIds = new Set(Object.keys(initIds));
+      // Discover and attach all constraints via centralized registry
+      setupConstraints(
+        engine,
+        { config, bp, constraintsDir: 'themes' },
+        { knownIds, crossAxisDebug },
+      );
+
+      const allIds = new Set(Object.keys(init));
       const issues = engine.evaluate(allIds);
       const errs = issues.filter((i: ConstraintIssue) => i.level === 'error');
       const warns = issues.filter((i: ConstraintIssue) => i.level !== 'error');

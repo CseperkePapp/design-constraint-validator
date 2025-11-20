@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../config.js';
-import { createEngine } from '../engine-helpers.js';
+import { Engine } from '../../core/engine.js';
 import { flattenTokens } from '../../core/flatten.js';
 import { loadTokens, outputResult } from './utils.js';
+import { setupConstraints } from '../constraint-registry.js';
 // Lightweight suggestion helpers (kept local – why command uses core formatter instead)
 function levenshtein(a, b) {
     const al = a.length, bl = b.length;
@@ -81,9 +82,16 @@ export async function setCommand(options) {
     }
     const config = cfgRes.value;
     const tokens = loadTokens(tokensPath);
-    const engine = createEngine(tokens, config);
-    const { flat: flatAll } = flattenTokens(tokens);
-    const knownIds = new Set(Object.keys(flatAll));
+    // Create engine with flattened tokens
+    const { flat, edges } = flattenTokens(tokens);
+    const init = {};
+    for (const t of Object.values(flat)) {
+        init[t.id] = t.value;
+    }
+    const engine = new Engine(init, edges);
+    const knownIds = new Set(Object.keys(init));
+    // Discover and attach all constraints via centralized registry
+    setupConstraints(engine, { config, constraintsDir: 'themes' }, { knownIds });
     function ensureKnownOrSuggest(id) {
         if (!knownIds.has(id)) {
             const suggestions = suggestIds(id, Array.from(knownIds));
