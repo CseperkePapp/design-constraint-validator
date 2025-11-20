@@ -1,0 +1,10 @@
+{
+  "a": { "base": { "$value": "#000000" } },
+  "b": { "usesA": { "$value": "{a.base}" } },
+  "c": { "usesB": { "$value": "{b.usesA}" } },
+  "alias": { "toC": { "$value": "{c.usesB}" } },
+  "color": {
+    "fg": { "$value": "#111111" },
+    "bg": { "$value": "#ffffff" }
+  }
+}
