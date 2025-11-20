@@ -4,39 +4,40 @@ Complete documentation for Design Constraint Validator.
 
 ## Quick Links
 
+### For Everyone
 - **[Getting Started](./Getting-Started.md)** - 5-minute quick start guide
-- **[Constraints](./Constraints.md)** - All constraint types explained
+- **[Features & Complete Guide](./Features.md)** - All features, examples, and FAQ
+- **[Examples](./Examples.md)** - Sample projects and use cases
+
+### For Users
+- **[Constraints](./Constraints.md)** - All 5 constraint types in detail
 - **[CLI Reference](./CLI.md)** - Complete command documentation
 - **[Configuration](./Configuration.md)** - Config file options
-- **[Architecture](./Architecture.md)** - How DCV works internally
+- **[Concepts](./Concepts.md)** - Core terminology and defaults
+
+### For Developers
 - **[API Reference](./API.md)** - Programmatic usage
-- **[Concepts](./Concepts.md)** - Core terms and defaults
-- **[Adapters](./Adapters.md)** - Input/output formats and mappers
+- **[Architecture](./Architecture.md)** - Internal design
+- **[Adapters](./Adapters.md)** - Input/output formats
+
+### Additional Resources
+- **[Prior Art / Method](./prior-art/)** - Design rationale (Decision Themes, receipts)
+- **[AI Guide](./AI-GUIDE.md)** - Using DCV with ChatGPT/Claude/Copilot
 
 ## Overview
 
 These docs provide comprehensive guidance for using Design Constraint Validator (DCV):
 
-### For Beginners
-Start with **[Getting Started](./Getting-Started.md)** - it will have you validating tokens in 5 minutes.
+**New to DCV?** Start with **[Getting Started](./Getting-Started.md)** - it will have you validating tokens in 5 minutes.
 
-### For Users
-- **[Constraints](./Constraints.md)** - Learn all 5 constraint types
-- **[CLI Reference](./CLI.md)** - Master all commands
-- **[Configuration](./Configuration.md)** - Customize DCV for your project
-- **[Concepts](./Concepts.md)** - Understand tokens, constraints, policies, receipts
-
-### For Developers
-- **[API Reference](./API.md)** - Use DCV programmatically
-- **[Architecture](./Architecture.md)** - Understand how it works internally
-- **[Adapters](./Adapters.md)** - Integrate with token pipelines and outputs
+**Want to see everything?** Check out **[Features & Complete Guide](./Features.md)** for the full feature set, detailed examples, CLI commands, and FAQ
 
 ## Additional Resources
 
 - **Main README**: [../README.md](../README.md)
-- **Configuration Guide**: [../CONFIGURATION.md](../CONFIGURATION.md)
+- **Configuration Guide**: [./Configuration.md](./Configuration.md)
 - **Contributing**: [../CONTRIBUTING.md](../CONTRIBUTING.md)
-- **Examples**: [../examples/](../examples/)
+- **Examples folder**: [../examples/](../examples/)
 
 ## GitHub Wiki
 

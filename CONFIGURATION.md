@@ -1,43 +1,13 @@
-# Configuration Guide
+﻿# Configuration Guide (Deprecated)
 
-This guide explains how `design-constraint-validator` discovers and loads your tokens and constraints.
+> **Deprecated:** This configuration guide has moved to `docs/Configuration.md` and will be removed in a future release.
 
-## Default Behavior
+Please refer to the canonical configuration documentation:
 
-By default, the validator automatically looks for:
+- `docs/Configuration.md` (primary, up-to-date guide)
+- `docs/CLI.md` (CLI options, including config-related flags)
 
-### Tokens
-- `tokens.json` (root level)
-- `tokens/*.json` (all JSON files in tokens folder)
-- `tokens/**/*.json` (recursive)
-
-### Constraints
-- `themes/*.json` (all JSON files in themes folder)
-- `themes/**/*.json` (recursive)
-
-### Overrides (for breakpoints)
-- `tokens/overrides/sm.json` - Small screens
-- `tokens/overrides/md.json` - Medium screens
-- `tokens/overrides/lg.json` - Large screens
-
-## Configuration Files
-
-You can customize paths and behavior using a configuration file. The validator searches for config in this order:
-
-1. `dcv.config.json`
-2. `dcv.config.js`
-3. `.dcvrc.json`
-4. `package.json` (under `"dcv"` key)
-
-## Configuration Schema
-
-### Basic Example
-
-**dcv.config.json:**
-```json
-{
-  "tokens": "design-tokens.json",
-  "themes": "constraints",
+The information here is intentionally minimal to avoid divergence from the main docs.
   "overrides": "tokens/breakpoints"
 }
 ```
