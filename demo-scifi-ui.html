@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sci-Fi Spiral Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000000;
+            color: #00d4ff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Starfield background */
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(0, 30, 60, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(20, 40, 80, 0.2) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Main canvas for spiral */
+        #spiralCanvas {
+            position: fixed;
+            top: 50%;
+            left: 15%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.6));
+        }
+
+        /* UI Panels Container */
+        .ui-container {
+            position: relative;
+            z-index: 10;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+
+        /* Panel styles */
+        .panel {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.8) 0%, rgba(10, 30, 50, 0.6) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            pointer-events: all;
+            box-shadow: 0 0 20px rgba(0, 100, 150, 0.3),
+                        inset 0 0 20px rgba(0, 212, 255, 0.05);
+            backdrop-filter: blur(10px);
+            animation: panelPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes panelPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 100, 150, 0.3),
+                            inset 0 0 20px rgba(0, 212, 255, 0.05);
+                border-color: rgba(0, 212, 255, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 150, 200, 0.5),
+                            inset 0 0 30px rgba(0, 212, 255, 0.1);
+                border-color: rgba(0, 212, 255, 0.5);
+            }
+        }
+
+        .panel-header {
+            font-size: 10px;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+            animation: textGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes textGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(0, 212, 255, 0.8); }
+            50% { text-shadow: 0 0 20px rgba(0, 212, 255, 1); }
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 11px;
+            color: rgba(0, 212, 255, 0.7);
+        }
+
+        .data-value {
+            color: #ff8c42;
+            text-shadow: 0 0 8px rgba(255, 140, 66, 0.6);
+        }
+
+        /* Top right panel */
+        .panel-top-right {
+            top: 40px;
+            right: 40px;
+            width: 320px;
+            height: 180px;
+        }
+
+        /* Top left info */
+        .panel-top-left {
+            top: 30px;
+            left: 40px;
+            width: 200px;
+        }
+
+        /* Bottom right data */
+        .panel-bottom-right {
+            bottom: 40px;
+            right: 40px;
+            width: 280px;
+            height: 240px;
+        }
+
+        /* Circular gauges */
+        .gauge-container {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+        }
+
+        .gauge {
+            width: 120px;
+            height: 120px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .gauge canvas {
+            filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.5));
+        }
+
+        /* Status bars */
+        .status-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 50, 100, 0.4);
+            border-radius: 3px;
+            margin: 8px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff 0%, #ff8c42 100%);
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+            animation: fillPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes fillPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 212, 255, 0.8); }
+            50% { box-shadow: 0 0 20px rgba(0, 212, 255, 1); }
+        }
+
+        /* Mini spiral indicators */
+        .mini-spiral {
+            width: 80px;
+            height: 80px;
+            margin: 10px 0;
+        }
+
+        /* Hexagonal grid overlay */
+        .hex-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.05;
+            background-image:
+                linear-gradient(30deg, transparent 48%, rgba(0, 212, 255, 0.1) 49%, rgba(0, 212, 255, 0.1) 51%, transparent 52%),
+                linear-gradient(150deg, transparent 48%, rgba(0, 212, 255, 0.1) 49%, rgba(0, 212, 255, 0.1) 51%, transparent 52%),
+                linear-gradient(90deg, transparent 48%, rgba(0, 212, 255, 0.1) 49%, rgba(0, 212, 255, 0.1) 51%, transparent 52%);
+            background-size: 50px 87px;
+            animation: hexMove 20s linear infinite;
+        }
+
+        @keyframes hexMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 87px; }
+        }
+
+        /* Scan lines */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 50%,
+                rgba(0, 212, 255, 0.03) 51%
+            );
+            background-size: 100% 4px;
+            z-index: 15;
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* Glitch effect */
+        .glitch {
+            animation: glitch 5s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translateX(0); }
+            91% { transform: translateX(-2px); }
+            93% { transform: translateX(2px); }
+            95% { transform: translateX(-2px); }
+            97% { transform: translateX(0); }
+        }
+
+        /* Number ticker */
+        .ticker {
+            display: inline-block;
+            animation: numberTick 0.5s steps(10) infinite;
+        }
+
+        /* Coordinates display */
+        .coordinates {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 200px;
+            color: rgba(0, 212, 255, 0.03);
+            z-index: 0;
+            font-weight: bold;
+            letter-spacing: 20px;
+        }
+
+        /* Data tables */
+        .data-table {
+            margin-top: 10px;
+        }
+
+        .data-table-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin: 5px 0;
+            font-size: 9px;
+        }
+
+        .data-cell {
+            padding: 4px;
+            background: rgba(0, 50, 100, 0.2);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            text-align: center;
+        }
+
+        .data-cell.active {
+            background: rgba(255, 140, 66, 0.2);
+            border-color: rgba(255, 140, 66, 0.4);
+            animation: cellPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes cellPulse {
+            0%, 100% { background: rgba(255, 140, 66, 0.2); }
+            50% { background: rgba(255, 140, 66, 0.4); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background layers -->
+    <div class="starfield"></div>
+    <canvas class="stars" id="starsCanvas"></canvas>
+    <div class="hex-grid"></div>
+    <div class="scanline"></div>
+
+    <!-- Large coordinate overlay -->
+    <div class="coordinates">01</div>
+
+    <!-- Main spiral canvas -->
+    <canvas id="spiralCanvas" width="800" height="800"></canvas>
+
+    <!-- UI Panels -->
+    <div class="ui-container">
+        <!-- Top left panel -->
+        <div class="panel panel-top-left glitch">
+            <div class="panel-header">◉ System Status</div>
+            <div class="data-row">
+                <span>Mode</span>
+                <span class="data-value">Active</span>
+            </div>
+            <div class="data-row">
+                <span>Signal</span>
+                <span class="data-value ticker">98.7%</span>
+            </div>
+            <div class="status-bar">
+                <div class="status-fill" style="width: 98.7%"></div>
+            </div>
+        </div>
+
+        <!-- Top right panel -->
+        <div class="panel panel-top-right">
+            <div class="panel-header">◎ Temporal Data</div>
+            <div class="data-row">
+                <span>Sync Rate</span>
+                <span class="data-value">1.618 Hz</span>
+            </div>
+            <div class="status-bar">
+                <div class="status-fill" style="width: 85%"></div>
+            </div>
+            <div class="data-row">
+                <span>Phase</span>
+                <span class="data-value ticker">280.4°</span>
+            </div>
+            <div class="status-bar">
+                <div class="status-fill" style="width: 62%"></div>
+            </div>
+            <div class="data-table">
+                <div class="data-table-row">
+                    <div class="data-cell">Alpha</div>
+                    <div class="data-cell active">Beta</div>
+                    <div class="data-cell">Gamma</div>
+                </div>
+                <div class="data-table-row">
+                    <div class="data-cell">0.42</div>
+                    <div class="data-cell active">0.89</div>
+                    <div class="data-cell">0.13</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom right panel -->
+        <div class="panel panel-bottom-right">
+            <div class="panel-header">⬡ Quantum Metrics</div>
+            <div class="data-row">
+                <span>Coherence</span>
+                <span class="data-value">Active</span>
+            </div>
+            <div class="data-row">
+                <span>Entropy</span>
+                <span class="data-value ticker">0.271828</span>
+            </div>
+            <div class="status-bar">
+                <div class="status-fill" style="width: 73%"></div>
+            </div>
+            <div class="data-row">
+                <span>Spin</span>
+                <span class="data-value">↻ CCW</span>
+            </div>
+            <div class="data-row">
+                <span>Position</span>
+                <span class="data-value ticker">42.618</span>
+            </div>
+            <canvas class="mini-spiral" id="miniSpiral1"></canvas>
+            <div class="data-table">
+                <div class="data-table-row">
+                    <div class="data-cell">X: 0.11</div>
+                    <div class="data-cell active">Y: 0.85</div>
+                    <div class="data-cell">Z: 0.42</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Circular gauges -->
+        <div class="gauge-container">
+            <div class="gauge">
+                <canvas id="gauge1" width="120" height="120"></canvas>
+            </div>
+            <div class="gauge">
+                <canvas id="gauge2" width="120" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Stars animation
+        const starsCanvas = document.getElementById('starsCanvas');
+        const starsCtx = starsCanvas.getContext('2d');
+        starsCanvas.width = window.innerWidth;
+        starsCanvas.height = window.innerHeight;
+
+        const stars = [];
+        for (let i = 0; i < 200; i++) {
+            stars.push({
+                x: Math.random() * starsCanvas.width,
+                y: Math.random() * starsCanvas.height,
+                radius: Math.random() * 1.5,
+                opacity: Math.random(),
+                speed: Math.random() * 0.02
+            });
+        }
+
+        function animateStars() {
+            starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(star => {
+                star.opacity += star.speed;
+                if (star.opacity > 1 || star.opacity < 0) star.speed *= -1;
+
+                starsCtx.beginPath();
+                starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                starsCtx.fillStyle = `rgba(0, 212, 255, ${star.opacity})`;
+                starsCtx.fill();
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // Main spiral fractal
+        const spiralCanvas = document.getElementById('spiralCanvas');
+        const spiralCtx = spiralCanvas.getContext('2d');
+        let spiralRotation = 0;
+
+        function drawFractalSpiral() {
+            const centerX = spiralCanvas.width / 2;
+            const centerY = spiralCanvas.height / 2;
+
+            spiralCtx.clearRect(0, 0, spiralCanvas.width, spiralCanvas.height);
+            spiralCtx.save();
+            spiralCtx.translate(centerX, centerY);
+            spiralCtx.rotate(spiralRotation);
+            spiralCtx.translate(-centerX, -centerY);
+
+            const numSegments = 12;
+            const maxRadius = 350;
+            const goldenRatio = 1.618;
+
+            // Draw multiple spiral layers
+            for (let layer = 0; layer < 5; layer++) {
+                const radiusScale = Math.pow(goldenRatio, -layer);
+
+                for (let i = 0; i < numSegments; i++) {
+                    const angle1 = (i / numSegments) * Math.PI * 2;
+                    const angle2 = ((i + 1) / numSegments) * Math.PI * 2;
+
+                    const gradient = spiralCtx.createRadialGradient(
+                        centerX, centerY, 0,
+                        centerX, centerY, maxRadius * radiusScale
+                    );
+
+                    // Alternating blue and orange segments with glow
+                    if (i % 2 === 0) {
+                        gradient.addColorStop(0, `rgba(0, 100, 180, ${0.8 - layer * 0.15})`);
+                        gradient.addColorStop(0.5, `rgba(0, 150, 255, ${0.6 - layer * 0.1})`);
+                        gradient.addColorStop(1, `rgba(0, 212, 255, ${0.3 - layer * 0.05})`);
+                    } else {
+                        gradient.addColorStop(0, `rgba(180, 60, 20, ${0.7 - layer * 0.1})`);
+                        gradient.addColorStop(0.5, `rgba(255, 100, 40, ${0.5 - layer * 0.1})`);
+                        gradient.addColorStop(1, `rgba(255, 140, 66, ${0.2 - layer * 0.05})`);
+                    }
+
+                    spiralCtx.beginPath();
+                    spiralCtx.moveTo(centerX, centerY);
+                    spiralCtx.arc(centerX, centerY, maxRadius * radiusScale, angle1, angle2);
+                    spiralCtx.closePath();
+                    spiralCtx.fillStyle = gradient;
+                    spiralCtx.fill();
+
+                    // Add glowing borders
+                    spiralCtx.strokeStyle = i % 2 === 0
+                        ? `rgba(0, 212, 255, ${0.4 - layer * 0.08})`
+                        : `rgba(255, 140, 66, ${0.3 - layer * 0.06})`;
+                    spiralCtx.lineWidth = 2;
+                    spiralCtx.stroke();
+                }
+
+                // Draw inner dark circle for depth
+                const innerRadius = maxRadius * radiusScale * 0.3;
+                const darkGradient = spiralCtx.createRadialGradient(
+                    centerX, centerY, 0,
+                    centerX, centerY, innerRadius
+                );
+                darkGradient.addColorStop(0, 'rgba(0, 0, 0, 0.9)');
+                darkGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+
+                spiralCtx.beginPath();
+                spiralCtx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+                spiralCtx.fillStyle = darkGradient;
+                spiralCtx.fill();
+            }
+
+            spiralCtx.restore();
+
+            spiralRotation += 0.002; // Slow rotation
+        }
+
+        // Circular gauges
+        function drawGauge(canvasId, value, color1, color2) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 50;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 50, 100, 0.3)';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+
+            // Value arc
+            const endAngle = -Math.PI / 2 + (value / 100) * Math.PI * 2;
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, -Math.PI / 2, endAngle);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Inner glow
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius - 20, 0, Math.PI * 2);
+            const glowGradient = ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, radius - 20
+            );
+            glowGradient.addColorStop(0, `${color1}40`);
+            glowGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = glowGradient;
+            ctx.fill();
+
+            // Center text
+            ctx.fillStyle = color2;
+            ctx.font = 'bold 16px Courier New';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${Math.round(value)}%`, centerX, centerY);
+        }
+
+        // Mini spiral
+        function drawMiniSpiral(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const numSegments = 8;
+            const maxRadius = 35;
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle1 = (i / numSegments) * Math.PI * 2;
+                const angle2 = ((i + 1) / numSegments) * Math.PI * 2;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, maxRadius, angle1, angle2);
+                ctx.closePath();
+
+                if (i % 2 === 0) {
+                    ctx.fillStyle = 'rgba(0, 150, 255, 0.6)';
+                } else {
+                    ctx.fillStyle = 'rgba(255, 100, 40, 0.5)';
+                }
+                ctx.fill();
+
+                ctx.strokeStyle = i % 2 === 0 ? 'rgba(0, 212, 255, 0.8)' : 'rgba(255, 140, 66, 0.7)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // Inner circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fill();
+        }
+
+        // Animation loop
+        let gaugeValue1 = 67;
+        let gaugeValue2 = 42;
+        let gaugeDirection1 = 0.3;
+        let gaugeDirection2 = -0.5;
+
+        function animate() {
+            drawFractalSpiral();
+
+            // Pulsing gauge values
+            gaugeValue1 += gaugeDirection1;
+            gaugeValue2 += gaugeDirection2;
+
+            if (gaugeValue1 > 95 || gaugeValue1 < 30) gaugeDirection1 *= -1;
+            if (gaugeValue2 > 85 || gaugeValue2 < 20) gaugeDirection2 *= -1;
+
+            drawGauge('gauge1', gaugeValue1, '#00d4ff', '#0088ff');
+            drawGauge('gauge2', gaugeValue2, '#ff8c42', '#ff5522');
+            drawMiniSpiral('miniSpiral1');
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            starsCanvas.width = window.innerWidth;
+            starsCanvas.height = window.innerHeight;
+        });
+
+        // Number ticker animation
+        setInterval(() => {
+            document.querySelectorAll('.ticker').forEach(el => {
+                const current = parseFloat(el.textContent);
+                const variation = (Math.random() - 0.5) * 0.2;
+                const newValue = current + variation;
+                el.textContent = el.textContent.includes('%')
+                    ? `${newValue.toFixed(1)}%`
+                    : newValue.toFixed(current > 1 ? 1 : 6);
+            });
+        }, 500);
+    </script>
+</body>
+</html>
