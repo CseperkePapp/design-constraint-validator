@@ -7,7 +7,18 @@
       "Bash(cat:*)",
       "Bash(npm run build:*)",
       "Bash(npm pack:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm publish:*)",
+      "Bash(echo \"You need to publish with an OTP (One-Time Password) from your authenticator app.\n\nRun this command with your OTP code:\n\nnpm publish --otp=YOUR_6_DIGIT_CODE\n\nReplace YOUR_6_DIGIT_CODE with the current code from your authenticator app.\")",
+      "Bash(npm profile:*)",
+      "Bash(gh release create:*)",
+      "Bash(git fetch:*)",
+      "Bash(curl:*)",
+      "Bash(npm whoami:*)",
+      "Bash(npm view:*)",
+      "Bash(git restore:*)",
+      "Bash(npm test:*)",
+      "Bash(npm version:*)"
     ],
     "deny": [],
     "ask": []

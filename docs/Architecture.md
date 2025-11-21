@@ -843,13 +843,13 @@ const issues = engine.evaluate(fullCandidates);
 
 ### Deprecation Timeline
 
-The following modules are deprecated and will be removed in v2.0:
+The following modules were deprecated in v1.1.0 and removed in v2.0.0:
 
-- **cli/engine-helpers.ts** - Use `constraint-registry.ts` instead
-- **cli/constraints-loader.ts** - Use `constraint-registry.ts` instead
-- **core/cross-axis-config.ts** - Use `cli/cross-axis-loader.ts` instead
+- **cli/engine-helpers.ts** - Removed. Use `constraint-registry.ts` instead
+- **cli/constraints-loader.ts** - Removed. Use `constraint-registry.ts` instead
+- **core/cross-axis-config.ts** - Removed. Use `cli/cross-axis-loader.ts` instead
 
-All deprecated modules include migration guides in their JSDoc comments.
+See the [v1.1.0 release notes](https://github.com/CseperkePapp/design-constraint-validator/releases/tag/v1.1.0) for migration guides.
 
 ---
 

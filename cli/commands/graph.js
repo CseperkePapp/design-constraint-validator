@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { flattenTokens } from '../../core/flatten.js';
 import { exportGraphImage } from '../../core/image-export.js';
-import { attachRuntimeConstraints } from '../constraints-loader.js';
+import { setupConstraints } from '../constraint-registry.js';
 import { loadConfig } from '../config.js';
 // Local helper for non-poset dependency graphs
 function generateDependencyGraph(edges, format) {
@@ -127,7 +127,7 @@ export async function graphCommand(options) {
                     if (cfgRes.ok) {
                         const config = cfgRes.value;
                         const knownIds = new Set(Object.keys(flat));
-                        attachRuntimeConstraints(engine, { config, knownIds, bp: breakpoint });
+                        setupConstraints(engine, { config, bp: breakpoint }, { knownIds });
                         const runtimeIssues = engine.evaluate(allIdsInHasse);
                         issues.push(...runtimeIssues);
                     }
