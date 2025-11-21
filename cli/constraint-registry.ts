@@ -273,7 +273,7 @@ export function attachConstraints(engine: Engine, sources: ConstraintSource[], o
           break;
         }
       }
-    } catch (err) {
+    } catch {
       // Silently skip failed constraint attachments (consistent with old behavior)
       // In the future, we may want to surface these as warnings
     }

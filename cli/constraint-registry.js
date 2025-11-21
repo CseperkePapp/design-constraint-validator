@@ -200,7 +200,7 @@ export function attachConstraints(engine, sources, opts) {
                 }
             }
         }
-        catch (err) {
+        catch {
             // Silently skip failed constraint attachments (consistent with old behavior)
             // In the future, we may want to surface these as warnings
         }
