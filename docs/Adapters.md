@@ -141,6 +141,38 @@ For CSS/JS output, you can provide a “manifest” (mapper) file that remaps to
 
 This lets you keep canonical token IDs internally while exposing different variable names externally (for example, to preserve backwards-compatible CSS variables).
 
+## DecisionThemes Adapter (Coming Soon)
+
+The `adapters/decisionthemes.ts` adapter will integrate with the [DecisionThemes framework](https://www.decisionthemes.com) (coming 2026).
+
+**Purpose:** Transform VT (Value Themes) + DT (Decision Themes) into flat tokens for DCV validation.
+
+**How it works:**
+1. **Input**: VT (raw design values) + DT (decision formulas and mappings)
+2. **Process**: DecisionThemes resolver computes effective CSS variables
+3. **Output**: Flat tokens + auto-generated constraint policy from 5-axis model
+
+**Example usage (when implemented):**
+```typescript
+import { decisionthemesAdapter } from './adapters/decisionthemes.js';
+
+const { tokens, policy } = decisionthemesAdapter({
+  vt: valueThemes,     // Raw values
+  dt: decisionThemes   // Formulas + 5-axis decisions
+});
+
+// Validate the computed tokens
+await validate(tokens, { policy });
+```
+
+**Status:** Placeholder implementation currently throws an error. Full integration coming with DecisionThemes launch.
+
+**Learn more:**
+- [Decision Themes Method](./prior-art/Decision-Themes-Deterministic-Compute-and-Dual-Namespaces.md)
+- [DecisionThemes Preview](https://www.decisionthemes.com)
+
+---
+
 ## When to Write a Custom Adapter
 
 You may want a custom adapter if:

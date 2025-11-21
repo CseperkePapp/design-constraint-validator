@@ -146,6 +146,20 @@ Full adapter documentation: **[Adapters](docs/Adapters.md)**
 
 ---
 
+## DCV & DecisionThemes
+
+DCV is the **standalone validation engine** — use it for any token system.
+
+**DecisionThemes** (coming 2026) is a complete design system framework built on DCV:
+- **5-axis decision model** (Tone, Emphasis, Size, Density, Shape)
+- **VT/DT pipeline** (Value Themes + Decision Themes → deterministic CSS configs)
+- **Studio UI** + **Hub marketplace** for sharing Decision Systems
+
+DCV powers DecisionThemes' validation layer — but works perfectly standalone.
+Preview: [www.decisionthemes.com](https://www.decisionthemes.com)
+
+---
+
 ## Method & Prior Art
 
 The Design Constraint Validator engine is based on a theming and validation method published as **defensive prior art**.
