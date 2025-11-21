@@ -20,40 +20,16 @@
  * // policy = auto-generated constraints from 5-axis model
  * ```
  */
-
-export interface VT {
-  // Value Themes - raw design values
-  [key: string]: any;
-}
-
-export interface DT {
-  // Decision Themes - formulas and decision mappings
-  [key: string]: any;
-}
-
-export interface DecisionThemesInput {
-  vt: VT;
-  dt: DT;
-}
-
-export interface DecisionThemesOutput {
-  tokens: Record<string, any>;
-  policy?: string;
-}
-
 /**
  * Transform DecisionThemes (VT+DT) into DCV-compatible tokens
  *
  * @param input - VT (values) + DT (decisions)
  * @returns Flat tokens + optional policy JSON
  */
-export function decisionthemesAdapter(_input: DecisionThemesInput): DecisionThemesOutput {
-  // TODO: Implement when DecisionThemes integration is ready
-  // This will call the DecisionThemes resolver/compute engine to process _input
-
-  throw new Error(
-    'DecisionThemes adapter not yet implemented. ' +
-    'This is a placeholder for future integration with the DecisionThemes framework. ' +
-    'See https://www.decisionthemes.com for updates.'
-  );
+export function decisionthemesAdapter(_input) {
+    // TODO: Implement when DecisionThemes integration is ready
+    // This will call the DecisionThemes resolver/compute engine to process _input
+    throw new Error('DecisionThemes adapter not yet implemented. ' +
+        'This is a placeholder for future integration with the DecisionThemes framework. ' +
+        'See https://www.decisionthemes.com for updates.');
 }
