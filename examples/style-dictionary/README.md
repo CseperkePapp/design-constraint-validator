@@ -327,5 +327,5 @@ npx design-constraint-validator validate --tokens tokens.json
 ## Resources
 
 - [Style Dictionary Documentation](https://amzn.github.io/style-dictionary/)
-- [DCV Configuration Guide](../../docs/CONFIGURATION.md)
+- [DCV Configuration Guide](../../docs/Configuration.md)
 - [Complete Examples](../../examples/)

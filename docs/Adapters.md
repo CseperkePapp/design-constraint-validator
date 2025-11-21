@@ -85,12 +85,27 @@ Style Dictionary often uses a `value` property instead of `$value` and may inclu
 }
 ```
 
-DCV does not currently rename `value` to `$value` automatically. To validate a Style Dictionary export, you have two options:
+**Integration Options:**
 
-1. Transform your Style Dictionary output to use `$value` (for example, via a small script in your build pipeline).
-2. Export a DTCG-style or “raw tokens” JSON from your tool that already uses `$value`.
+DCV's flattening logic looks for `$value` by default, but the ecosystem tool examples in `examples/style-dictionary/` show how to integrate DCV into your pipeline:
+
+1. **Transform to DTCG format**: Use Style Dictionary's built-in formats or transforms to output tokens in DTCG/W3C format (with `$value`), then validate that output.
+2. **Pre-process in your build**: Add a simple transformation step that renames `value` → `$value` before passing to DCV.
+3. **Use DCV programmatically**: Import tokens in your Node.js code, transform them to the expected shape, and call DCV's `validate()` API directly.
 
 The internal adapter modules under `adapters/` (`json.ts`, `css.ts`, `js.ts`) focus on *output* formats (what DCV emits), not on input normalization from Style Dictionary.
+
+**See also:** [examples/style-dictionary/README.md](../examples/style-dictionary/README.md) for a complete integration example.
+
+### 4. Format Detection & Normalization
+
+DCV currently does NOT automatically detect or convert between formats (e.g., auto-converting Style Dictionary's `value` to `$value`). This is intentional:
+
+- **Explicit > Implicit**: Requiring `$value` makes the token structure unambiguous.
+- **Ecosystem Flexibility**: Different tools may use `value`, `val`, or other fields. Rather than guess, DCV expects normalized input.
+- **Adapter Responsibility**: Input normalization belongs in your build pipeline or custom adapter, keeping DCV's core focused on validation logic.
+
+**Recommendation**: If your tokens don't use `$value`, add a preprocessing step in your build pipeline rather than modifying DCV's core. This keeps your integration explicit and maintainable.
 
 ## Output Adapters
 

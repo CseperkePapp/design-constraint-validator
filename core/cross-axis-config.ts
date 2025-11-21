@@ -1,3 +1,29 @@
+/**
+ * @deprecated This module is deprecated. Use cli/cross-axis-loader.ts instead.
+ *
+ * Phase 3B (Filesystem Separation): This file contains filesystem access logic
+ * that has been moved to the CLI layer (cli/cross-axis-loader.ts).
+ *
+ * Core modules should not import from node:fs. Instead:
+ * - CLI code uses cli/cross-axis-loader.ts to read and parse rules
+ * - Core plugin (core/constraints/cross-axis.ts) accepts pre-parsed rules
+ *
+ * Migration:
+ * ```ts
+ * // OLD (core reads filesystem):
+ * import { loadCrossAxisPlugin } from './core/cross-axis-config.js';
+ * engine.use(loadCrossAxisPlugin(path, bp, { knownIds }));
+ *
+ * // NEW (CLI reads, core receives data):
+ * import { loadCrossAxisRules } from './cli/cross-axis-loader.js';
+ * import { CrossAxisPlugin } from './core/constraints/cross-axis.js';
+ * const rules = loadCrossAxisRules(path, { bp, knownIds });
+ * engine.use(CrossAxisPlugin(rules, bp));
+ * ```
+ *
+ * This file will be removed in a future major version.
+ */
+
 import fs from "node:fs";
 import { CrossAxisPlugin, type CrossAxisRule, type Ctx } from "./constraints/cross-axis.js";
 
@@ -6,6 +32,10 @@ type Require = { id: string; op: "<="|">="|"<"|">"|"=="|"!="; ref?: string; fall
 type Compare = { a: string; op: "<="|">="|"<"|">"|"=="|"!="; b: string; delta?: string|number };
 type RawRule = { id: string; level?: "error"|"warn"; where?: string; bp?: string; when?: When; require?: Require; compare?: Compare; };
 
+/**
+ * @deprecated Use cli/cross-axis-loader.ts loadCrossAxisRules() + CrossAxisPlugin() instead.
+ * This function will be removed in a future major version.
+ */
 export function loadCrossAxisPlugin(
   path: string,
   bp?: string,

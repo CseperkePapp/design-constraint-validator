@@ -1,6 +1,8 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { flattenTokens } from '../../core/flatten.js';
 import { exportGraphImage } from '../../core/image-export.js';
+import { attachRuntimeConstraints } from '../constraints-loader.js';
+import { loadConfig } from '../config.js';
 // Local helper for non-poset dependency graphs
 function generateDependencyGraph(edges, format) {
     switch (format) {
@@ -103,12 +105,14 @@ export async function graphCommand(options) {
                     const { Engine } = await import('../../core/engine.js');
                     const { MonotonicPlugin, parseSize } = await import('../../core/constraints/monotonic.js');
                     const { MonotonicLightness } = await import('../../core/constraints/monotonic-lightness.js');
-                    const { ThresholdPlugin } = await import('../../core/constraints/threshold.js');
-                    const { flat, edges } = flattenTokens(tokens);
+                    const { flat, edges: depEdges } = flattenTokens(tokens);
                     const init = {};
-                    Object.values(flat).forEach(t => { const ft = t; init[ft.id] = ft.value; });
-                    const engine = new Engine(init, edges);
-                    const allIdsInHasse = new Set([...h.keys(), ...Array.from(h.values()).flatMap(s => [...s])]);
+                    Object.values(flat).forEach((t) => {
+                        const ft = t;
+                        init[ft.id] = ft.value;
+                    });
+                    const engine = new Engine(init, depEdges);
+                    const allIdsInHasse = new Set([...h.keys(), ...Array.from(h.values()).flatMap((s) => [...s])]);
                     let issues = [];
                     if (name === 'color') {
                         const colorOrders = order;
@@ -118,10 +122,20 @@ export async function graphCommand(options) {
                         const numericOrders = order;
                         issues = MonotonicPlugin(numericOrders, parseSize, 'monotonic').evaluate(engine, allIdsInHasse);
                     }
-                    const thresholdIssues = ThresholdPlugin([{ id: 'control.size.min', op: '>=', valuePx: 44, where: 'Touch target (WCAG / Apple HIG)' }]).evaluate(engine, allIdsInHasse);
-                    issues.push(...thresholdIssues);
+                    // Attach threshold (and any other runtime constraints) respecting config flags
+                    const cfgRes = loadConfig(undefined);
+                    if (cfgRes.ok) {
+                        const config = cfgRes.value;
+                        const knownIds = new Set(Object.keys(flat));
+                        attachRuntimeConstraints(engine, { config, knownIds, bp: breakpoint });
+                        const runtimeIssues = engine.evaluate(allIdsInHasse);
+                        issues.push(...runtimeIssues);
+                    }
                     const severityRank = { error: 2, warn: 1 };
-                    const filteredIssues = issues.filter(it => { const level = it.level || 'error'; return severityRank[level] >= severityRank[minSeverity]; });
+                    const filteredIssues = issues.filter((it) => {
+                        const level = it.level || 'error';
+                        return severityRank[level] >= severityRank[minSeverity];
+                    });
                     const edgeViol = new Set();
                     const nodeViol = new Set();
                     if (labelViolations)
@@ -134,13 +148,15 @@ export async function graphCommand(options) {
                             nodeViol.add(b);
                             if (labelViolations && edgeLabels) {
                                 let label = it.message ?? 'violation';
-                                if (labelTruncate > 0 && label.length > labelTruncate)
+                                if (labelTruncate > 0 && label.length > labelTruncate) {
                                     label = label.slice(0, labelTruncate - 1) + '…';
+                                }
                                 edgeLabels.set(`${a}|${b}`, label);
                             }
                         }
-                        else if (typeof it.id === 'string')
+                        else if (typeof it.id === 'string') {
                             nodeViol.add(it.id);
+                        }
                     }
                     highlight = { nodes: nodeViol, edges: edgeViol, color: violationColor };
                     if (onlyViolations) {

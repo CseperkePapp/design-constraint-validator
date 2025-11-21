@@ -16,6 +16,28 @@ export class Engine {
     use(plugin) { this.plugins.push(plugin); return this; }
     get(id) { return this.values.get(id); }
     set(id, value) { this.values.set(id, value); }
+    /**
+     * Get all token IDs in the engine.
+     *
+     * Phase 3C: Exposed for plugins and adapters.
+     * Useful for iterating all tokens or creating a full candidate set.
+     *
+     * @returns Array of all token IDs
+     */
+    getAllIds() {
+        return Array.from(this.values.keys());
+    }
+    /**
+     * Get flat token map (ID → value).
+     *
+     * Phase 3C: Exposed to avoid duplicate flattening in CLI/adapters.
+     * Returns a plain object suitable for serialization or adapter use.
+     *
+     * @returns Record mapping token IDs to their current values
+     */
+    getFlatTokens() {
+        return Object.fromEntries(this.values);
+    }
     /** All nodes that depend (directly/indirectly) on start. */
     affected(start) {
         const seen = new Set();

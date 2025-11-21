@@ -137,5 +137,5 @@ We're exploring native multi-file support - feedback welcome!
 ## Resources
 
 - [Tokens Studio Documentation](https://docs.tokens.studio/)
-- [DCV Configuration Guide](../../docs/CONFIGURATION.md)
+- [DCV Configuration Guide](../../docs/Configuration.md)
 - [Complete Examples](../../examples/)

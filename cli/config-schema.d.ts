@@ -32,8 +32,6 @@ export declare const ConstraintsSchema: z.ZodObject<{
         description?: string | undefined;
         ratio?: number | undefined;
     }>, "many">>;
-    enableBuiltInThreshold: z.ZodOptional<z.ZodBoolean>;
-    enableBuiltInWcagDefaults: z.ZodOptional<z.ZodBoolean>;
 }, "passthrough", z.ZodTypeAny, z.objectOutputType<{
     wcag: z.ZodOptional<z.ZodArray<z.ZodObject<{
         foreground: z.ZodString;
@@ -51,8 +49,6 @@ export declare const ConstraintsSchema: z.ZodObject<{
         description?: string | undefined;
         ratio?: number | undefined;
     }>, "many">>;
-    enableBuiltInThreshold?: boolean | undefined;
-    enableBuiltInWcagDefaults?: boolean | undefined;
 }, z.ZodTypeAny, "passthrough">, z.objectInputType<{
     wcag: z.ZodOptional<z.ZodArray<z.ZodObject<{
         foreground: z.ZodString;
@@ -70,8 +66,6 @@ export declare const ConstraintsSchema: z.ZodObject<{
         description?: string | undefined;
         ratio?: number | undefined;
     }>, "many">>;
-    enableBuiltInThreshold?: boolean | undefined;
-    enableBuiltInWcagDefaults?: boolean | undefined;
 }, z.ZodTypeAny, "passthrough">>;
 export declare const DcvConfigSchema: z.ZodObject<{
     version: z.ZodOptional<z.ZodString>;

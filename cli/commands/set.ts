@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../config.js';
-import { createEngine } from '../engine-helpers.js';
-import { flattenTokens } from '../../core/flatten.js';
+import { Engine } from '../../core/engine.js';
+import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import type { OverridesTree, SetOptions, ValuesPatch } from '../types.js';
 import { loadTokens, outputResult } from './utils.js';
+import { setupConstraints } from '../constraint-registry.js';
 
 // Lightweight suggestion helpers (kept local – why command uses core formatter instead)
 function levenshtein(a: string, b: string): number {
@@ -76,9 +77,22 @@ export async function setCommand(options: SetOptions): Promise<void> {
   if (!cfgRes.ok) { console.error(cfgRes.error); process.exit(2); }
   const config = cfgRes.value;
   const tokens = loadTokens(tokensPath);
-  const engine = createEngine(tokens, config);
-  const { flat: flatAll } = flattenTokens(tokens);
-  const knownIds = new Set(Object.keys(flatAll));
+
+  // Create engine with flattened tokens
+  const { flat, edges } = flattenTokens(tokens);
+  const init: Record<string, string | number> = {};
+  for (const t of Object.values(flat)) {
+    init[(t as FlatToken).id] = (t as FlatToken).value;
+  }
+  const engine = new Engine(init, edges);
+  const knownIds = new Set(Object.keys(init));
+
+  // Discover and attach all constraints via centralized registry
+  setupConstraints(
+    engine,
+    { config, constraintsDir: 'themes' },
+    { knownIds },
+  );
   function ensureKnownOrSuggest(id: string) {
     if (!knownIds.has(id)) {
       const suggestions = suggestIds(id, Array.from(knownIds));

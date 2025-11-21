@@ -506,5 +506,5 @@ Tokens Studio format is DTCG-compliant!
 
 - [DTCG Specification](https://tr.designtokens.org/format/)
 - [DTCG GitHub](https://github.com/design-tokens/community-group)
-- [DCV Configuration Guide](../../docs/CONFIGURATION.md)
+- [DCV Configuration Guide](../../docs/Configuration.md)
 - [Complete Examples](../../examples/)

@@ -25,11 +25,11 @@ You've already copied the docs to the GitHub Wiki! Here's the complete structure
 
 ## Updating the Home Page
 
-The Home page content is in `docs/Home.md`. To update the wiki:
+The Home page should reflect the high-level overview from the root `README.md` (with links into the rest of the docs). To update the wiki:
 
 1. Go to: https://github.com/CseperkePapp/design-constraint-validator/wiki/Home
 2. Click **Edit**
-3. Copy content from `docs/Home.md`
+3. Copy or adapt content from the root `README.md` and `docs/README.md` (you can keep the wiki Home shorter and link to other pages)
 4. Save
 
 ## Wiki Sidebar (Optional)

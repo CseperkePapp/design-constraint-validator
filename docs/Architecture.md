@@ -595,9 +595,268 @@ describe('CLI', () => {
 
 ---
 
+## Phase 3 Architectural Improvements (v1.1+)
+
+In version 1.1, DCV underwent significant architectural improvements based on a comprehensive audit. These changes improve maintainability, testability, and extensibility while remaining backwards compatible.
+
+### Centralized Constraint Loading (Phase 3A)
+
+**Problem:** Constraint loading was scattered across multiple files with inconsistent behavior.
+
+**Solution:** All constraint discovery and attachment now goes through a single registry.
+
+**Before:**
+```
+cli/engine-helpers.ts        → applyMonotonicPlugins()
+cli/engine-helpers.ts        → applyWcagPlugins()
+cli/constraints-loader.ts    → attachRuntimeConstraints()
+core/cross-axis-config.ts    → loadCrossAxisPlugin()
+```
+
+**After:**
+```
+cli/constraint-registry.ts   → discoverConstraints()
+                             → attachConstraints()
+                             → setupConstraints()
+```
+
+**Benefits:**
+- Single source of truth for "what constraints are active"
+- Consistent behavior across all CLI commands
+- Easier to test and debug
+
+**Usage:**
+```typescript
+import { Engine, flattenTokens, type FlatToken } from 'design-constraint-validator';
+import { setupConstraints } from './cli/constraint-registry.js';
+
+const { flat, edges } = flattenTokens(tokens);
+const init = {};
+for (const t of Object.values(flat)) {
+  init[(t as FlatToken).id] = (t as FlatToken).value;
+}
+
+const engine = new Engine(init, edges);
+const knownIds = new Set(Object.keys(init));
+
+// One function loads all constraints
+setupConstraints(engine, { config, bp }, { knownIds });
+```
+
+### Core/Filesystem Separation (Phase 3B)
+
+**Problem:** Core modules (`core/`) directly accessed the filesystem, making them non-portable and hard to test.
+
+**Solution:** Moved all filesystem I/O to the CLI layer. Core modules now accept in-memory data only.
+
+**Before:**
+```typescript
+// core/cross-axis-config.ts (BAD: core reads filesystem)
+import fs from 'node:fs';
+
+export function loadCrossAxisPlugin(path: string) {
+  const raw = JSON.parse(fs.readFileSync(path, 'utf8'));
+  return CrossAxisPlugin(parseRules(raw));
+}
+```
+
+**After:**
+```typescript
+// cli/cross-axis-loader.ts (GOOD: CLI reads filesystem)
+import { readFileSync } from 'node:fs';
+
+export function loadCrossAxisRules(path: string): CrossAxisRule[] {
+  const raw = JSON.parse(readFileSync(path, 'utf8'));
+  return parseRules(raw);
+}
+
+// core/constraints/cross-axis.ts (GOOD: core receives data)
+export function CrossAxisPlugin(rules: CrossAxisRule[]): ConstraintPlugin {
+  // No filesystem access, pure constraint logic
+}
+```
+
+**Benefits:**
+- Core modules testable with fixtures (no fs mocking required)
+- Core can run in browser, Deno, Edge workers
+- Clear separation of concerns
+
+### Enhanced Engine API (Phase 3C)
+
+**Problem:** Engine's internal state was not easily accessible. Plugins lacked clear contracts.
+
+**Solution:** Added new API methods and documented plugin contracts.
+
+#### New Engine Methods
+
+```typescript
+class Engine {
+  // ✨ New: Get all token IDs
+  getAllIds(): TokenId[] {
+    return Array.from(this.values.keys());
+  }
+
+  // ✨ New: Get flat token map (avoid re-flattening)
+  getFlatTokens(): Record<TokenId, TokenValue> {
+    return Object.fromEntries(this.values);
+  }
+}
+```
+
+**Use cases:**
+- CLI/adapters can access flat tokens without duplicate flattening
+- Plugins can iterate all tokens when needed
+- Engine state can be easily serialized
+
+#### Enhanced ConstraintIssue Type
+
+Added optional metadata fields for tooling:
+
+```typescript
+export type ConstraintIssue = {
+  id: TokenId | string;
+  rule: string;
+  level: "error" | "warn";
+  message: string;
+  where?: string;
+
+  // ✨ New: Token IDs involved in violation
+  involvedTokens?: TokenId[];
+
+  // ✨ New: Reference edges involved
+  involvedEdges?: Array<[TokenId, TokenId]>;
+};
+```
+
+**Benefits:**
+- UI tools can highlight affected tokens
+- Graph visualizations show constraint relationships
+- "Why" explanations are richer
+
+#### Documented Plugin Contracts
+
+Plugins now have clear, documented contracts:
+
+**Candidate Contract (MUST):**
+- Only evaluate constraints involving at least one candidate token
+- Enables efficient incremental validation
+
+**Metadata Contract (SHOULD):**
+- Populate `involvedTokens` in returned issues
+- Enables filtering, highlighting, visualization
+
+**Example:**
+```typescript
+export function MyPlugin(rules: Rule[]): ConstraintPlugin {
+  return {
+    id: "my-plugin",
+    evaluate(engine, candidates) {
+      const issues = [];
+
+      for (const rule of rules) {
+        // ✅ Honor candidate contract
+        if (!candidates.has(rule.tokenA) && !candidates.has(rule.tokenB)) {
+          continue; // Skip, not affected by changes
+        }
+
+        // Check constraint...
+        if (violated) {
+          issues.push({
+            id: `${rule.tokenA}|${rule.tokenB}`,
+            rule: "my-plugin",
+            level: "error",
+            message: "Constraint violated",
+            involvedTokens: [rule.tokenA, rule.tokenB], // ✅ Metadata
+          });
+        }
+      }
+
+      return issues;
+    }
+  };
+}
+```
+
+See [Extending-DCV.md](./Extending-DCV.md) for complete plugin authoring guide.
+
+### Migration Guide
+
+These changes are **backwards compatible**. Old code continues to work, but new code should use the improved APIs:
+
+#### Migrating Constraint Loading
+
+**Old:**
+```typescript
+import { createValidationEngine } from './cli/engine-helpers.js';
+
+const engine = createValidationEngine(tokens, bp, config);
+```
+
+**New:**
+```typescript
+import { Engine, flattenTokens } from 'design-constraint-validator';
+import { setupConstraints } from './cli/constraint-registry.js';
+
+const { flat, edges } = flattenTokens(tokens);
+const init = {};
+for (const t of Object.values(flat)) {
+  init[t.id] = t.value;
+}
+
+const engine = new Engine(init, edges);
+const knownIds = new Set(Object.keys(init));
+setupConstraints(engine, { config, bp }, { knownIds });
+```
+
+#### Migrating Cross-Axis Loading
+
+**Old:**
+```typescript
+import { loadCrossAxisPlugin } from './core/cross-axis-config.js';
+
+engine.use(loadCrossAxisPlugin(path, bp, { knownIds }));
+```
+
+**New:**
+```typescript
+import { loadCrossAxisRules } from './cli/cross-axis-loader.js';
+import { CrossAxisPlugin } from './core/constraints/cross-axis.js';
+
+const rules = loadCrossAxisRules(path, { bp, knownIds });
+engine.use(CrossAxisPlugin(rules, bp));
+```
+
+#### Using New Engine Methods
+
+```typescript
+// Get all token IDs
+const allIds = engine.getAllIds();
+
+// Get flat token map
+const tokens = engine.getFlatTokens();
+// { "color.brand.primary": "#0066cc", ... }
+
+// Create full candidate set
+const fullCandidates = new Set(engine.getAllIds());
+const issues = engine.evaluate(fullCandidates);
+```
+
+### Deprecation Timeline
+
+The following modules are deprecated and will be removed in v2.0:
+
+- **cli/engine-helpers.ts** - Use `constraint-registry.ts` instead
+- **cli/constraints-loader.ts** - Use `constraint-registry.ts` instead
+- **core/cross-axis-config.ts** - Use `cli/cross-axis-loader.ts` instead
+
+All deprecated modules include migration guides in their JSDoc comments.
+
+---
+
 ## Next Steps
 
 - **[Getting Started](./Getting-Started.md)** - Quick start
 - **[Constraints](./Constraints.md)** - Constraint types
-- **[API](./API.md)** - Programmatic usage
+- **[API](./API.md)** - Programmatic usage (includes Phase 3C improvements)
+- **[Extending-DCV](./Extending-DCV.md)** - Write custom plugins (new!)
 - **[Contributing](../CONTRIBUTING.md)** - Contribute code

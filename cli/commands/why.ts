@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { flattenTokens } from '../../core/flatten.js';
+import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import { explain } from '../../core/why.js';
 import type { WhyOptions } from '../types.js';
 import { loadTokens } from './utils.js';
-import { createEngine } from '../engine-helpers.js';
+import { Engine } from '../../core/engine.js';
 import { loadConfig } from '../config.js';
 import type { ConstraintIssue } from '../../core/engine.js';
-import { attachRuntimeConstraints } from '../constraints-loader.js';
+import { setupConstraints } from '../constraint-registry.js';
 
 export async function whyCommand(options: WhyOptions): Promise<void> {
   const tokensPath = options.tokens || 'tokens/tokens.json';
@@ -64,10 +64,21 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
     const cfgRes = loadConfig(options.config);
     if (cfgRes.ok) {
       const config = cfgRes.value;
-      const engine = createEngine(tokens, config);
-      const knownIds = new Set(Object.keys(flat));
 
-      attachRuntimeConstraints(engine, { config, knownIds });
+      // Create engine with flattened tokens
+      const init: Record<string, string | number> = {};
+      for (const t of Object.values(flat)) {
+        init[(t as FlatToken).id] = (t as FlatToken).value;
+      }
+      const engine = new Engine(init, edges);
+      const knownIds = new Set(Object.keys(init));
+
+      // Discover and attach all constraints via centralized registry
+      setupConstraints(
+        engine,
+        { config, constraintsDir: 'themes' },
+        { knownIds },
+      );
 
       const candidates = new Set<string>([target]);
       const allIssues: ConstraintIssue[] = engine.evaluate(candidates);
