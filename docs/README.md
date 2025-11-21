@@ -16,8 +16,9 @@ Complete documentation for Design Constraint Validator.
 - **[Concepts](./Concepts.md)** - Core terminology and defaults
 
 ### For Developers
-- **[API Reference](./API.md)** - Programmatic usage
-- **[Architecture](./Architecture.md)** - Internal design
+- **[API Reference](./API.md)** - Programmatic usage (includes Phase 3C improvements)
+- **[Extending DCV](./Extending-DCV.md)** - Write custom constraint plugins ✨ New!
+- **[Architecture](./Architecture.md)** - Internal design (includes Phase 3 improvements)
 - **[Adapters](./Adapters.md)** - Input/output formats
 
 ### Additional Resources

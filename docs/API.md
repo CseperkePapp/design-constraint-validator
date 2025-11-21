@@ -329,10 +329,49 @@ for (const v of violations) {
 Get dependency graph.
 
 ```typescript
-const { nodes, edges } = engine.getGraph();
+const { nodes, edges} = engine.getGraph();
 
 console.log(`Graph has ${nodes.length} nodes and ${edges.length} edges`);
 ```
+
+#### `getAllIds()` ✨ New in Phase 3C
+
+Get all token IDs in the engine.
+
+```typescript
+const allIds: string[] = engine.getAllIds();
+
+// Useful for creating full candidate sets
+const fullCandidates = new Set(engine.getAllIds());
+const issues = engine.evaluate(fullCandidates);
+```
+
+**Use cases:**
+- Iterate over all tokens
+- Create full candidate set for validation
+- Export token lists
+
+#### `getFlatTokens()` ✨ New in Phase 3C
+
+Get flat token map without re-flattening.
+
+```typescript
+const tokens: Record<string, string | number> = engine.getFlatTokens();
+
+// Example output:
+// {
+//   'typography.size.h1': '32px',
+//   'typography.size.h2': '24px',
+//   'color.text.body': '#333333'
+// }
+```
+
+**Use cases:**
+- Export token values for adapters
+- Serialize engine state
+- Avoid duplicate flattening operations
+
+**Note:** This returns the current state. Changes via `set()` or `commit()` are reflected immediately.
 
 ---
 

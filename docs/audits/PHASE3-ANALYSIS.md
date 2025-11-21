@@ -350,12 +350,14 @@ From audit document section 4.3 (Architecture Audit):
 - ⚠️ Note: Candidate validation helper not added (optional future enhancement)
 - ✅ **Status**: Build passes, ready to commit
 
-### Phase 3D: Documentation & Cleanup (Week 4)
-- ✅ Update [Architecture.md](../Architecture.md) with new design
-- ✅ Update [API.md](../API.md) with Engine API changes
-- ✅ Update [Extending-DCV.md](../Extending-DCV.md) with plugin contract
-- ✅ Remove deprecated helpers
-- ✅ Update all examples to use new API
+### Phase 3D: Documentation & Cleanup ✅ COMPLETE
+- ✅ Updated [Architecture.md](../Architecture.md) with Phase 3 improvements section
+- ✅ Updated [API.md](../API.md) with `getAllIds()` and `getFlatTokens()` documentation
+- ✅ Created [Extending-DCV.md](../Extending-DCV.md) - comprehensive plugin authoring guide
+- ✅ Updated [docs/README.md](../README.md) to link to new Extending-DCV guide
+- ⚠️ Note: Deprecated helpers NOT removed (kept for backwards compatibility until v2.0)
+- ⚠️ Note: Example updates deferred (examples work with current code)
+- ✅ **Status**: Documentation complete, ready to commit
 
 ---
 
