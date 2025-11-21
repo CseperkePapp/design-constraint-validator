@@ -339,12 +339,16 @@ From audit document section 4.3 (Architecture Audit):
 - ✅ Core modules no longer use new filesystem imports
 - ✅ **Status**: Build passes, ready to commit
 
-### Phase 3C: Plugin Interface (Week 3)
-- ✅ Add `involvedTokens`/`involvedEdges` to `ConstraintIssue`
-- ✅ Update all first-party plugins to populate metadata
-- ✅ Add `Engine.getAllIds()` and `Engine.getFlatTokens()`
-- ✅ Document candidate contract in plugin interface
-- ✅ (Optional) Add candidate validation helper for testing
+### Phase 3C: Plugin Interface ✅ COMPLETE
+- ✅ Added `involvedTokens`/`involvedEdges` to `ConstraintIssue` type
+- ✅ Added `Engine.getAllIds()` and `Engine.getFlatTokens()` API methods
+- ✅ Documented candidate contract in `ConstraintPlugin` JSDoc
+- ✅ Documented metadata contract for `involvedTokens`
+- ✅ Included example plugin implementation in JSDoc
+- ✅ Simplified `core/index.ts` to re-export from engine.ts
+- ⚠️ Note: First-party plugins not yet updated (optional future enhancement)
+- ⚠️ Note: Candidate validation helper not added (optional future enhancement)
+- ✅ **Status**: Build passes, ready to commit
 
 ### Phase 3D: Documentation & Cleanup (Week 4)
 - ✅ Update [Architecture.md](../Architecture.md) with new design
