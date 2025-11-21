@@ -16,7 +16,8 @@ import { MonotonicPlugin, parseSize as parseSizePx } from '../core/constraints/m
 import { MonotonicLightness } from '../core/constraints/monotonic-lightness.js';
 import { WcagContrastPlugin } from '../core/constraints/wcag.js';
 import { ThresholdPlugin } from '../core/constraints/threshold.js';
-import { loadCrossAxisPlugin } from '../core/cross-axis-config.js';
+import { CrossAxisPlugin } from '../core/constraints/cross-axis.js';
+import { loadCrossAxisRules } from './cross-axis-loader.js';
 // ============================================================================
 // Discovery
 // ============================================================================
@@ -188,12 +189,13 @@ export function attachConstraints(engine, sources, opts) {
                     break;
                 }
                 case 'cross-axis-file': {
-                    // Note: This still uses the old loadCrossAxisPlugin helper which reads from filesystem.
-                    // In Phase 3B, we'll refactor this to parse rules here and pass them to CrossAxisPlugin.
-                    engine.use(loadCrossAxisPlugin(source.path, source.bp, {
-                        debug: crossAxisDebug,
+                    // Phase 3B: Load rules from filesystem in CLI layer, pass to core plugin
+                    const rules = loadCrossAxisRules(source.path, {
+                        bp: source.bp,
                         knownIds,
-                    }));
+                        debug: crossAxisDebug,
+                    });
+                    engine.use(CrossAxisPlugin(rules, source.bp));
                     break;
                 }
             }

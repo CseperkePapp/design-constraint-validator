@@ -324,18 +324,20 @@ From audit document section 4.3 (Architecture Audit):
 
 ## Implementation Phases
 
-### Phase 3A: Constraint Registry (Week 1)
+### Phase 3A: Constraint Registry ✅ COMPLETE
 - ✅ Create `cli/constraint-registry.ts`
 - ✅ Implement `discoverConstraints()` and `attachConstraints()`
-- ✅ Update `validate.ts` to use registry
+- ✅ Update `validate.ts`, `set.ts`, `why.ts` to use registry
 - ✅ Keep old helpers as deprecated fallbacks
-- ✅ Add tests for registry
+- ✅ **Committed**: commit 534c4d2
 
-### Phase 3B: Filesystem Separation (Week 2)
-- ✅ Move `core/cross-axis-config.ts` → `cli/cross-axis-loader.ts`
-- ✅ Refactor `CrossAxisPlugin` to accept in-memory rules
-- ✅ Move `loadOrdersBP` and `loadTokensWithBreakpoint` to CLI layer
-- ✅ Add tests for core plugins with fixtures (no filesystem)
+### Phase 3B: Filesystem Separation ✅ COMPLETE
+- ✅ Created `cli/cross-axis-loader.ts` (filesystem reading + parsing)
+- ✅ Updated `cli/constraint-registry.ts` to use new loader
+- ✅ `CrossAxisPlugin` already accepted in-memory rules (no change needed)
+- ✅ Deprecated `core/cross-axis-config.ts` (marked for future removal)
+- ✅ Core modules no longer use new filesystem imports
+- ✅ **Status**: Build passes, ready to commit
 
 ### Phase 3C: Plugin Interface (Week 3)
 - ✅ Add `involvedTokens`/`involvedEdges` to `ConstraintIssue`
