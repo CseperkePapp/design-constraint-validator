@@ -8,8 +8,12 @@ import { createValidationResult, createValidationReceipt, writeJsonOutput } from
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { setupConstraints } from '../constraint-registry.js';
+import { printVersionBanner } from '../version-banner.js';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
+  // Show version banner (subtle, dimmed)
+  printVersionBanner({ quiet: _options.format === 'json' });
+
   try {
     const bps = parseBreakpoints(process.argv);
     const crossAxisDebug = process.argv.includes('--cross-axis-debug');

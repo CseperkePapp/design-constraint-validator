@@ -2,6 +2,7 @@ import type { ConstraintIssue } from '../core/engine.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
+import { getVersionInfo } from './version-banner.js';
 
 export interface ConstraintViolation {
   ruleId: string;
@@ -30,6 +31,11 @@ export interface ValidationResult {
     durationMs: number;
     engineVersion: string;
     timestamp: string;
+  };
+  dcv: {
+    name: string;
+    version: string;
+    repository: string;
   };
 }
 
@@ -100,6 +106,7 @@ export function createValidationResult(
       engineVersion,
       timestamp: new Date().toISOString(),
     },
+    dcv: getVersionInfo(),
   };
 }
 
