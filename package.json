@@ -1,5 +1,5 @@
 {
-  "name": "@cseperkepapp/design-constraint-validator",
+  "name": "design-constraint-validator",
   "version": "1.1.0",
   "description": "Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence",
   "type": "module",
