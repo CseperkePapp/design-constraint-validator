@@ -26,6 +26,11 @@ export interface ValidationResult {
         engineVersion: string;
         timestamp: string;
     };
+    dcv: {
+        name: string;
+        version: string;
+        repository: string;
+    };
 }
 export interface ValidationReceipt extends ValidationResult {
     environment: {

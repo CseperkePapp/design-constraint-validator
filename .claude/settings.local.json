@@ -21,7 +21,8 @@
       "Bash(npm version:*)",
       "Bash(git merge:*)",
       "Bash(git checkout:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(npm run check:*)"
     ],
     "deny": [],
     "ask": []

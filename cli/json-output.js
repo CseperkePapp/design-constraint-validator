@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
+import { getVersionInfo } from './version-banner.js';
 /**
  * Convert internal ConstraintIssue to standardized ConstraintViolation format
  */
@@ -39,6 +40,7 @@ export function createValidationResult(errors, warnings, durationMs, engineVersi
             engineVersion,
             timestamp: new Date().toISOString(),
         },
+        dcv: getVersionInfo(),
     };
 }
 /**
