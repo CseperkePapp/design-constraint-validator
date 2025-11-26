@@ -49,7 +49,22 @@ Every release includes a CycloneDX SBOM attached as a release artifact, enabling
 - Vulnerability scanning
 - License compliance verification
 
-#### 5. Minimal Dependencies
+#### 5. Automated IoC Scanning
+
+Every CI run includes a security scan that checks for known Shai-Hulud indicators of compromise (IoCs):
+
+| Check | Description |
+|-------|-------------|
+| Malicious files | `setup_bun.js`, `bun_environment.js`, `bun_setup.js` |
+| Install script injection | `curl \| bash` or `bun.sh/install` in preinstall/postinstall |
+| Malware signatures | "Sha1-Hulud: The Second Coming" and variants |
+| Credential exfiltration | TruffleHog abuse, token export patterns |
+| Self-hosted runners | Unexpected runner configurations |
+| Unpinned actions | GitHub Actions using version tags instead of SHAs |
+
+The security scan runs **before** tests and will fail the build if critical IoCs are detected.
+
+#### 6. Minimal Dependencies
 
 This package maintains a minimal dependency footprint (only 3 production dependencies) to reduce attack surface:
 
