@@ -81,6 +81,14 @@ npm run release:major   # Breaking changes (1.0.0 → 2.0.0)
 
 ⚠️ **Remember:** GitHub (git push) and npm (npm publish) are separate - pushing to GitHub does NOT automatically publish to npm!
 
+## Security
+
+This project implements supply chain security measures. When updating dependencies or GitHub Actions:
+
+- Pin GitHub Actions to SHA hashes (see existing workflows for format)
+- Review dependency changes carefully before merging
+- Report security issues privately (see [SECURITY.md](./SECURITY.md))
+
 ## Questions?
 
 Open a GitHub Discussion!

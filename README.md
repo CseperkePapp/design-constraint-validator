@@ -6,6 +6,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/design-constraint-validator.svg)](https://www.npmjs.com/package/design-constraint-validator)
 [![CI](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml/badge.svg)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/ci.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX-brightgreen)](https://github.com/CseperkePapp/design-constraint-validator/actions/workflows/sbom.yml)
+[![Supply Chain Security](https://img.shields.io/badge/security-hardened-blue)](SECURITY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.x-339933.svg)](#)
 
@@ -103,6 +104,7 @@ See **[API Reference](docs/API.md)** for complete programmatic usage.
 - **[Prior Art / Method](docs/prior-art/)** - Design rationale (Decision Themes, receipts)
 - **[AI Guide](docs/AI-GUIDE.md)** - Using DCV with ChatGPT/Claude/Copilot
 - **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+- **[Security](SECURITY.md)** - Supply chain security measures
 
 ---
 
