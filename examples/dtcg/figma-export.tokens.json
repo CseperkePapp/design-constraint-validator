@@ -1,0 +1,32 @@
+{
+  "$description": "DTCG 2025.10 stable-spec sample (Figma-shaped). Exercised end-to-end by test/dtcg.test.ts. Mixes hex-bearing and hex-less sRGB colors, a non-sRGB color, a {alias} chain, a structured dimension, and $extensions passthrough.",
+  "color": {
+    "text": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [0.5333, 0.5333, 0.5333], "alpha": 1, "hex": "#888888" },
+      "$extensions": { "com.figma": { "variableId": "VariableID:1:23" } }
+    },
+    "bg": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [0.6, 0.6, 0.6], "alpha": 1 }
+    },
+    "ink": {
+      "$type": "color",
+      "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 1, "hex": "#000000" }
+    },
+    "brand": {
+      "$type": "color",
+      "$value": "{color.text}"
+    },
+    "neon": {
+      "$type": "color",
+      "$value": { "colorSpace": "display-p3", "components": [1, 0, 0.5], "alpha": 1 }
+    }
+  },
+  "size": {
+    "touch": {
+      "$type": "dimension",
+      "$value": { "value": 30, "unit": "px" }
+    }
+  }
+}
