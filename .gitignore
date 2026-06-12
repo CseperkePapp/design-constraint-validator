@@ -59,3 +59,16 @@ sbom-test.json
 
 # Local-only docs/audit folder
 /docs/audit/
+
+# Personal workflow-automation system — kept on disk, not tracked on GitHub.
+# (Untracked via `git rm -r --cached`; files remain locally. See
+# docs/project-management/WORKFLOW-COMMANDS.md for the npm-less command runbook.)
+/docs/project-management/
+/src/
+/scripts/sync-task-index.ts
+/scripts/rename-done-tasks.ts
+/scripts/validate-headers.ts
+/scripts/read-pdf.cjs
+/tsconfig.workflow-automation.json
+/.github/skills/
+/.github/workflows/workflow-automation-ci.yml
