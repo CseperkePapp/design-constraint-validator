@@ -14,12 +14,19 @@
       "import": "./core/index.js"
     },
     "./core/*": "./core/*",
-    "./cli/*": "./cli/*"
+    "./cli/*": "./cli/*",
+    "./mcp": {
+      "types": "./mcp/index.d.ts",
+      "import": "./mcp/index.js"
+    },
+    "./mcp/*": "./mcp/*"
   },
   "bin": {
     "dcv": "./cli/index.js",
-    "design-constraint-validator": "./cli/index.js"
+    "design-constraint-validator": "./cli/index.js",
+    "dcv-mcp": "./mcp/index.js"
   },
+  "mcpName": "io.github.cseperkepapp/design-constraint-validator",
   "scripts": {
     "test": "vitest run --exclude \"**/*.test.js\"",
     "test:watch": "vitest --exclude \"**/*.test.js\"",
@@ -72,6 +79,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "fast-glob": "^3.3.3",
     "yargs": "^17.7.2",
     "zod": "^3.25.76"
@@ -94,8 +102,10 @@
   "files": [
     "cli/",
     "core/",
+    "mcp/",
     "adapters/",
     "themes/",
+    "server.json",
     "LICENSE",
     "README.md"
   ]

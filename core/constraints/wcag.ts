@@ -40,6 +40,7 @@ export function WcagContrastPlugin(pairs: ContrastPair[]): ConstraintPlugin {
             rule: "wcag-contrast",
             level: "warn" as const,
             where: p.where,
+            involvedTokens: [p.fg, p.bg],
             message: `Unparseable color(s): fg="${fgStr}" bg="${bgStr}" backdrop="${backdropStr}"`
           });
           continue;
@@ -60,6 +61,11 @@ export function WcagContrastPlugin(pairs: ContrastPair[]): ConstraintPlugin {
             rule: "wcag-contrast",
             level: "error" as const,
             where: p.where,
+            involvedTokens: [p.fg, p.bg],
+            metadata: {
+              actual: Number(ratio.toFixed(2)),
+              required: p.min
+            },
             message: `Contrast ${ratio.toFixed(2)}:1 < ${p.min}:1`
           });
         }

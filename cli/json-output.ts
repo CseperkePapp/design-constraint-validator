@@ -70,13 +70,18 @@ export function formatViolation(issue: ConstraintIssue): ConstraintViolation {
     message: issue.message,
   };
 
-  if (issue.id) {
+  if (issue.involvedTokens?.length) {
+    violation.nodes = issue.involvedTokens;
+  } else if (issue.id) {
     violation.nodes = [issue.id];
   }
 
   // Add context from where field or other metadata
-  if (issue.where) {
-    violation.context = { where: issue.where };
+  if (issue.where || issue.metadata) {
+    violation.context = {
+      ...(issue.where ? { where: issue.where } : {}),
+      ...(issue.metadata ?? {}),
+    };
   }
 
   return violation;
