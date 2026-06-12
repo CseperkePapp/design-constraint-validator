@@ -69,6 +69,18 @@ export type AttachOptions = {
   crossAxisDebug?: boolean;
 };
 
+// Built-in default constraint rules. Shared by attachConstraints (to register
+// plugins) and collectReferencedIds (to compute coverage) so the two never drift.
+export const DEFAULT_WCAG_PAIRS: WcagRule[] = [
+  { fg: 'color.role.text.default', bg: 'color.role.bg.surface', min: 4.5, where: 'Body text on surface' },
+  { fg: 'color.role.accent.default', bg: 'color.role.bg.surface', min: 3.0, where: 'Accent on surface' },
+  { fg: 'color.role.focus.ring', bg: 'color.role.bg.surface', min: 3.0, where: 'Focus ring on surface', backdrop: '#ffffff' },
+];
+
+export const DEFAULT_THRESHOLDS: ThresholdRule[] = [
+  { id: 'control.size.min', op: '>=', valuePx: 44, where: 'Touch target (WCAG / Apple HIG)' },
+];
+
 // ============================================================================
 // Discovery
 // ============================================================================
@@ -200,43 +212,14 @@ export function attachConstraints(engine: Engine, sources: ConstraintSource[], o
       switch (source.type) {
         case 'builtin-wcag': {
           if (source.enabled) {
-            const defaultWcagPairs: WcagRule[] = [
-              {
-                fg: 'color.role.text.default',
-                bg: 'color.role.bg.surface',
-                min: 4.5,
-                where: 'Body text on surface',
-              },
-              {
-                fg: 'color.role.accent.default',
-                bg: 'color.role.bg.surface',
-                min: 3.0,
-                where: 'Accent on surface',
-              },
-              {
-                fg: 'color.role.focus.ring',
-                bg: 'color.role.bg.surface',
-                min: 3.0,
-                where: 'Focus ring on surface',
-                backdrop: '#ffffff',
-              },
-            ];
-            engine.use(WcagContrastPlugin(defaultWcagPairs));
+            engine.use(WcagContrastPlugin(DEFAULT_WCAG_PAIRS));
           }
           break;
         }
 
         case 'builtin-threshold': {
           if (source.enabled) {
-            const defaultThresholds: ThresholdRule[] = [
-              {
-                id: 'control.size.min',
-                op: '>=',
-                valuePx: 44,
-                where: 'Touch target (WCAG / Apple HIG)',
-              },
-            ];
-            engine.use(ThresholdPlugin(defaultThresholds, 'threshold'));
+            engine.use(ThresholdPlugin(DEFAULT_THRESHOLDS, 'threshold'));
           }
           break;
         }
@@ -301,4 +284,57 @@ export function setupConstraints(
   const sources = discoverConstraints(discoveryOpts);
   attachConstraints(engine, sources, attachOpts);
   return sources;
+}
+
+/**
+ * Collect the token ids referenced by the active constraint sources, plus
+ * whether that coverage is fully enumerable.
+ *
+ * Used to detect the silent-pass case: a token file that validates with zero
+ * errors only because no active constraint references any of its tokens. Cross-
+ * axis rule ids are not enumerated here, so when any cross-axis source is present
+ * `coverageKnown` is false and callers must stay conservative (never claim
+ * "nothing was checked" when they cannot be sure).
+ */
+export function collectReferencedIds(sources: ConstraintSource[]): { ids: Set<string>; coverageKnown: boolean } {
+  const ids = new Set<string>();
+  let coverageKnown = true;
+  const addOrders = (orders: OrderRule[]) => {
+    for (const [a, , b] of orders) {
+      ids.add(a);
+      ids.add(b);
+    }
+  };
+
+  for (const source of sources) {
+    switch (source.type) {
+      case 'builtin-wcag':
+        for (const p of DEFAULT_WCAG_PAIRS) {
+          ids.add(p.fg);
+          ids.add(p.bg);
+        }
+        break;
+      case 'builtin-threshold':
+        for (const t of DEFAULT_THRESHOLDS) ids.add(t.id);
+        break;
+      case 'config-wcag':
+        for (const r of source.rules) {
+          ids.add(r.fg);
+          ids.add(r.bg);
+        }
+        break;
+      case 'custom-threshold':
+        for (const r of source.rules) ids.add(r.id);
+        break;
+      case 'order-file':
+      case 'lightness-file':
+        addOrders(source.orders);
+        break;
+      case 'cross-axis-file':
+        coverageKnown = false;
+        break;
+    }
+  }
+
+  return { ids, coverageKnown };
 }

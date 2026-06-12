@@ -8,7 +8,7 @@ import type { BuildOptions } from '../types.js';
 
 export async function buildCommand(options: BuildOptions & { [k: string]: any }): Promise<void> {
   const { loadTokensWithBreakpoint } = await import('../../core/breakpoints.js');
-  const tokens = loadTokensWithBreakpoint();
+  const tokens = loadTokensWithBreakpoint(undefined, options.tokens);
   const { flat } = flattenTokens(tokens);
   let allValues = Object.fromEntries(Object.values(flat).map(t => [t.id, (t as FlatToken).value]));
   if (options.theme) {

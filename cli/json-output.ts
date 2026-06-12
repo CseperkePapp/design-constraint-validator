@@ -27,6 +27,8 @@ export interface ValidationResult {
   };
   violations: ConstraintViolation[];
   warnings?: ConstraintViolation[];
+  /** Set when tokens were validated but no active constraint referenced any of them. */
+  note?: string;
   stats: {
     durationMs: number;
     engineVersion: string;
@@ -87,7 +89,8 @@ export function createValidationResult(
   errors: ConstraintIssue[],
   warnings: ConstraintIssue[],
   durationMs: number,
-  engineVersion: string
+  engineVersion: string,
+  note?: string
 ): ValidationResult {
   const violations = errors.map(formatViolation);
   const warningViolations = warnings.map(formatViolation);
@@ -101,6 +104,7 @@ export function createValidationResult(
     },
     violations,
     warnings: warningViolations.length > 0 ? warningViolations : undefined,
+    note,
     stats: {
       durationMs: Math.round(durationMs),
       engineVersion,

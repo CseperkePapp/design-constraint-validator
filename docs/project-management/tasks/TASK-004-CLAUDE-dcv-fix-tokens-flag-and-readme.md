@@ -97,10 +97,10 @@ Named CSS colors in the parser, gamut-mapping improvements, new constraint types
 - [x] Clean-room test passes: custom tokens + custom constraints in a temp dir, violations reported with custom ids, correct exit codes, receipt references the real file.
 - [x] `dcv validate --tokens <file>` and `dcv validate <file>` both work; missing file → clear error, non-zero exit.
 - [x] `build` and `graph` accept `--tokens` consistently.
-- [ ] Every command and code sample in README executes successfully as written, confirmed by running each in a clean directory.
-- [ ] No README reference to a nonexistent export remains. *(`validate()` export now exists; README not yet verified.)*
+- [x] Every command and code sample in README executes successfully as written, confirmed by running each in a clean directory.
+- [x] No README reference to a nonexistent export remains.
 - [x] All existing tests still pass; math files untouched.
-- [ ] v2.1.0 published to npm; CHANGELOG updated.
+- [ ] v2.1.0 published to npm. *(version bumped to 2.1.0 and CHANGELOG updated; `npm publish` pending — outward-facing, gated on TASK-006 publish pipeline.)*
 
 ---
 

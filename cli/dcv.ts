@@ -45,17 +45,19 @@ cli.command<BuildOptions>('build', 'Build token outputs', y => y
   .option('mapper', { type: 'string' })
   .option('theme', { type: 'string' })
   .option('dry-run', { type: 'boolean', default: false })
-  .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
+  .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' }),
   a => buildCommand(a)
 );
 
-cli.command<ValidateOptions>('validate', 'Validate constraints', y => y
+cli.command<ValidateOptions>('validate [tokens-path]', 'Validate constraints', y => y
+  .positional('tokens-path', { type: 'string', describe: 'Path to a tokens file (positional alias for --tokens)' })
+  .option('constraints-dir', { type: 'string', describe: 'Directory holding order / cross-axis constraint files (default: themes)' })
   .option('fail-on', { type: 'string', choices: ['off','warn','error'], default: 'error' })
   .option('summary', { type: 'string', choices: ['none','table','json'], default: 'none' })
   .option('format', { type: 'string', choices: ['text','json'], default: 'text', describe: 'Output format' })
   .option('output', { type: 'string', describe: 'Write JSON output to file' })
   .option('receipt', { type: 'string', describe: 'Generate validation receipt with audit trail' })
-  .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' })
+  .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' })
   .option('theme', { type: 'string', describe: 'Apply named theme tokens before validation' })
   .option('breakpoint', { type: 'string' })
   .option('all-breakpoints', { type: 'boolean' })
@@ -78,7 +80,7 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
   .option('min-severity', { type: 'string', choices: ['warn','error'], default: 'warn' })
   .option('focus', { type: 'string' })
   .option('radius', { type: 'number', default: 1 })
-  .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
+  .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' }),
   a => graphCommand(a)
 );
 

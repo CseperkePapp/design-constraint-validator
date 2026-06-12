@@ -36,27 +36,53 @@ npx dcv --help
 
 ## Quick Start
 
+DCV validates **your** tokens against **your** constraints. From an empty directory:
+
 ```bash
-# Validate tokens with default constraints
-npx dcv validate ./tokens/tokens.json
+# 1. Your design tokens (DTCG-style "$value")
+cat > tokens.json <<'JSON'
+{
+  "color": {
+    "text": { "$value": "#888888" },
+    "bg":   { "$value": "#999999" }
+  }
+}
+JSON
 
-# Explain failures
-npx dcv why --format table
+# 2. Your constraints — auto-discovered as dcv.config.json in the cwd
+cat > dcv.config.json <<'JSON'
+{
+  "constraints": {
+    "enableBuiltInWcagDefaults": false,
+    "enableBuiltInThreshold": false,
+    "wcag": [
+      { "foreground": "color.text", "background": "color.bg", "ratio": 4.5, "description": "Body text on background" }
+    ]
+  }
+}
+JSON
 
-# Export dependency graph
-npx dcv graph --format mermaid > graph.mmd
+# 3. Validate (positional path or --tokens; exits non-zero on violations)
+npx dcv validate tokens.json --summary table
+
+# Explain one token (the tokenId is required)
+npx dcv why color.text --tokens tokens.json --format table
+
+# Export the dependency graph
+npx dcv graph --tokens tokens.json --format mermaid > graph.mmd
 ```
 
-**Example Output:**
+**Example output** (`validate`):
 
+```text
+validate: 1 error(s), 0 warning(s)
+ERROR wcag-contrast  color.text|color.bg @ Body text on background — Contrast 1.24:1 < 4.5:1
+scope   rules  warnings  errors
+------  -----  --------  ------
+global  1      0         1
 ```
-Constraint                    Status   Details
-────────────────────────────  ──────   ─────────────────────────────────────────────
-WCAG Contrast ≥ 4.5:1        FAIL     text.primary(#5A5A5A) on bg.body(#F5F5F5) ⇒ 3.8
-Typography monotonic scale   FAIL     h3(22) < body(18) < h2(21) < h1(34)  ✖ out-of-order: h2<h3
-Cross-axis (weight vs size)  PASS     all headings satisfy min weight for size bucket
-Exit code: 1 (violations found)
-```
+
+Exit code is `1` when violations are found, `0` when clean (use `--fail-on off` to always exit `0`). The built-in WCAG/threshold defaults target the bundled example token ids, so disable them (as above) when validating your own token names.
 
 ---
 
@@ -65,14 +91,15 @@ Exit code: 1 (violations found)
 ```ts
 import { validate } from 'design-constraint-validator';
 
-const result = await validate({
-  tokensPath: './tokens/tokens.json',
-  policyPath: './themes/policies/aa.json'
+// Synchronous. Point at files, or pass `tokens` / `constraints` inline.
+const result = validate({
+  tokensPath: './tokens.json',
+  configPath: './dcv.config.json', // omit to auto-discover dcv.config.json in the cwd
 });
 
 if (!result.ok) {
   for (const v of result.violations) {
-    console.log(`[${v.kind}] ${v.message}`, v.context);
+    console.log(`[${v.ruleId}] ${v.message}`);
   }
   process.exitCode = 1;
 }

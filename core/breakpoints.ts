@@ -40,10 +40,29 @@ export function mergeTokens(base: unknown, overlay: unknown): TokenNode {
 
 /** Load tokens with optional breakpoint override: base + overrides/<bp>.json */
 /**
- * Load tokens with override precedence: base < local < breakpoint
+ * Load tokens with override precedence: base < local < breakpoint.
+ *
+ * @param bp          optional breakpoint overlay (tokens/overrides/<bp>.json).
+ * @param tokensPath  explicit base tokens file. When provided, a missing or
+ *                    invalid file throws — callers must never silently validate
+ *                    an empty token set. When omitted, defaults to the repo
+ *                    example file and stays lenient (backward-compatible).
  */
-export function loadTokensWithBreakpoint(bp?: Breakpoint): TokenNode {
-  const base = loadJsonSafe<TokenNode>("tokens/tokens.example.json") ?? {};
+export function loadTokensWithBreakpoint(bp?: Breakpoint, tokensPath?: string): TokenNode {
+  let base: TokenNode;
+  if (tokensPath !== undefined) {
+    if (!fs.existsSync(tokensPath)) {
+      throw new Error(`Tokens file not found: ${tokensPath}`);
+    }
+    try {
+      base = JSON.parse(fs.readFileSync(tokensPath, "utf8")) as TokenNode;
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : String(e);
+      throw new Error(`Tokens file is not valid JSON: ${tokensPath} (${detail})`);
+    }
+  } else {
+    base = loadJsonSafe<TokenNode>("tokens/tokens.example.json") ?? {};
+  }
   const local = loadJsonSafe<TokenNode>("tokens/overrides/local.json");
   const ov = bp ? loadJsonSafe<TokenNode>(`tokens/overrides/${bp}.json`) : null;
   return mergeTokens(mergeTokens(base, local), ov);

@@ -38,6 +38,8 @@ export interface BuildOptions extends GlobalOptions {
 export interface ValidateOptions extends GlobalOptions {
   strict?: boolean;
   constraints?: string[];
+  'tokens-path'?: string;
+  'constraints-dir'?: string;
   perf?: boolean;
   budgetTotalMs?: number;
   budgetPerBpMs?: number;

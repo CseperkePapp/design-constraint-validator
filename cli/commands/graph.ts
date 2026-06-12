@@ -69,7 +69,7 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
         let highlight: { nodes: Set<string>; edges: Set<string>; color?: string } | undefined; let edgeLabels: Map<string,string> | undefined;
         if (onlyViolations || highlightViolations || labelViolations) {
           const { loadTokensWithBreakpoint } = await import('../../core/breakpoints.js');
-          const tokens = loadTokensWithBreakpoint(breakpoint);
+          const tokens = loadTokensWithBreakpoint(breakpoint, options.tokens);
           const { flattenTokens } = await import('../../core/flatten.js');
           const { Engine } = await import('../../core/engine.js');
           const { MonotonicPlugin, parseSize } = await import('../../core/constraints/monotonic.js');
@@ -170,7 +170,7 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
     return; }
   for (const breakpoint of plan) {
     const { loadTokensWithBreakpoint } = await import('../../core/breakpoints.js');
-    const tokens = loadTokensWithBreakpoint(breakpoint); const { edges } = flattenTokens(tokens);
+    const tokens = loadTokensWithBreakpoint(breakpoint, options.tokens); const { edges } = flattenTokens(tokens);
     let filteredEdges = edges;
     if (options.filter) { const filterRegex = new RegExp(options.filter); filteredEdges = edges.filter(([from,to]) => filterRegex.test(from) || filterRegex.test(to)); }
     const format = options.format || 'json'; const graph = generateDependencyGraph(filteredEdges, format);
