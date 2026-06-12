@@ -7,6 +7,9 @@ dist/
 /cli/**/*.js
 /cli/**/*.d.ts
 /cli/**/*.map
+/mcp/**/*.js
+/mcp/**/*.d.ts
+/mcp/**/*.map
 /core/**/*.js
 /core/**/*.d.ts
 /core/**/*.map

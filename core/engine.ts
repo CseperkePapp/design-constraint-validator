@@ -29,6 +29,13 @@ export type ConstraintIssue = {
    * this captures that reference edge.
    */
   involvedEdges?: Array<[TokenId, TokenId]>;
+
+  /**
+   * Structured, rule-specific data for JSON consumers.
+   * For example, WCAG contrast issues can expose actual/required ratios here
+   * without forcing callers to parse human-readable messages.
+   */
+  metadata?: Record<string, unknown>;
 };
 
 /**

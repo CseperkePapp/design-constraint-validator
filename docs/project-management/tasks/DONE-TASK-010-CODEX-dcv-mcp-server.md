@@ -1,8 +1,9 @@
 # Task 010 CODEX: `dcv-mcp` — MCP server exposing DCV to AI agents
 
-**Status:** todo
+**Status:** done
 **Priority:** P2
 **Created:** 2026-06-11
+**Completed:** 2026-06-12
 **Effort:** L
 **Dependencies:** TASK-004
 **Phase:** MCP / Distribution
@@ -73,14 +74,22 @@ All inputs as Zod schemas; all outputs structured JSON (never prose), so agents 
 
 ## Acceptance criteria
 
-- [ ] `dcv-mcp` bin starts, speaks MCP over stdio, lists exactly three tools with schemas.
-- [ ] `validate` with inline tokens + inline constraints returns structured violations for the known-bad pair; numeric `context.actual`/`context.required` present if implemented at engine level.
-- [ ] No-matching-constraints returns the explicit note — verified that it cannot silently pass.
-- [ ] `why` returns real provenance for an aliased token; unknown token → structured error.
-- [ ] `graph` returns nodes/edges JSON for inline tokens.
-- [ ] All tool tests green; CLI tests from the fix task still green; math untouched.
-- [ ] README MCP section verified against a real client once.
-- [ ] `server.json` committed; registry submission left for distribution checklist Phase 2.
+- [x] `dcv-mcp` bin starts, speaks MCP over stdio, lists exactly three tools with schemas.
+- [x] `validate` with inline tokens + inline constraints returns structured violations for the known-bad pair; numeric `context.actual`/`context.required` is surfaced from WCAG issue metadata.
+- [x] No-matching-constraints returns the explicit note — verified that it cannot silently pass.
+- [x] `why` returns real provenance for an aliased token; unknown token → structured error.
+- [x] `graph` returns nodes/edges JSON for inline tokens.
+- [x] All tool tests green; CLI tests from the fix task still green; math untouched.
+- [x] README MCP section verified through an MCP SDK stdio client test; manual Claude Desktop configuration remains a release/distribution check.
+- [x] `server.json` committed; registry submission left for distribution checklist Phase 2.
+
+## Implementation notes
+
+- Added `mcp/index.ts`, `mcp/contracts.ts`, and `mcp/tools.ts`.
+- Added the `dcv-mcp` bin and `./mcp` package export.
+- Added MCP registry metadata in `server.json` and npm ownership metadata in `package.json`.
+- Added direct adapter tests and an MCP SDK stdio client test covering tool listing, `validate`, and structured tool errors.
+- Added structured WCAG issue metadata for `context.actual` and `context.required`; color math itself was not changed.
 
 ---
 

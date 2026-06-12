@@ -109,6 +109,31 @@ See **[API Reference](docs/API.md)** for complete programmatic usage.
 
 ---
 
+## Use from AI agents (MCP)
+
+DCV ships a second binary, `dcv-mcp`, that exposes the validator over MCP stdio for agent clients. Add it to a Claude Desktop or generic MCP client config like this:
+
+```json
+{
+  "mcpServers": {
+    "dcv": {
+      "command": "npx",
+      "args": ["-y", "--package", "design-constraint-validator", "dcv-mcp"]
+    }
+  }
+}
+```
+
+The server exposes exactly three JSON-returning tools:
+
+- `validate` - validate inline `tokens` or a `tokensPath` against inline `constraints` or a config file.
+- `why` - explain provenance, aliases, dependencies, dependents, and alias chain for one token id.
+- `graph` - return token dependency `nodes` and `edges`.
+
+Tool failures are returned as structured JSON: `{ "ok": false, "error": { "code": "...", "message": "..." } }`.
+
+---
+
 ## Documentation
 
 ### For Everyone
