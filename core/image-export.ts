@@ -6,12 +6,15 @@ import { spawnSync } from "node:child_process";
 function which(cmd: string): string | null {
   const paths = (process.env.PATH || "").split(path.delimiter);
   for (const p of paths) {
-    const full = path.join(p, cmd + (process.platform === "win32" ? ".cmd" : ""));
-    try { 
-      fs.accessSync(full, fs.constants.X_OK); 
-      return full; 
-    } catch {
-      // File not accessible, continue to next path
+    const names = process.platform === "win32" ? [cmd + ".cmd", cmd + ".exe", cmd] : [cmd];
+    for (const name of names) {
+      const full = path.join(p, name);
+      try {
+        fs.accessSync(full, fs.constants.X_OK);
+        return full;
+      } catch {
+        // File not accessible, continue to next path
+      }
     }
   }
   return null;

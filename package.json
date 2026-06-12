@@ -21,8 +21,8 @@
     "design-constraint-validator": "./cli/index.js"
   },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --exclude \"**/*.test.js\"",
+    "test:watch": "vitest --exclude \"**/*.test.js\"",
     "typecheck": "tsc --noEmit",
     "workflow:typecheck": "tsc -p tsconfig.workflow-automation.json --noEmit",
     "validate-headers": "tsx scripts/validate-headers.ts",
@@ -32,8 +32,8 @@
     "build": "tsc",
     "lint": "eslint . --ext .js,.ts,.mjs,.cjs",
     "format": "prettier -w .",
-    "check": "npm run typecheck && npm run lint && npm test",
-    "prepublishOnly": "npm run check && npm run build",
+    "check": "npm run typecheck && npm run lint && npm run build && npm test",
+    "prepublishOnly": "npm run check",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "release:notes": "npm run changelog && git add CHANGELOG.md && git commit -m \"docs(changelog): update\"",
     "release:patch": "npm version patch && git push && git push --tags && echo '\n✅ Tag pushed. CI (.github/workflows/publish.yml) will build, publish, and verify the version on npm — no manual npm publish needed. Watch the Actions run.'",

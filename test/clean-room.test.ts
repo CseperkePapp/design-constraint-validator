@@ -108,6 +108,52 @@ describe('clean-room: validate a foreign tokens file with foreign constraints', 
       rmSync(noteDir, { recursive: true, force: true });
     }
   });
+
+  it('--config reads an explicit JSON config file', () => {
+    const configPath = path.join(dir, 'custom-config.json');
+    writeFileSync(configPath, JSON.stringify(CONFIG, null, 2));
+
+    const { status, stdout } = runCli(dir, 'validate --tokens tokens.json --config custom-config.json --format json');
+    expect(status).not.toBe(0);
+    const result = JSON.parse(stdout);
+    expect(JSON.stringify(result.violations)).toContain('myapp.color.text');
+  });
+
+  it('missing --config path exits non-zero with a clear error', () => {
+    const { status, stderr, stdout } = runCli(dir, 'validate --tokens tokens.json --config missing-config.json');
+    expect(status).not.toBe(0);
+    expect(`${stderr}${stdout}`).toContain('Config file not found: missing-config.json');
+  });
+
+  it('.dcvrc.json is discovered when dcv.config.json is absent', () => {
+    const rcDir = mkdtempSync(path.join(tmpdir(), 'dcv-rc-'));
+    try {
+      writeFileSync(path.join(rcDir, 'tokens.json'), JSON.stringify(TOKENS, null, 2));
+      writeFileSync(path.join(rcDir, '.dcvrc.json'), JSON.stringify(CONFIG, null, 2));
+
+      const { status, stdout } = runCli(rcDir, 'validate --tokens tokens.json --format json');
+      expect(status).not.toBe(0);
+      const result = JSON.parse(stdout);
+      expect(JSON.stringify(result.violations)).toContain('myapp.color.text');
+    } finally {
+      rmSync(rcDir, { recursive: true, force: true });
+    }
+  });
+
+  it('package.json "dcv" config is discovered when standalone config files are absent', () => {
+    const pkgDir = mkdtempSync(path.join(tmpdir(), 'dcv-pkg-'));
+    try {
+      writeFileSync(path.join(pkgDir, 'tokens.json'), JSON.stringify(TOKENS, null, 2));
+      writeFileSync(path.join(pkgDir, 'package.json'), JSON.stringify({ name: 'fixture', dcv: CONFIG }, null, 2));
+
+      const { status, stdout } = runCli(pkgDir, 'validate --tokens tokens.json --format json');
+      expect(status).not.toBe(0);
+      const result = JSON.parse(stdout);
+      expect(JSON.stringify(result.violations)).toContain('myapp.color.text');
+    } finally {
+      rmSync(pkgDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('clean-room: programmatic validate() wrapper', () => {

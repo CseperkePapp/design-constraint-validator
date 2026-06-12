@@ -84,6 +84,9 @@ npm install design-constraint-validator && npx dcv --version
 
 A GitHub Release is **not** required by the flow — the tag is the source of truth.
 Create one only if you want human-readable release notes.
+The SBOM workflow also runs on version tags and uploads SBOM artifacts; if you
+create a GitHub Release, the same workflow attaches `sbom.json` and `sbom.xml`
+to that release.
 
 ## Version Guidelines
 

@@ -16,7 +16,7 @@ export type FlatToken = {
   id: TokenId;
   type: string;
   value: TokenValue;       // resolved (if ref)
-  raw: TokenValue;         // original $value
+  raw: TokenValue | DtcgStructuredValue; // original $value
   refs: TokenId[];         // referenced token IDs found in raw
 };
 
@@ -25,7 +25,8 @@ export type FlattenResult = {
   edges: Array<[from: TokenId, to: TokenId]>; // from ref -> to dependent
 };
 
-const REF_RE = /\{([a-z0-9.-]+)\}/gi;
+const REF_RE = /\{([a-z0-9_.-]+)\}/gi;
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function flattenTokens(root: TokenNode): FlattenResult {
   const flat: Record<TokenId, FlatToken> = {};
@@ -41,13 +42,14 @@ export function flattenTokens(root: TokenNode): FlattenResult {
       // Normalize DTCG 2025.10 structured color/dimension objects to the
       // string/number form the engine + plugins expect (strings, incl. aliases,
       // pass through unchanged). Keeps the color math in core/color.ts untouched.
-      const raw = normalizeDtcgValue(node.$value, node.$type);
+      const raw = node.$value;
+      const normalized = normalizeDtcgValue(raw, node.$type);
 
       const refs: TokenId[] = [];
       
       // Find all references in the value
-      if (typeof raw === 'string') {
-        const matches = raw.matchAll(REF_RE);
+      if (typeof normalized === 'string') {
+        const matches = normalized.matchAll(REF_RE);
         for (const match of matches) {
           refs.push(match[1]);
         }
@@ -56,7 +58,7 @@ export function flattenTokens(root: TokenNode): FlattenResult {
       flat[id] = { 
         id, 
         type: String(node.$type ?? 'unknown'), 
-        value: raw,
+        value: normalized,
         raw, 
         refs 
       };
@@ -105,7 +107,7 @@ export function flattenTokens(root: TokenNode): FlattenResult {
           }
           
           // Replace the reference with the resolved value
-          const refPattern = new RegExp(`\\{${refId}\\}`, 'g');
+          const refPattern = new RegExp(`\\{${escapeRegExp(refId)}\\}`, 'g');
           newValue = newValue.replace(refPattern, String(refToken.value));
         }
         
