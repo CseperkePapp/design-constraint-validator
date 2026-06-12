@@ -2,6 +2,16 @@
 
 Quick reference for AI assistants (ChatGPT, Claude, Copilot) helping users with `design-constraint-validator`.
 
+## Repository Workflow Skills
+
+DCV includes reusable workflow skills under `.github/skills/` for task execution discipline and closeout quality:
+
+- `.github/skills/workflow-investigation/SKILL.md` — use for risky or cross-cutting changes before editing
+- `.github/skills/workflow-qa-evidence/SKILL.md` — use for acceptance-criteria-based verification and evidence capture
+- `.github/skills/workflow-docs-sync/SKILL.md` — use when documentation and status/task surfaces must be synchronized
+
+These are workflow skills (process and quality), not DCV engine/domain logic skills.
+
 ## Core Commands (Copy-Paste Ready)
 
 ### Validation
