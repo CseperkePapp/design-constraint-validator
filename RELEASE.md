@@ -4,13 +4,13 @@ This document describes how to release a new version of `design-constraint-valid
 
 ## Prerequisites
 
-1. You must be logged into npm:
-   ```bash
-   npm login
-   npm whoami  # Verify you're logged in
-   ```
+Publishing runs in CI, not from your laptop, so the prerequisite is a one-time
+GitHub setup (see "Automated Releases" below):
 
-2. You must have write access to the `design-constraint-validator` package on npm
+1. An `NPM_TOKEN` secret (npm **Automation** token) is configured in the repo,
+   **or** the package is set up for npm **trusted publishing / OIDC** (preferred —
+   no long-lived token can silently expire).
+2. The token/identity has write access to the `design-constraint-validator` package.
 
 ## Release Steps
 
@@ -56,39 +56,34 @@ git push
 git push --tags
 ```
 
-### 4. Publish to npm
+### 4. CI publishes automatically (no manual `npm publish`)
 
-```bash
-# Dry run first (optional but recommended)
-npm publish --dry-run
+Pushing the `vX.Y.Z` tag in step 3 triggers `.github/workflows/publish.yml`, which:
 
-# Actually publish
-npm publish
-```
+1. Builds and runs `npm run check`.
+2. Verifies the tag matches `package.json`'s version.
+3. Runs `npm publish --access public --provenance`.
+4. **Polls the npm registry and fails the run if the version is not live** — so a
+   release can never silently not happen (this is the gap that stranded `v2.0.2`).
 
-The `prepublishOnly` script will automatically run `npm run check && npm run build` before publishing.
+Do **not** run `npm publish` by hand — there is exactly one canonical flow
+(tag push → CI). To publish locally only as an emergency fallback, you can run the
+`publish.yml` workflow via **workflow_dispatch** from the Actions tab.
 
 ### 5. Verify Publication
 
-```bash
-# Check it's published
-npm view design-constraint-validator
+The workflow's own verification step is authoritative. To double-check manually:
 
-# Try installing it
-mkdir /tmp/test-install
-cd /tmp/test-install
-npm init -y
-npm install design-constraint-validator
-npx dcv --version
+```bash
+npm view design-constraint-validator version   # should show the new version
+
+# Optional: install it in a scratch dir
+mkdir /tmp/test-install && cd /tmp/test-install && npm init -y
+npm install design-constraint-validator && npx dcv --version
 ```
 
-### 6. Create GitHub Release (Optional)
-
-1. Go to https://github.com/CseperkePapp/design-constraint-validator/releases
-2. Click "Draft a new release"
-3. Select the tag you just pushed (e.g., `v1.0.1`)
-4. Add release notes describing changes
-5. Publish release
+A GitHub Release is **not** required by the flow — the tag is the source of truth.
+Create one only if you want human-readable release notes.
 
 ## Version Guidelines
 
@@ -100,18 +95,18 @@ Follow [Semantic Versioning](https://semver.org/):
 
 ## What Gets Published?
 
-Only files listed in `package.json` `files` array:
-- `adapters/`
+Only files listed in `package.json` `files` array (verify with `npm pack --dry-run`):
 - `cli/`
 - `core/`
+- `adapters/`
 - `themes/`
-- `tokens/`
-- `examples/`
-- `dist/` (if it exists)
-- `README.md`
 - `LICENSE`
+- `README.md`
 
-**Not published:** `node_modules/`, `.git/`, test files, `.github/`, etc.
+Built `.js` / `.d.ts` are emitted by `prepublishOnly` (`check && build`) and ship
+via those directories even though they are not committed to git (TASK-007).
+
+**Not published:** `node_modules/`, `.git/`, `test/`, `.github/`, `docs/`, `examples/`, `tokens/`, source-only `.ts` config, etc.
 
 ## Troubleshooting
 
@@ -121,10 +116,10 @@ npm login
 ```
 
 ### "Cannot publish over existing version"
-You're trying to publish the same version twice. Bump the version:
+You're trying to publish the same version twice. Bump the version and push the new tag:
 ```bash
 npm version patch
-npm publish
+git push && git push --tags
 ```
 
 ### "prepublishOnly script failed"
@@ -140,7 +135,7 @@ The package name is already taken. Choose a different name in `package.json`.
 
 1. **npm packages are immutable** - Once published, you cannot change that version
 2. **Cannot unpublish after 72 hours** - Be sure before publishing
-3. **GitHub ≠ npm** - Pushing to GitHub doesn't update npm. You must publish separately.
+3. **A pushed tag is the trigger** - Pushing a `vX.Y.Z` tag is what publishes to npm (via `publish.yml`). Pushing ordinary commits/branches does not.
 4. **Always test before publishing** - Run `npm run check` and test installation locally
 
 ## Emergency: Unpublish
@@ -155,10 +150,13 @@ Better approach: Publish a new version with the fix.
 
 ## Automated Releases (GitHub Actions)
 
-An automated release workflow is configured in `.github/workflows/release.yml`. When you push a version tag (e.g., `v1.0.1`), it will:
-1. Run all checks (`npm run check`)
-2. Build the package (`npm run build`)
-3. Publish to npm (if `NPM_TOKEN` is configured)
+This is the **canonical (and only) release flow**. The workflow
+`.github/workflows/publish.yml` triggers on pushing a version tag (e.g. `v2.1.0`)
+and:
+1. Builds and runs all checks (`npm run check`)
+2. Verifies the tag matches `package.json`'s version
+3. Publishes to npm with provenance (using `NPM_TOKEN` / OIDC)
+4. Verifies the version is live on the npm registry, failing loudly if not
 
 ### Setup
 
@@ -182,4 +180,4 @@ An automated release workflow is configured in `.github/workflows/release.yml`. 
 
 The workflow will handle publishing automatically.
 
-**Note:** VS Code may show warnings in `release.yml` about `secrets.NPM_TOKEN` being "unrecognized". This is a false positive from the editor's schema validator—the workflow will run correctly once the secret is configured in GitHub.
+**Note:** VS Code may show warnings in `publish.yml` about `secrets.NPM_TOKEN` being "unrecognized". This is a false positive from the editor's schema validator—the workflow will run correctly once the secret is configured in GitHub.
