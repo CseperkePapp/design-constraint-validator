@@ -1,6 +1,6 @@
 {
   "name": "design-constraint-validator",
-  "version": "2.0.2",
+  "version": "2.0.4",
   "description": "Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence",
   "type": "module",
   "engines": {
@@ -34,10 +34,10 @@
     "release:patch": "npm version patch && git push && git push --tags && echo '\n⚠️  Now run: npm publish'",
     "release:minor": "npm version minor && git push && git push --tags && echo '\n⚠️  Now run: npm publish'",
     "release:major": "npm version major && git push && git push --tags && echo '\n⚠️  Now run: npm publish'",
-    "demo": "cd ../designLab-DEMO && npm run dev",
-    "demo:build": "cd ../designLab-DEMO && npm run build",
-    "demo:v2": "cd designLab-v2 && npm run dev",
-    "demo:v2:build": "cd designLab-v2 && npm run build"
+    "demo": "node -e \"const fs=require('node:fs');const cp=require('node:child_process');const dir='../designLab-DEMO';if(!fs.existsSync(dir)){console.error('Demo repo not found at ../designLab-DEMO. Clone it next to this repo to run npm run demo.');process.exit(1)}const r=cp.spawnSync('npm',['run','dev'],{cwd:dir,stdio:'inherit',shell:true});process.exit(r.status===null?1:r.status)\"",
+    "demo:build": "node -e \"const fs=require('node:fs');const cp=require('node:child_process');const dir='../designLab-DEMO';if(!fs.existsSync(dir)){console.error('Demo repo not found at ../designLab-DEMO. Clone it next to this repo to run npm run demo:build.');process.exit(1)}const r=cp.spawnSync('npm',['run','build'],{cwd:dir,stdio:'inherit',shell:true});process.exit(r.status===null?1:r.status)\"",
+    "demo:v2": "node -e \"const fs=require('node:fs');const cp=require('node:child_process');const dir='designLab-v2';if(!fs.existsSync(dir)){console.error('Demo repo not found at designLab-v2. Add it inside this repo to run npm run demo:v2.');process.exit(1)}const r=cp.spawnSync('npm',['run','dev'],{cwd:dir,stdio:'inherit',shell:true});process.exit(r.status===null?1:r.status)\"",
+    "demo:v2:build": "node -e \"const fs=require('node:fs');const cp=require('node:child_process');const dir='designLab-v2';if(!fs.existsSync(dir)){console.error('Demo repo not found at designLab-v2. Add it inside this repo to run npm run demo:v2:build.');process.exit(1)}const r=cp.spawnSync('npm',['run','build'],{cwd:dir,stdio:'inherit',shell:true});process.exit(r.status===null?1:r.status)\""
   },
   "keywords": [
     "design-constraints",
@@ -67,23 +67,24 @@
     "access": "public"
   },
   "dependencies": {
-    "fast-glob": "^3.3.2",
-    "yargs": "^17.0.0",
-    "zod": "^3.0.0"
+    "fast-glob": "^3.3.3",
+    "yargs": "^17.7.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/yargs": "^17.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
+    "@types/node": "^22.19.21",
+    "@types/yargs": "^17.0.35",
+    "@typescript-eslint/eslint-plugin": "^8.61.0",
+    "@typescript-eslint/parser": "^8.61.0",
     "conventional-changelog-cli": "^2.2.2",
-    "eslint": "^9.0.0",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^9.0.0",
+    "glob": "^11.1.0",
     "pdf-parse": "^2.4.5",
-    "prettier": "^3.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^3.0.0"
+    "prettier": "^3.8.4",
+    "tsx": "^4.22.4",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.6"
   },
   "files": [
     "cli/",

@@ -1,1 +1,0 @@
-{"version":3,"file":"version-banner.d.ts","sourceRoot":"","sources":["version-banner.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAkCH;;;GAGG;AACH,wBAAgB,kBAAkB,CAAC,OAAO,CAAC,EAAE;IAAE,KAAK,CAAC,EAAE,OAAO,CAAA;CAAE,GAAG,IAAI,CAOtE;AAED;;GAEG;AACH,wBAAgB,cAAc,IAAI;IAAE,IAAI,EAAE,MAAM,CAAC;IAAC,OAAO,EAAE,MAAM,CAAC;IAAC,UAAU,EAAE,MAAM,CAAA;CAAE,CAOtF"}
