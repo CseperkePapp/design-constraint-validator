@@ -174,6 +174,21 @@ The template's commit message templates use `<AI-MODEL>` as a placeholder.
 Co-Authored-By: <AI-MODEL> <noreply@<provider>.com>
 ```
 
+### Collaboration Model
+
+Work is **solo-sequential**: drive one task to merge before starting the next.
+**Do not run parallel agent implementation** on concurrent branches or worktrees.
+
+Parallel work caused real integration drift — a branch (`task/005`) cut before
+TASK-007 de-committed build artifacts reintroduced `core/color.js` + compiled
+test files, requiring a manual artifact-stripping merge (see
+`workflows/TEST-AND-MERGE-005-oklch-contrast-bug.md`).
+
+Codex (GPT-5.3-Codex) is still used where its skills are the right fit —
+including implementation, and by default for reviews — but it must be
+**deliberately scheduled for a specific task**, not run alongside other work.
+Bring it in intentionally, let it finish and merge that task, then move on.
+
 ---
 
 ## Project-Specific Conventions
@@ -231,6 +246,7 @@ Track changes to your overlay so you know when your project diverged from templa
 | ---- | ------ | ------ |
 | 2026-06-11 | Initial overlay | Project adopted ai-project-workflow v1.1.0 |
 | 2026-06-12 | Added Branch Naming convention (`task/NNN-…`, one branch per task) | Codify branch-per-task discipline so it is followed |
+| 2026-06-12 | Added Collaboration Model (solo-sequential; Codex scheduled, not parallel) | Parallel agent work caused integration drift; make coordination explicit |
 
 ---
 
