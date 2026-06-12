@@ -1,8 +1,9 @@
 # Task 005 CODEX: DCV — fix OKLCH→sRGB conversion (contrast is wrong for OKLCH inputs)
 
-**Status:** in-progress
+**Status:** done
 **Priority:** P1
 **Created:** 2026-06-11
+**Completed:** 2026-06-12
 **Effort:** M
 **Dependencies:** none
 **Phase:** DCV v2.1.0
@@ -78,12 +79,12 @@ against OKLCH input.
 
 ## Acceptance
 
-- [ ] `parseCssColor('oklch(0.67 0.09 195)')` returns sRGB matching a reference (luminance ~0.35, not ~0.10).
-- [ ] A dark-OKLCH-on-light-OKLCH pair reports its true contrast (~7:1), not ~3:1.
-- [ ] OKLCH test vectors added; hex tests still pass; math otherwise untouched.
-- [ ] Validator-level tests cover both supplied input families: sRGB CSS (`#hex` / `rgb[a]()`) and OKLCH CSS,
+- [x] `parseCssColor('oklch(0.67 0.09 195)')` returns sRGB matching a reference (luminance ~0.35, not ~0.10).
+- [x] A dark-OKLCH-on-light-OKLCH pair reports its true contrast (~7:1), not ~3:1.
+- [x] OKLCH test vectors added; hex tests still pass; math otherwise untouched.
+- [x] Validator-level tests cover both supplied input families: sRGB CSS (`#hex` / `rgb[a]()`) and OKLCH CSS,
       with both paths normalizing to encoded sRGB RGBA before contrast.
-- [ ] Ride in v2.1.0 alongside the `--tokens`/README work.
+- [x] Ride in v2.1.0 alongside the `--tokens`/README work.
 
 ## Note for DecisionThemes side
 

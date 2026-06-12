@@ -1,6 +1,6 @@
 # Prompt: Test and Merge Task 005
 
-**Task:** [TASK-005](../tasks/TASK-005-CODEX-dcv-oklch-contrast-bug.md)
+**Task:** [TASK-005](../tasks/DONE-TASK-005-CODEX-dcv-oklch-contrast-bug.md)
 **Status:** in-progress (code integrated into main; final closeout owned by Codex)
 **Branch:** `task/005-oklch-contrast-bug` (Codex)
 **Merged:** 2026-06-12 → `main` (merge commit `d21695d`, `--no-ff`)
