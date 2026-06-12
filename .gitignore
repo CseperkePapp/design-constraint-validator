@@ -4,6 +4,24 @@ node_modules/
 # Build outputs
 dist/
 *.tsbuildinfo
+/cli/**/*.js
+/cli/**/*.d.ts
+/cli/**/*.map
+/core/**/*.js
+/core/**/*.d.ts
+/core/**/*.map
+/adapters/**/*.js
+/adapters/**/*.d.ts
+/adapters/**/*.map
+/test/**/*.js
+/test/**/*.d.ts
+/test/**/*.map
+/scripts/**/*.js
+/scripts/**/*.d.ts
+/scripts/**/*.map
+/src/**/*.js
+/src/**/*.d.ts
+/src/**/*.map
 
 # Test coverage
 coverage/
