@@ -1,0 +1,28 @@
+#!/bin/sh
+
+msg_file="$1"
+msg=$(grep -v '^#' "$msg_file")
+
+case "$msg" in
+  "Merge "*) exit 0 ;;
+esac
+
+if printf '%s' "$msg" | grep -Eiq '(DONE-)?TASK-[0-9]+(\.[0-9]+)?'; then
+  exit 0
+fi
+
+if printf '%s' "$msg" | grep -Eiq '\[no-task:[^]]+\]'; then
+  exit 0
+fi
+
+cat >&2 <<'EOF'
+
+Commit rejected: no task reference.
+
+Add one of the following to the commit message:
+
+  - a task id        e.g. feat(TASK-091): add workflow reports
+  - an escape tag    e.g. fix typo [no-task: trivial copy fix]
+
+EOF
+exit 1

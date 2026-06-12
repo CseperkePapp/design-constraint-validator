@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+echo "[pre-push] workflow automation typecheck…"
+npx tsc -p tsconfig.workflow-automation.json --noEmit
+
+echo "[pre-push] header validation…"
+npx tsx scripts/validate-headers.ts
+
+echo "[pre-push] workflow integrity tests…"
+npx vitest run src/__tests__/task-workflow-integrity.test.ts src/__tests__/sync-task-index.test.ts
+
+echo "[pre-push] fast workflow gate passed"
