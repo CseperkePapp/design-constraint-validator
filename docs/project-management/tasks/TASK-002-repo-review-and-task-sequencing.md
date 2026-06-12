@@ -9,6 +9,7 @@
 **Effort:** M
 **Dependencies:** TASK-001
 **Phase:** Assessment
+**Branch:** `task/002-repo-review-and-task-sequencing`
 
 ## Source
 

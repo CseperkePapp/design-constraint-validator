@@ -7,6 +7,7 @@
 **Effort:** M
 **Dependencies:** none
 **Phase:** Workflow Adoption
+**Branch:** `task/001-adopt-ai-project-workflow`
 
 ## Source
 

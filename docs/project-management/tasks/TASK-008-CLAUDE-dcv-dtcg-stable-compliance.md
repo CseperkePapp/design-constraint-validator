@@ -6,6 +6,7 @@
 **Effort:** M
 **Dependencies:** none
 **Phase:** DTCG Compliance
+**Branch:** `task/008-dtcg-stable-compliance`
 
 ## Source
 

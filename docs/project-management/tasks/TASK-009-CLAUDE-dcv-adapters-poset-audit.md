@@ -6,6 +6,7 @@
 **Effort:** M
 **Dependencies:** TASK-004
 **Phase:** Audit
+**Branch:** `task/009-adapters-poset-audit`
 
 ## Source
 

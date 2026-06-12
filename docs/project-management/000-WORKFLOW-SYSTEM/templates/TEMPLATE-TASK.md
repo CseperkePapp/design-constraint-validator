@@ -9,6 +9,7 @@
 **Effort:** S | M | L | XL | -- <!-- optional; add a short note if needed -->
 **Dependencies:** none | TASK-NNN | TASK-NNN, TASK-NNN.N | free text <!-- optional -->
 **Phase:** <!-- optional; use when your repo groups tasks into named or numbered phases -->
+**Branch:** `task/NNN-short-description` <!-- REQUIRED. Every task is implemented on its own branch — never bundle multiple tasks on one branch. Create from latest `main`, or stack on a dependency's branch when `Dependencies` names one. See PROJECT-WORKFLOW-OVERLAYS.md → "Branch Naming". -->
 
 ## Source
 

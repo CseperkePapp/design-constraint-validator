@@ -188,6 +188,30 @@ Any other conventions your project uses that extend the template. Examples:
 
 Add subsections as needed.
 
+### Branch Naming
+
+**One branch per task. Never bundle multiple tasks on a single branch.**
+
+- Branch name: `task/NNN-short-description`, where `NNN` is the task number and
+  `short-description` is a kebab-case slug derived from the task title (drop the
+  agent tag and the `dcv` prefix). Examples: `task/007-repo-hygiene`,
+  `task/004-fix-tokens-flag-and-readme`.
+- Base the branch on the latest `main`. If the task's `Dependencies` field names
+  another task, stack the branch on that dependency's branch instead, so the
+  dependency's commits are available and the two merge to `main` in order.
+- Record the branch in the task doc's `**Branch:**` header field (see
+  `TEMPLATE-TASK.md`) so the assignment is discoverable without `git`.
+- Each task's commits stay on its own branch; the per-task `TEST-AND-MERGE` doc
+  governs the merge to `main`.
+- The task-tracking docs under `docs/project-management/` are owned by the
+  workflow-adoption task (TASK-001). Edits to a _task doc_ (status, `Branch:`
+  field, checkboxes) live on the branch that owns the ledger, while each task's
+  _code_ lives on its own `task/NNN-…` branch.
+
+> Note: the upstream `TEMPLATE-TEST-AND-MERGE.md` still shows the template
+> default prefix `feature/task-NNN-…`. This project uses `task/NNN-…` — this
+> overlay is the source of truth for the prefix.
+
 ### Workflow Naming
 
 The base template uses these defaults for reusable workflow docs:
@@ -206,6 +230,7 @@ Track changes to your overlay so you know when your project diverged from templa
 | Date | Change | Reason |
 | ---- | ------ | ------ |
 | 2026-06-11 | Initial overlay | Project adopted ai-project-workflow v1.1.0 |
+| 2026-06-12 | Added Branch Naming convention (`task/NNN-…`, one branch per task) | Codify branch-per-task discipline so it is followed |
 
 ---
 

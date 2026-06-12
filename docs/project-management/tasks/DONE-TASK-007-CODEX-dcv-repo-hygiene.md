@@ -1,11 +1,13 @@
 # Task 007 CODEX: DCV — repo hygiene (remove committed build artifacts + small cleanups)
 
-**Status:** todo
+**Status:** done
 **Priority:** P2
 **Created:** 2026-06-11
+**Completed:** 2026-06-12
 **Effort:** S
 **Dependencies:** none
 **Phase:** DCV v2.1.0
+**Branch:** `task/007-repo-hygiene`
 
 ## Source
 

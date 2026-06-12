@@ -1,11 +1,12 @@
 # Task 004 CLAUDE: DCV v2.1.0 — Make the published package actually usable (fix `--tokens`, README parity, boundary test)
 
-**Status:** todo
+**Status:** in-progress
 **Priority:** P1
 **Created:** 2026-06-11
 **Effort:** L
 **Dependencies:** TASK-006, TASK-007
 **Phase:** DCV v2.1.0
+**Branch:** `task/004-fix-tokens-flag-and-readme`
 
 ## Source
 
@@ -93,12 +94,12 @@ Named CSS colors in the parser, gamut-mapping improvements, new constraint types
 
 ## Acceptance criteria
 
-- [ ] Clean-room test passes: custom tokens + custom constraints in a temp dir, violations reported with custom ids, correct exit codes, receipt references the real file.
-- [ ] `dcv validate --tokens <file>` and `dcv validate <file>` both work; missing file → clear error, non-zero exit.
-- [ ] `build` and `graph` accept `--tokens` consistently.
+- [x] Clean-room test passes: custom tokens + custom constraints in a temp dir, violations reported with custom ids, correct exit codes, receipt references the real file.
+- [x] `dcv validate --tokens <file>` and `dcv validate <file>` both work; missing file → clear error, non-zero exit.
+- [x] `build` and `graph` accept `--tokens` consistently.
 - [ ] Every command and code sample in README executes successfully as written, confirmed by running each in a clean directory.
-- [ ] No README reference to a nonexistent export remains.
-- [ ] All existing tests still pass; math files untouched.
+- [ ] No README reference to a nonexistent export remains. *(`validate()` export now exists; README not yet verified.)*
+- [x] All existing tests still pass; math files untouched.
 - [ ] v2.1.0 published to npm; CHANGELOG updated.
 
 ---

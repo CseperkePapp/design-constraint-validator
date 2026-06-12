@@ -9,6 +9,7 @@
 **Effort:** M
 **Dependencies:** TASK-002
 **Phase:** Assessment
+**Branch:** `task/003-ai-capability-assessment`
 
 ## Source
 

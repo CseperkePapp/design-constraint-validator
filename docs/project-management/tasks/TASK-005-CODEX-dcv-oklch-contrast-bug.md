@@ -1,11 +1,12 @@
 # Task 005 CODEX: DCV — fix OKLCH→sRGB conversion (contrast is wrong for OKLCH inputs)
 
-**Status:** todo
+**Status:** in-progress
 **Priority:** P1
 **Created:** 2026-06-11
 **Effort:** M
 **Dependencies:** none
 **Phase:** DCV v2.1.0
+**Branch:** `task/005-oklch-contrast-bug`
 
 ## Source
 
@@ -68,12 +69,20 @@ against OKLCH input.
    existing hex contrast tests with OKLCH equivalents.
 3. **Handle `oklch(… / alpha)`** correctly too (DT can emit alpha; compositing already exists, just ensure
    the parse feeds it right).
+4. **Test both supplied color families at the validator boundary.** Keep the internal contract simple:
+   CSS inputs (`#hex`, `rgb[a]()`, `hsl[a]()`, `oklch()`) normalize to gamma-encoded sRGB RGBA channels on
+   the 0-255 scale before luminance/contrast. Do not make the validator accept ambiguous raw linear-RGB
+   objects. Add validator-level tests that prove:
+   - sRGB-style CSS inputs (`#hex` / `rgb[a]()`) still produce the expected contrast behavior.
+   - OKLCH CSS inputs produce the corrected contrast behavior for equivalent/known token pairs.
 
 ## Acceptance
 
 - [ ] `parseCssColor('oklch(0.67 0.09 195)')` returns sRGB matching a reference (luminance ~0.35, not ~0.10).
 - [ ] A dark-OKLCH-on-light-OKLCH pair reports its true contrast (~7:1), not ~3:1.
 - [ ] OKLCH test vectors added; hex tests still pass; math otherwise untouched.
+- [ ] Validator-level tests cover both supplied input families: sRGB CSS (`#hex` / `rgb[a]()`) and OKLCH CSS,
+      with both paths normalizing to encoded sRGB RGBA before contrast.
 - [ ] Ride in v2.1.0 alongside the `--tokens`/README work.
 
 ## Note for DecisionThemes side

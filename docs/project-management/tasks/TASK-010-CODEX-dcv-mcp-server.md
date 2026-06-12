@@ -6,6 +6,7 @@
 **Effort:** L
 **Dependencies:** TASK-004
 **Phase:** MCP / Distribution
+**Branch:** `task/010-mcp-server`
 
 ## Source
 
