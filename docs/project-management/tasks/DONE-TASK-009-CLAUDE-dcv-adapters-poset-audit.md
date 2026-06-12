@@ -1,8 +1,9 @@
 # Task 009 CLAUDE: DCV — audit the unexamined third: adapters, poset edges, receipt claims
 
-**Status:** todo
+**Status:** done
 **Priority:** P3
 **Created:** 2026-06-11
+**Completed:** 2026-06-12
 **Effort:** M
 **Dependencies:** TASK-004
 **Phase:** Audit
@@ -58,9 +59,58 @@ New adapter formats, rewriting poset internals absent a failing test, patch-form
 
 ## Acceptance criteria
 
-- [ ] One passing boundary test per adapter, with findings (bugs fixed or documented limitations) written into `docs/Adapters.md`.
-- [ ] Poset edge-case tests green; the mixed hex/oklch lightness-scale question answered with either a normalization fix or an explicit documented restriction + warning.
-- [ ] Patch/set semantics defined and pinned (post-apply validation behavior decided deliberately).
-- [ ] Receipt documentation matches exactly what receipts contain.
-- [ ] `image-export.ts` has a justified existence or is gone.
-- [ ] A short findings section appended to this doc: what was sound, what was fixed, what was documented-as-limited — closing the audit loop on the last unexamined third of the repo.
+- [x] One passing boundary test per adapter, with findings written into `docs/Adapters.md`. (`test/adapters.test.ts`, 6 cases; audit note in `docs/Adapters.md`.)
+- [x] Poset edge-case tests green; mixed hex/oklch lightness-scale answered with a **normalization fix**. (`test/poset.test.ts`, 8 cases.)
+- [x] Patch/set semantics defined and pinned. (`test/patch-semantics.test.ts`; `docs/CLI.md` notes.)
+- [x] Receipt documentation matches exactly what receipts contain. (`docs/Concepts.md` + README roadmap.)
+- [x] `image-export.ts` has a justified existence. (Backs `dcv graph --format svg|png`; kept.)
+- [x] Findings section appended (below).
+
+---
+
+## Findings (2026-06-12, Claude)
+
+Audited boundary-first. As predicted, the algorithms were sound; one real
+correctness bug lived at a seam (lightness scale). Coverage gaps were the bigger
+story.
+
+**Sound (verified, now pinned with tests):**
+
+- **Adapters are all output-only** (CSS / JS / JSON emit; no parsers — token input
+  is `core/flatten.ts`). `decisionthemes.ts` is an unimplemented placeholder that
+  throws by design. `docs/Adapters.md` already framed this correctly; added an
+  audit note + `test/adapters.test.ts`.
+- **`core/poset.ts` `validatePoset`** correctly detects 2-cycles, self-references,
+  longer cycles, contradictory operators (they form a 2-cycle), and handles
+  disconnected components / diamonds. Pinned with `test/poset.test.ts`.
+- **`core/image-export.ts`** is justified — it backs `dcv graph --format svg|png`
+  via `mmdc`/`dot` with a graceful fallback when the tool is absent. Kept.
+
+**Fixed (real bug):**
+
+- **`monotonic-lightness` mixed-scale bug.** `parseLightness` returned the raw
+  OKLCH **perceptual L** for `oklch()` strings but **WCAG relative luminance** for
+  hex — two different scales. A scale mixing the formats compared incomparable
+  numbers (e.g. `oklch(0.6)` L=0.60 vs the same gray's luminance 0.216), giving
+  false pass/fail. Fixed by routing every format through `parseCssColor`
+  (oklch→sRGB is the verified TASK-005 pipeline) → one consistent luminance scale.
+  Pinned with a case the old code got wrong.
+
+**Documented as defined/limited (deliberate decisions, not bugs):**
+
+- **`patch:apply` is a pure transform** — it does not validate the result; a patch
+  can produce a violating token file with exit 0. Documented in `docs/CLI.md`
+  ("always `validate` the output"); pinned.
+- **`set <id>=<value>` de-aliases** — it writes the literal at that token id,
+  replacing an alias on the named token; it never writes through to the alias
+  source. Documented in `docs/CLI.md`; pinned.
+- **Receipts**: hashes are a **truncated** SHA-256 (`sha256:` + first 16 hex chars,
+  64-bit prefix); `constraintHashes` only covers `.json` files in the constraints
+  directory, **not** a discovered `dcv.config.json`; receipts are **not signed**.
+  `docs/Concepts.md` made exact; README roadmap clarified (hashes exist today,
+  signing is roadmap).
+
+**Minor, noted not fixed:** `image-export.ts` `which()` appends `.cmd` on Windows,
+so Graphviz `dot.exe` isn't found there (image export degrades gracefully with a
+hint). `json-output.ts` declares a `config.overrides` receipt field that is never
+populated.

@@ -223,7 +223,7 @@ DCV generates CycloneDX-compliant SBOMs for supply chain transparency:
 - Plugin API for **custom constraints**
 - **VS Code** diagnostics (inline explain)
 - **Cross-axis packs** (typography × weight × contrast)
-- **Receipts & provenance** (hashes, signable reports)
+- **Signed / attestable receipts** — `dcv validate --receipt` already emits environment + input content hashes today; cryptographic **signing** is the roadmap part
 - UI graph explorer (node inspector, violations focus)
 
 ---

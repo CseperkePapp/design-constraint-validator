@@ -109,6 +109,12 @@ DCV currently does NOT automatically detect or convert between formats (e.g., au
 
 ## Output Adapters
 
+> **Audit note (2026-06-12, TASK-009):** every module under `adapters/` is
+> **output-only** — it takes the internal flat token map and emits a format. None
+> of them parses external token files; token *input* (including DTCG) is handled by
+> `core/flatten.ts`. Each adapter's contract is pinned by `test/adapters.test.ts`.
+> `adapters/decisionthemes.ts` remains an unimplemented placeholder that throws.
+
 The `adapters/` folder provides helpers that take the internal flat token map and emit different formats:
 
 - `adapters/json.ts`

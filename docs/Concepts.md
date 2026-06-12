@@ -60,8 +60,11 @@ Core concepts and terms used across the Design Constraint Validator (DCV) codeba
   - Contains `ok`, `counts`, `violations`, optional `warnings`, and `stats` (duration, version, timestamp).
 - **Receipt**:
   - A validation result enriched with environment and input metadata (`ValidationReceipt`).
-  - Includes Node/OS info, token file path and hash, constraints directory and hashes, and effective configuration (including `failOn`).
+  - Includes Node/OS info (`nodeVersion`, `platform`, `arch`), the token file path and a content hash, the constraints directory and per-file hashes, the breakpoint, and effective configuration (`failOn`).
   - Generated with `dcv validate --format json --receipt <path>`.
+  - **Hash format (audited TASK-009):** each hash is `sha256:` followed by the **first 16 hex chars** (a 64-bit prefix of the SHA-256 of the file's bytes) — enough for drift detection, not a full digest.
+  - **Constraint hashing scope:** only `.json` files in the constraints directory (`themes/` by default, or `--constraints-dir`) are hashed. Constraints supplied through a discovered `dcv.config.json` are **not** currently included in `constraintHashes`.
+  - Receipts are **not signed** — signing is on the roadmap.
 
 ## Defaults & Assumptions
 
