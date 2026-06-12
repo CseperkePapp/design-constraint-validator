@@ -1,31 +1,28 @@
 # Constraint Types
 
-DCV supports multiple types of constraints to validate design tokens.
+DCV validates relationships between design tokens. Constraints can come from
+`dcv.config.json` or from order/cross-axis JSON files in the constraints
+directory.
 
 ## Overview
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| **Monotonic** | Enforce ordering (h1 ≥ h2) | Typography scales, spacing |
-| **WCAG** | Color contrast accessibility | Text readability |
-| **Threshold** | Min/max value guards | Touch target sizes |
-| **Lightness** | Color palette progression | Lightness ordering |
-| **Cross-Axis** | Multi-domain relationships | Weight × size dependencies |
+| Type | Configured In | Purpose |
+|------|---------------|---------|
+| Monotonic | `<axis>.order.json` | Enforce ordering such as `h1 >= h2` |
+| WCAG | `dcv.config.json` | Enforce foreground/background contrast |
+| Threshold | `dcv.config.json` | Enforce min/max numeric values |
+| Lightness | `color.order.json` | Enforce color lightness progression |
+| Cross-axis | `cross-axis.rules.json` | Enforce multi-property rules |
 
----
+The default constraints directory is `themes/`. Use `--constraints-dir` to use
+another directory name.
 
-## 1. Monotonic Constraints
+## Monotonic Constraints
 
-Enforce ordering relationships between tokens.
+Monotonic rules enforce ordering relationships between tokens.
 
-### Use Cases
-- Typography scales (h1 ≥ h2 ≥ h3 ≥ body)
-- Spacing hierarchies (xl ≥ lg ≥ md ≥ sm)
-- Layout breakpoints (desktop ≥ tablet ≥ mobile)
+Example `themes/typography.order.json`:
 
-### Configuration
-
-**themes/typography.order.json:**
 ```json
 {
   "order": [
@@ -36,51 +33,23 @@ Enforce ordering relationships between tokens.
 }
 ```
 
-### Operators
-- `>=` - Greater than or equal
-- `<=` - Less than or equal
+Operators:
 
-### Supported Value Types
-- **Pixels** - `16px`, `24px`
-- **Rems** - `1rem`, `1.5rem`
-- **Unitless numbers** - `16`, `24`
+- `>=`: Left token must be greater than or equal to the right token.
+- `<=`: Left token must be less than or equal to the right token.
 
-### Example Tokens
+Supported values include `px`, `rem`, and unitless numbers.
 
-```json
-{
-  "typography": {
-    "size": {
-      "h1": { "$value": "32px" },
-      "h2": { "$value": "24px" },
-      "h3": { "$value": "20px" },
-      "body": { "$value": "16px" }
-    }
-  }
-}
+Example failure:
+
+```text
+ERROR monotonic  typography.size.h1|typography.size.h2 - typography.size.h1 >= typography.size.h2 violated: 32 vs 40
 ```
 
-### Error Example
+## WCAG Contrast Constraints
 
-```
-ERROR monotonic  typography.size.h2
-  typography.size.h1 >= typography.size.h2 violated: 32px < 40px
-```
+WCAG contrast rules live in `dcv.config.json` under `constraints.wcag`.
 
----
-
-## 2. WCAG Contrast Constraints
-
-Validate color contrast for accessibility compliance.
-
-### Use Cases
-- Body text on backgrounds (AA = 4.5:1)
-- Large text (AAA = 4.5:1, AA = 3:1)
-- UI components (3:1 minimum)
-
-### Configuration
-
-**themes/wcag.json:**
 ```json
 {
   "constraints": {
@@ -89,202 +58,135 @@ Validate color contrast for accessibility compliance.
         "foreground": "color.text.body",
         "background": "color.bg.surface",
         "ratio": 4.5,
-        "description": "Body text on surface (AA)"
+        "description": "Body text on surface"
       },
       {
         "foreground": "color.text.heading",
         "background": "color.bg.surface",
-        "ratio": 7.0,
-        "description": "Headings on surface (AAA)"
-      },
-      {
-        "foreground": "color.accent.primary",
-        "background": "color.bg.surface",
-        "ratio": 3.0,
-        "description": "UI components (AA)"
+        "ratio": 7,
+        "description": "Headings on surface"
       }
     ]
   }
 }
 ```
 
-### WCAG Levels
+Fields:
 
-| Level | Normal Text | Large Text | UI Components |
-|-------|-------------|------------|---------------|
-| **AA** | 4.5:1 | 3:1 | 3:1 |
-| **AAA** | 7:1 | 4.5:1 | - |
+- `foreground`: Foreground color token ID.
+- `background`: Background color token ID.
+- `ratio`: Minimum ratio. Defaults to `4.5` when omitted.
+- `description`: Optional label surfaced as `context.where`.
+- `backdrop`: Optional token ID or color literal for transparent background
+  compositing.
 
-**Large text** = ≥18pt regular or ≥14pt bold
+Supported color inputs include hex, RGB, HSL, OKLCH, OKLAB, and `transparent`
+where the parser can resolve them.
 
-### Example Tokens
+WCAG JSON violations include:
 
 ```json
 {
-  "color": {
-    "text": {
-      "body": { "$value": "#1a1a1a" },
-      "heading": { "$value": "#000000" }
-    },
-    "bg": {
-      "surface": { "$value": "#ffffff" }
-    },
-    "accent": {
-      "primary": { "$value": "#0066cc" }
-    }
+  "ruleId": "wcag-contrast",
+  "level": "error",
+  "message": "Contrast 1.24:1 < 4.5:1",
+  "nodes": ["color.text.body", "color.bg.surface"],
+  "context": {
+    "where": "Body text on surface",
+    "actual": 1.24,
+    "required": 4.5
   }
 }
 ```
 
-### Error Example
-
-```
-ERROR wcag  color.text.body vs color.bg.surface
-  Contrast ratio 4.5:1 required, got 3.8:1
-  Body text on surface (AA)
-```
-
-### Color Formats Supported
-- **Hex** - `#1a1a1a`, `#fff`
-- **RGB** - `rgb(26, 26, 26)`
-- **HSL** - `hsl(0, 0%, 10%)`
-- **OKLCH** - `oklch(0.2 0 0)` (perceptual)
-
----
-
-## 3. Threshold Constraints
-
-Enforce min/max value guards.
-
-### Use Cases
-- Touch target sizes (≥44px WCAG, ≥48px Material)
-- Maximum line lengths (≤75ch)
-- Font size floors (≥12px)
-
-### Configuration
-
-Defined in code plugins:
-
-```typescript
-{
-  id: 'control.size.min',
-  op: '>=',
-  valuePx: 44,
-  where: 'Touch target (WCAG 2.1 / Apple HIG)'
-}
-```
-
-### Example Tokens
+DCV also enables a small set of built-in WCAG checks for common role token IDs.
+Disable those defaults with:
 
 ```json
 {
-  "control": {
-    "size": {
-      "button": { "$value": "48px" },
-      "checkbox": { "$value": "24px" },
-      "icon-button": { "$value": "44px" }
-    }
+  "constraints": {
+    "enableBuiltInWcagDefaults": false
   }
 }
 ```
 
-### Error Example
+## Threshold Constraints
 
+Threshold rules live in `constraints.thresholds`.
+
+```json
+{
+  "constraints": {
+    "thresholds": [
+      {
+        "id": "control.size.min",
+        "op": ">=",
+        "valuePx": 44,
+        "where": "Touch target"
+      },
+      {
+        "id": "layout.container.max",
+        "op": "<=",
+        "valuePx": 1440,
+        "where": "Maximum content width"
+      }
+    ]
+  }
+}
 ```
-ERROR threshold  control.size.checkbox
-  Touch target should be ≥ 44px, got 24px
-  Touch target (WCAG 2.1 / Apple HIG)
+
+Fields:
+
+- `id`: Token ID to check.
+- `op`: `">="` or `"<="`.
+- `valuePx`: Numeric pixel threshold.
+- `where`: Optional label surfaced as `context.where`.
+
+DCV enables a built-in touch target threshold by default:
+
+```json
+{
+  "id": "control.size.min",
+  "op": ">=",
+  "valuePx": 44,
+  "where": "Touch target (WCAG / Apple HIG)"
+}
 ```
 
-### Common Thresholds
+Disable it with:
 
-| Guideline | Minimum Size |
-|-----------|--------------|
-| **WCAG 2.1** | 44×44px |
-| **Material Design** | 48×48px |
-| **iOS HIG** | 44×44pt |
-| **Android** | 48×48dp |
+```json
+{
+  "constraints": {
+    "enableBuiltInThreshold": false
+  }
+}
+```
 
----
+## Lightness Constraints
 
-## 4. Lightness Constraints
+Color lightness ordering uses `themes/color.order.json` and the same `order`
+shape as monotonic constraints.
 
-Enforce color palette progression based on perceptual lightness.
-
-### Use Cases
-- Color scales (50 → 100 → 200 → ... → 900)
-- Ensuring darker shades are actually darker
-- Perceptual consistency
-
-### Configuration
-
-**themes/color.order.json:**
 ```json
 {
   "order": [
     ["color.palette.brand.50", ">=", "color.palette.brand.100"],
     ["color.palette.brand.100", ">=", "color.palette.brand.200"],
-    ["color.palette.brand.200", ">=", "color.palette.brand.300"],
-    ["color.palette.brand.300", ">=", "color.palette.brand.400"],
-    ["color.palette.brand.400", ">=", "color.palette.brand.500"]
+    ["color.palette.brand.200", ">=", "color.palette.brand.300"]
   ]
 }
 ```
 
-### Example Tokens
+The lightness plugin compares parsed OKLCH lightness where available and falls
+back to an approximation for hex colors.
 
-```json
-{
-  "color": {
-    "palette": {
-      "brand": {
-        "50": { "$value": "oklch(0.95 0.05 280)" },
-        "100": { "$value": "oklch(0.90 0.08 280)" },
-        "200": { "$value": "oklch(0.80 0.12 280)" },
-        "300": { "$value": "oklch(0.70 0.15 280)" },
-        "400": { "$value": "oklch(0.60 0.18 280)" },
-        "500": { "$value": "oklch(0.50 0.20 280)" }
-      }
-    }
-  }
-}
-```
+## Cross-Axis Constraints
 
-### How It Works
+Cross-axis constraints enforce relationships between different token domains.
 
-Uses **OKLCH** (perceptual color space) L channel:
-- L=1.0 → white
-- L=0.5 → mid
-- L=0.0 → black
+Example `themes/cross-axis.rules.json`:
 
-Converts hex/rgb to OKLCH automatically.
-
----
-
-## 5. Cross-Axis Constraints ⚡
-
-**Multi-property conditional rules** - enforce relationships between different token properties.
-
-### What Makes Cross-Axis Special?
-
-Unlike other validators that check tokens in isolation, cross-axis constraints validate **combinations** of properties:
-
-| Single-Property Check | Cross-Axis Check |
-|----------------------|------------------|
-| ✅ Font size ≥ 14px | ✅ **IF** weight ≤ 400 **THEN** size ≥ 16px |
-| ✅ Touch target ≥ 44px | ✅ **IF** text size < 18px **THEN** target ≥ 44px |
-| ✅ Contrast ≥ 4.5:1 | ✅ **IF** on mobile **THEN** contrast ≥ 7:1 |
-
-This enables **sophisticated design system governance** that standard validators can't achieve.
-
----
-
-### Real-World Use Cases
-
-#### 1. Typography Readability
-**Rule:** Light font weights need larger sizes for legibility
-
-**themes/cross-axis.rules.json:**
 ```json
 {
   "rules": [
@@ -292,329 +194,91 @@ This enables **sophisticated design system governance** that standard validators
       "id": "readable-light-text",
       "when": {
         "id": "typography.weight.body",
-        "test": "(v) => v <= 400"
+        "test": "v <= 400"
       },
       "require": {
         "id": "typography.size.body",
-        "test": "(v) => v >= 16",
-        "msg": "(v, ctx) => `Light weight (${ctx.get('typography.weight.body')}) requires size ≥16px, got ${v}px`"
+        "test": "v >= 16",
+        "msg": "Light body text needs at least 16px size"
       }
-    }
-  ]
-}
-```
-
-**Tokens that violate:**
-```json
-{
-  "typography": {
-    "weight": { "body": { "$value": 300 } },
-    "size": { "body": { "$value": "14px" } }
-  }
-}
-```
-
-**Error:**
-```
-ERROR cross-axis  typography.size.body
-  Light weight (300) requires size ≥16px, got 14px
-```
-
----
-
-#### 2. Accessible Touch Targets
-**Rule:** Small button text requires larger tap targets (WCAG 2.5.5 + Apple HIG)
-
-```json
-{
-  "rules": [
+    },
     {
-      "id": "touch-target-accessibility",
+      "id": "accessible-touch-targets",
       "when": {
         "id": "typography.size.button",
-        "test": "(v) => v < 18"
+        "test": "v < 18"
       },
       "require": {
         "id": "control.size.min",
-        "test": "(v) => v >= 44",
-        "msg": "() => `Button text <18px requires ≥44px touch target for accessibility`"
+        "test": "v >= 44",
+        "msg": "Small button text requires a larger tap target"
       }
     }
   ]
 }
 ```
 
----
+Breakpoint-specific files are also supported:
 
-#### 3. Responsive Contrast
-**Rule:** Mobile screens need higher contrast due to outdoor viewing
-
-```json
-{
-  "rules": [
-    {
-      "id": "mobile-high-contrast",
-      "contrast": {
-        "text": "color.text.body",
-        "bg": "color.bg.default",
-        "min": "(bp) => bp === 'sm' ? 7 : 4.5",
-        "ratio": "(text, bg, ctx) => calculateContrast(text, bg)"
-      }
-    }
-  ]
-}
-```
-
----
-
-#### 4. Heading Emphasis
-**Rule:** Headings must be visually distinct from body text
-
-```json
-{
-  "rules": [
-    {
-      "id": "heading-emphasis",
-      "when": {
-        "id": "typography.size.h2",
-        "test": "(v, ctx) => v - ctx.getPx('typography.size.body') < 4"
-      },
-      "require": {
-        "id": "typography.weight.h2",
-        "test": "(v, ctx) => v >= ctx.get('typography.weight.body') + 200",
-        "msg": "() => `Small heading size delta requires heavier weight for emphasis`"
-      }
-    }
-  ]
-}
-```
-
----
-
-#### 5. Dense Layout Spacing
-**Rule:** Tighter line-height needs more paragraph spacing
-
-```json
-{
-  "rules": [
-    {
-      "id": "compensate-tight-leading",
-      "when": {
-        "id": "typography.lineHeight.body",
-        "test": "(v) => v < 1.4"
-      },
-      "require": {
-        "id": "spacing.paragraph",
-        "test": "(v, ctx) => v >= ctx.getPx('typography.size.body') * 1.5",
-        "msg": "() => `Tight line-height (<1.4) requires larger paragraph spacing for readability`"
-      }
-    }
-  ]
-}
-```
-
----
-
-### Syntax Reference
-
-**Basic Structure:**
-```typescript
-{
-  id: string;              // Unique identifier
-  level?: "error" | "warn"; // Severity (default: "error")
-  when: {
-    id: string;            // Token to test
-    test: string | Function; // Condition (JS function)
-  };
-  require: {
-    id: string;            // Token to validate
-    test: string | Function; // Validation (JS function)
-    msg: string | Function;  // Error message
-  };
-}
-```
-
-**Available in test functions:**
-- `v` - Current token value (parsed as number)
-- `ctx.get(id)` - Get any token value
-- `ctx.getPx(id)` - Get dimension as pixels
-- `ctx.bp` - Current breakpoint (if any)
-
----
-
-### Breakpoint-Specific Rules
-
-Cross-axis constraints can vary by breakpoint:
-
-**themes/cross-axis.sm.rules.json:** (mobile-only)
-```json
-{
-  "rules": [
-    {
-      "id": "mobile-touch-targets",
-      "when": { "id": "typography.size.body", "test": "v => v < 16" },
-      "require": { 
-        "id": "control.size.min", 
-        "test": "v => v >= 48",
-        "msg": "() => `Mobile requires ≥48px touch targets (Apple HIG)`"
-      }
-    }
-  ]
-}
-```
-
-**themes/cross-axis.lg.rules.json:** (desktop)
-```json
-{
-  "rules": [
-    {
-      "id": "desktop-dense-ui",
-      "when": { "id": "layout.density", "test": "v => v === 'compact'" },
-      "require": { 
-        "id": "spacing.padding",
-        "test": "v => v >= 12",
-        "msg": "() => `Compact layouts need minimum 12px padding`"
-      }
-    }
-  ]
-}
-```
-
----
-
-### Why Cross-Axis Matters
-
-**Without cross-axis validation:**
-```
-✅ Font weight 300 - Valid
-✅ Font size 12px - Valid
-❌ Together? Unreadable! (But passes validation)
-```
-
-**With cross-axis validation:**
-```
-✅ Font weight 300
-✅ Font size 16px
-✅ Combination valid - Readable!
-
-OR
-
-❌ Font weight 300 + Font size 12px
-ERROR: Light weight requires ≥16px size
-```
-
-**Real Impact:**
-- 🎯 Catches **subtle design bugs** before production
-- 📱 Enforces **responsive best practices** automatically
-- ♿ Validates **accessibility combinations** (not just isolated checks)
-- 📚 Documents **design intent** in code (no more wiki pages)
-
----
-
-### Advanced Example: Complete Mobile Ruleset
-
-**themes/cross-axis.sm.rules.json:**
-```json
-{
-  "rules": [
-    {
-      "id": "mobile-readable-body",
-      "when": { "id": "typography.weight.body", "test": "v => v < 500" },
-      "require": { 
-        "id": "typography.size.body",
-        "test": "v => v >= 16",
-        "msg": "() => `Mobile body text with light weight needs ≥16px`"
-      }
-    },
-    {
-      "id": "mobile-touch-buttons",
-      "when": { "id": "typography.size.button", "test": "v => v < 18" },
-      "require": {
-        "id": "control.size.button",
-        "test": "v => v >= 44",
-        "msg": "() => `Mobile buttons <18px text need ≥44px tap target`"
-      }
-    },
-    {
-      "id": "mobile-high-contrast",
-      "contrast": {
-        "text": "color.text.secondary",
-        "bg": "color.bg.default",
-        "min": "() => 7",
-        "ratio": "(t, b, ctx) => calculateContrast(t, b)"
-      },
-      "level": "warn"
-    }
-  ]
-}
-```
-
-This creates a **comprehensive mobile accessibility ruleset** that validates:
-- Typography readability
-- Touch target sizes
-- Color contrast ratios
-
-All automatically enforced on every validation run.
-
----
+- `themes/cross-axis.sm.rules.json`
+- `themes/cross-axis.md.rules.json`
+- `themes/cross-axis.lg.rules.json`
 
 ## Combining Constraints
 
-You can use multiple constraint types together:
+Typical project structure:
 
-```
+```text
 project/
-├── tokens.json
-└── themes/
-    ├── wcag.json           # Color contrast
-    ├── typography.order.json  # Typography scales
-    ├── spacing.order.json     # Spacing hierarchy
-    ├── color.order.json       # Color lightness
-    └── cross-axis.rules.json  # Multi-domain rules
+  tokens.json
+  dcv.config.json
+  themes/
+    typography.order.json
+    spacing.order.json
+    color.order.json
+    cross-axis.rules.json
 ```
 
-All constraints are validated together in one pass.
-
----
-
-## Constraint Severity
-
-Constraints can be:
-- **error** - Validation fails (exit code 1)
-- **warn** - Validation passes but shows warning
-
-Control with `--fail-on`:
+Run validation:
 
 ```bash
-dcv validate --fail-on error   # Only fail on errors (default)
-dcv validate --fail-on warn    # Fail on warnings too
-dcv validate --fail-on off     # Never fail (reporting only)
+dcv validate --tokens tokens.json
 ```
 
----
+Use a differently named policy directory:
 
-## Custom Constraints
+```bash
+dcv validate --tokens tokens.json --constraints-dir constraints
+```
 
-Coming soon: Plugin API for custom constraint types.
+## Severity And Exit Behavior
 
----
+Most built-in constraints report `error`. Some warnings can appear for
+unparseable WCAG color inputs or custom plugins.
 
-## Next Steps
+Control exit behavior with:
 
-- **[CLI Reference](./CLI.md)** - Command options
-- **[Configuration](./Configuration.md)** - Customize paths
-- **[Architecture](./Architecture.md)** - How constraints are validated
+```bash
+dcv validate --fail-on error
+dcv validate --fail-on warn
+dcv validate --fail-on off
+```
 
----
+## Programmatic Use
 
-## Built-in Rules
+```ts
+import { validate } from 'design-constraint-validator';
 
-DCV includes a small number of built-in constraints that are always active:
+const result = validate({
+  tokensPath: './tokens.json',
+  configPath: './dcv.config.json',
+  constraintsDir: './themes'
+});
+```
 
-- **Touch target threshold**
-  - `control.size.min >= 44px` (Touch target, WCAG 2.1 / Apple HIG).
-  - Enforced even if you do not define any explicit threshold JSON files.
-- **Default WCAG pairs**
-  - A few common role-based color pairs (for example `color.role.text.default` on `color.role.bg.surface`) are checked for contrast automatically when those IDs exist.
+## Related Docs
 
-These defaults provide useful safety nets out-of-the-box. For full control, define your own WCAG and threshold constraints in `themes/` and adjust `--fail-on`/config as needed.
+- [Configuration](./Configuration.md)
+- [CLI Reference](./CLI.md)
+- [JSON Output Schema](./JSON-OUTPUT.md)
+- [API Reference](./API.md)

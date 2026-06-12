@@ -1,53 +1,76 @@
 # JSON Output Schema
 
-DCV provides machine-readable JSON output for programmatic consumption and CI/CD integration.
+DCV provides machine-readable JSON for CI, dashboards, agent integrations, and
+receipts.
 
 ## Usage
 
 ```bash
 dcv validate --format json
 dcv validate --format json --output results.json
+dcv validate --format json --receipt validation.receipt.json
 ```
 
-## Schema
+## CLI Validation Result
 
-### ValidationResult
+`dcv validate --format json` writes this shape:
 
-```typescript
+```ts
 interface ValidationResult {
-  ok: boolean;                  // true if no violations, false otherwise
+  ok: boolean;
   counts: {
-    checked: number;            // Total number of constraints checked
-    violations: number;         // Number of violations found
-    warnings: number;           // Number of warnings found
+    checked: number;
+    violations: number;
+    warnings: number;
   };
   violations: ConstraintViolation[];
   warnings?: ConstraintViolation[];
+  note?: string;
   stats: {
-    durationMs: number;         // Total validation time in milliseconds
-    engineVersion: string;      // DCV version
-    timestamp: string;          // ISO 8601 timestamp
+    durationMs: number;
+    engineVersion: string;
+    timestamp: string;
+  };
+  dcv: {
+    name: string;
+    version: string;
+    repository: string;
   };
 }
 ```
 
-### ConstraintViolation
+`warnings` is omitted by the CLI when there are no warnings. `note` is present
+when DCV can tell that tokens were loaded but no active constraint referenced any
+of them.
 
-```typescript
+The programmatic `validate()` API returns the same `ok`, `counts`, `violations`,
+`warnings`, and optional `note` fields. It does not add CLI-only `stats` or
+`dcv` metadata.
+
+## Constraint Violation
+
+```ts
 interface ConstraintViolation {
-  ruleId: string;               // Constraint type: 'wcag-contrast', 'mono-typography', etc.
-  level: 'error' | 'warn';      // Severity level
-  message: string;              // Human-readable description
-  nodes?: string[];             // Implicated token IDs
-  edges?: [string, string][];   // Dependency edges involved in violation
-  context?: {                   // Additional constraint-specific data
-    actual?: unknown;
-    expected?: unknown;
-    threshold?: number;
-    [key: string]: unknown;
-  };
+  ruleId: string;
+  level: 'error' | 'warn';
+  message: string;
+  nodes?: string[];
+  edges?: [string, string][];
+  context?: Record<string, unknown>;
 }
 ```
+
+Field notes:
+
+- `ruleId`: Constraint identifier, such as `wcag-contrast`, `threshold`, or
+  `monotonic`.
+- `level`: `error` blocks by default; `warn` blocks only when `--fail-on warn`.
+- `message`: Human-readable summary.
+- `nodes`: Token IDs involved in the issue.
+- `edges`: Dependency or constraint edges when available.
+- `context`: Rule-specific structured metadata. WCAG contrast violations include
+  `actual` and `required`; threshold violations currently include `where` when a
+  label is configured.
 
 ## Example Output
 
@@ -55,109 +78,88 @@ interface ConstraintViolation {
 {
   "ok": false,
   "counts": {
-    "checked": 156,
-    "violations": 3,
-    "warnings": 1
+    "checked": 2,
+    "violations": 2,
+    "warnings": 0
   },
   "violations": [
     {
       "ruleId": "wcag-contrast",
       "level": "error",
-      "message": "Insufficient contrast ratio: 2.3:1 (requires 4.5:1 for AA)",
-      "nodes": ["color.text.primary", "color.bg.surface"],
+      "message": "Contrast 1.24:1 < 4.5:1",
+      "nodes": ["color.text", "color.background"],
       "context": {
-        "actual": 2.3,
-        "expected": 4.5,
-        "standard": "AA"
-      }
-    },
-    {
-      "ruleId": "mono-typography",
-      "level": "error",
-      "message": "Typography scale must be strictly increasing",
-      "nodes": ["typography.size.md", "typography.size.lg"],
-      "edges": [["typography.size.md", "typography.size.lg"]],
-      "context": {
-        "values": [16, 14],
-        "order": "increasing"
+        "where": "Body text on page background",
+        "actual": 1.24,
+        "required": 4.5
       }
     },
     {
       "ruleId": "threshold",
       "level": "error",
-      "message": "control.size.min @ Touch target (WCAG / Apple HIG) — control.size.min >= 44px violated: 30px",
+      "message": "control.size.min >= 44px violated: 30px",
       "nodes": ["control.size.min"],
       "context": {
-        "actual": 30,
-        "threshold": 44,
-        "unit": "px",
-        "operator": ">="
+        "where": "Touch target (WCAG / Apple HIG)"
       }
     }
   ],
-  "warnings": [
-    {
-      "ruleId": "cross-axis",
-      "level": "warn",
-      "message": "Large text should have higher contrast at smaller sizes",
-      "nodes": ["typography.size.xl", "color.contrast.sm"]
-    }
-  ],
   "stats": {
-    "durationMs": 247,
-    "engineVersion": "1.0.0",
-    "timestamp": "2025-11-01T08:00:00.000Z"
+    "durationMs": 2,
+    "engineVersion": "2.1.0",
+    "timestamp": "2026-06-12T13:37:03.224Z"
+  },
+  "dcv": {
+    "name": "design-constraint-validator",
+    "version": "2.1.0",
+    "repository": "https://github.com/CseperkePapp/design-constraint-validator#readme"
   }
 }
 ```
 
 ## Exit Codes
 
-DCV uses standard exit codes for CI/CD integration:
-
 | Code | Meaning | Description |
 |------|---------|-------------|
-| `0` | Success | No violations or `--fail-on off` |
-| `1` | Violations | Constraint violations found (respects `--fail-on`) |
-| `2` | Configuration Error | Invalid config, missing files, or bad arguments |
-| `3` | Runtime Error | Unexpected exception or system error |
+| `0` | Success | No blocking violations, or `--fail-on off` |
+| `1` | Violations | Violations found according to `--fail-on` |
+| `2` | Configuration/runtime setup error | Invalid config, missing files, bad arguments, or command failure |
 
-### Exit Code Behavior with --fail-on
+### `--fail-on`
 
 ```bash
-# Exit 0 even if violations exist (reporting only)
+# Exit 0 even if violations exist
 dcv validate --fail-on off
 
-# Exit 1 if errors OR warnings found (strict)
+# Exit 1 if warnings or errors exist
 dcv validate --fail-on warn
 
-# Exit 1 only if errors found (default)
+# Exit 1 only if errors exist
 dcv validate --fail-on error
 ```
 
-## Receipt Mode (Audit Trail)
+## Receipt Mode
 
-Generate a validation receipt for audit and reproducibility:
+Receipts add audit metadata to the validation result. Receipt writing is tied to
+JSON validation output:
 
 ```bash
-dcv validate --receipt ./reports/validation.receipt.json
+dcv validate --format json --receipt ./reports/validation.receipt.json
 ```
 
-### Receipt Schema
-
-```typescript
+```ts
 interface ValidationReceipt extends ValidationResult {
   environment: {
-    nodeVersion: string;        // Node.js version
-    platform: string;           // OS platform
-    arch: string;               // CPU architecture
+    nodeVersion: string;
+    platform: string;
+    arch: string;
   };
   inputs: {
-    tokensFile: string;         // Path to tokens file
-    tokensHash: string;         // SHA-256 hash of tokens file
-    constraintsDir: string;     // Path to constraints directory
-    constraintHashes: Record<string, string>;  // Constraint file hashes
-    breakpoint?: string;        // Active breakpoint
+    tokensFile: string;
+    tokensHash: string;
+    constraintsDir: string;
+    constraintHashes: Record<string, string>;
+    breakpoint?: string;
   };
   config: {
     failOn: 'off' | 'warn' | 'error';
@@ -166,38 +168,9 @@ interface ValidationReceipt extends ValidationResult {
 }
 ```
 
-### Example Receipt
-
-```json
-{
-  "ok": false,
-  "counts": { "checked": 156, "violations": 3, "warnings": 1 },
-  "violations": [ /* ... */ ],
-  "stats": {
-    "durationMs": 247,
-    "engineVersion": "1.0.0",
-    "timestamp": "2025-11-01T08:00:00.000Z"
-  },
-  "environment": {
-    "nodeVersion": "v20.10.0",
-    "platform": "linux",
-    "arch": "x64"
-  },
-  "inputs": {
-    "tokensFile": "./tokens/tokens.json",
-    "tokensHash": "sha256:a3f2b1c9d8e7...",
-    "constraintsDir": "./themes",
-    "constraintHashes": {
-      "wcag.json": "sha256:1a2b3c4d...",
-      "typography.order.json": "sha256:5e6f7g8h..."
-    },
-    "breakpoint": "md"
-  },
-  "config": {
-    "failOn": "error"
-  }
-}
-```
+Hash values are `sha256:` plus the first 16 hex characters of the file digest.
+`constraintHashes` includes `.json` files from the active constraints directory;
+config-file constraints are not currently hashed there.
 
 ## Integration Examples
 
@@ -205,53 +178,52 @@ interface ValidationReceipt extends ValidationResult {
 
 ```yaml
 - name: Validate design tokens
-  run: dcv validate --format json --output validation.json
-  
+  run: npx dcv validate --format json --output validation.json
+
 - name: Upload results artifact
-  if: failure()
-  uses: actions/upload-artifact@v3
+  if: always()
+  uses: actions/upload-artifact@v4
   with:
     name: validation-results
     path: validation.json
 ```
 
-### CI Dashboard
+### Read CLI JSON
 
-```javascript
-const fs = require('fs');
-const result = JSON.parse(fs.readFileSync('validation.json'));
+```js
+import fs from 'node:fs';
 
-console.log(`✅ Checked ${result.counts.checked} constraints`);
-console.log(`❌ Found ${result.counts.violations} violations`);
-console.log(`⚠️  Found ${result.counts.warnings} warnings`);
+const result = JSON.parse(fs.readFileSync('validation.json', 'utf8'));
 
-result.violations.forEach(v => {
-  console.error(`[${v.ruleId}] ${v.message}`);
-  if (v.nodes) console.error(`  Tokens: ${v.nodes.join(', ')}`);
-});
+console.log(`Checked ${result.counts.checked} constraints`);
+console.log(`Found ${result.counts.violations} violations`);
+console.log(`Found ${result.counts.warnings} warnings`);
+
+for (const violation of result.violations) {
+  console.error(`[${violation.ruleId}] ${violation.message}`);
+  if (violation.nodes) {
+    console.error(`  Tokens: ${violation.nodes.join(', ')}`);
+  }
+}
 ```
 
-### Custom Reporting
+### Programmatic Validation
 
-```typescript
+```ts
 import { validate } from 'design-constraint-validator';
 
-const result = await validate(tokens, options);
-
-// Generate HTML report
-const html = generateHtmlReport(result);
-fs.writeFileSync('report.html', html);
-
-// Send to monitoring system
-await sendToDatadog({
-  metric: 'dcv.violations',
-  value: result.counts.violations,
-  tags: [`version:${result.stats.engineVersion}`]
+const result = validate({
+  tokensPath: './tokens.json',
+  configPath: './dcv.config.json'
 });
+
+const html = generateHtmlReport(result);
+await sendMetric('dcv.violations', result.counts.violations);
 ```
 
-## See Also
+## Related Docs
 
-- [CLI Reference](https://github.com/CseperkePapp/design-constraint-validator/wiki/CLI-Reference)
-- [Configuration](https://github.com/CseperkePapp/design-constraint-validator/wiki/Configuration)
-- [Constraint Types](https://github.com/CseperkePapp/design-constraint-validator/wiki/Constraint-Types)
+- [CLI Reference](./CLI.md)
+- [Configuration](./Configuration.md)
+- [API Reference](./API.md)
+- [Constraints](./Constraints.md)

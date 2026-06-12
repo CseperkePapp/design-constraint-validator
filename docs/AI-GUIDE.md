@@ -1,210 +1,277 @@
 # AI Assistant Guide for DCV
 
-Quick reference for AI assistants (ChatGPT, Claude, Copilot) helping users with `design-constraint-validator`.
+Quick reference for AI assistants helping users with
+`design-constraint-validator`.
 
 ## Repository Workflow Skills
 
-DCV includes reusable workflow skills under `.github/skills/` for task execution discipline and closeout quality:
+DCV includes reusable workflow skills under `.github/skills/` for disciplined
+task execution:
 
-- `.github/skills/workflow-investigation/SKILL.md` — use for risky or cross-cutting changes before editing
-- `.github/skills/workflow-qa-evidence/SKILL.md` — use for acceptance-criteria-based verification and evidence capture
-- `.github/skills/workflow-docs-sync/SKILL.md` — use when documentation and status/task surfaces must be synchronized
+- `.github/skills/workflow-investigation/SKILL.md` for risky or cross-cutting
+  changes before editing.
+- `.github/skills/workflow-qa-evidence/SKILL.md` for acceptance-criteria-based
+  verification and evidence capture.
+- `.github/skills/workflow-docs-sync/SKILL.md` when documentation and task
+  surfaces must stay synchronized.
 
-These are workflow skills (process and quality), not DCV engine/domain logic skills.
+These are workflow skills, not DCV runtime/domain logic.
 
-## Core Commands (Copy-Paste Ready)
+## Core Commands
 
 ### Validation
+
 ```bash
 # Basic validation
 npx dcv validate
 
-# Validate specific file
+# Validate a specific file
 npx dcv validate tokens.json
+npx dcv validate --tokens tokens.json
 
-# Non-blocking (report only)
+# Non-blocking report mode
 npx dcv validate --fail-on off
 
-# JSON output for parsing
+# Machine-readable output
 npx dcv validate --format json
-
-# Save results to file
 npx dcv validate --format json --output results.json
 
-# Generate audit receipt
-npx dcv validate --receipt audit.json
+# Audit receipt
+npx dcv validate --format json --receipt audit.json
 ```
 
 ### Analysis
+
 ```bash
 # Explain why a token has its value
 npx dcv why color.primary
 
 # Generate dependency graph
 npx dcv graph --format mermaid > graph.mmd
-npx dcv graph --format dot | dot -Tpng > graph.png
+npx dcv graph --format dot > graph.dot
+npx dcv graph --format json > graph.json
 ```
 
 ### Building
-```bash
-# Build CSS from tokens
-npx dcv build --format css
 
-# Build all formats
+```bash
+npx dcv build --format css
 npx dcv build --all-formats
 ```
 
-## Exit Codes (for CI scripts)
+## Exit Codes
 
-- `0` = Success (no violations) or `--fail-on off`
-- `1` = Constraint violations found
-- `2` = Configuration error (missing files, invalid config)
-- `3` = Runtime error (unexpected exception)
+- `0`: Success, or `--fail-on off`.
+- `1`: Blocking constraint violations found.
+- `2`: Configuration/setup/runtime command error.
 
 ## Common User Questions
 
 ### "How do I validate my tokens?"
+
 ```bash
-npx dcv validate tokens.json
+npx dcv validate --tokens tokens.json
 ```
 
-### "It says 'Cannot find tokens.json'"
-Either create `tokens.json` in the project root, or specify the path:
+### "It says it cannot find my tokens"
+
+Specify the file path:
+
 ```bash
 npx dcv validate --tokens path/to/tokens.json
 ```
 
 ### "I want to see errors but not fail my build"
+
 ```bash
 npx dcv validate --fail-on off
 ```
 
-### "How do I use this in CI?"
-```yaml
-# GitHub Actions
-- run: npx dcv validate --fail-on warn
-```
-
 ### "Can I get machine-readable output?"
+
 ```bash
 npx dcv validate --format json --output violations.json
 ```
 
-### "How do I visualize my token relationships?"
+### "How do I visualize token relationships?"
+
 ```bash
 npx dcv graph --format mermaid > graph.mmd
-# Then render on GitHub or with mermaid-cli
 ```
 
-## JSON Output Schema
+## JSON Output Shape
 
-When user asks "what's the output format?":
+When a user asks about validation output:
 
-```typescript
+```ts
 {
-  "ok": boolean,
-  "counts": { "checked": number, "violations": number, "warnings": number },
-  "violations": [{
-    "ruleId": string,      // e.g., "wcag-contrast", "mono-typography", "threshold"
-    "level": "error" | "warn",
-    "message": string,
-    "nodes"?: string[],    // affected token IDs
-    "edges"?: [string, string][], // optional graph edges for context
-    "context"?: {}         // constraint-specific data (ratios, thresholds, etc.)
-  }],
-  "stats": { "durationMs": number, "engineVersion": string, "timestamp": string }
+  ok: boolean;
+  counts: {
+    checked: number;
+    violations: number;
+    warnings: number;
+  };
+  violations: Array<{
+    ruleId: string;
+    level: 'error' | 'warn';
+    message: string;
+    nodes?: string[];
+    edges?: [string, string][];
+    context?: Record<string, unknown>;
+  }>;
+  warnings?: Array<{
+    ruleId: string;
+    level: 'error' | 'warn';
+    message: string;
+    nodes?: string[];
+    edges?: [string, string][];
+    context?: Record<string, unknown>;
+  }>;
+  note?: string;
+  stats: {
+    durationMs: number;
+    engineVersion: string;
+    timestamp: string;
+  };
+  dcv: {
+    name: string;
+    version: string;
+    repository: string;
+  };
 }
 ```
 
-## File Structure
+WCAG contrast violations expose `context.actual` and `context.required`.
+Programmatic `validate()` returns `ok`, `counts`, `violations`, `warnings`, and
+optional `note`, without CLI-only `stats` or `dcv`.
 
-When helping users set up:
+## Project Setup
 
-```
+Recommended minimal structure:
+
+```text
 project/
-├── tokens.json              # Design tokens (W3C DTCG format)
-├── themes/                  # Constraint definitions
-│   ├── wcag.json           # Color contrast rules
-│   ├── typography.order.json # Type scale hierarchy
-│   └── spacing.order.json   # Spacing scale
-└── dcv.config.json          # Optional: custom paths
+  tokens.json
+  dcv.config.json
+  themes/
+    typography.order.json
+    spacing.order.json
+    cross-axis.rules.json
 ```
 
-## Constraint Types
+`themes/` is the default constraint directory for order and cross-axis JSON
+files. WCAG and custom threshold rules are configured in `dcv.config.json`.
 
-Quick examples to show users:
+## Constraint Examples
 
-**Monotonic (ordering)**
+### WCAG Contrast
+
+`dcv.config.json`:
+
+```json
+{
+  "constraints": {
+    "wcag": [
+      {
+        "foreground": "color.text",
+        "background": "color.bg",
+        "ratio": 4.5,
+        "description": "Body text on background"
+      }
+    ]
+  }
+}
+```
+
+### Threshold Rules
+
+`dcv.config.json`:
+
+```json
+{
+  "constraints": {
+    "thresholds": [
+      {
+        "id": "control.size.min",
+        "op": ">=",
+        "valuePx": 44,
+        "where": "Touch target"
+      }
+    ]
+  }
+}
+```
+
+### Monotonic Ordering
+
+`themes/typography.order.json`:
+
 ```json
 {
   "order": [
     ["typography.h1", ">=", "typography.h2"],
-    ["spacing.xl", ">=", "spacing.lg"]
+    ["typography.h2", ">=", "typography.body"]
   ]
-}
-```
-
-**WCAG (contrast)**
-```json
-{
-  "constraints": {
-    "wcag": [{
-      "foreground": "color.text",
-      "background": "color.bg",
-      "ratio": 4.5
-    }]
-  }
-}
-```
-
-**Threshold (min/max)**
-```json
-{
-  "constraints": {
-    "threshold": [{
-      "id": "control.size.min",
-      "op": ">=",
-      "value": "44px"
-    }]
-  }
 }
 ```
 
 ## Programmatic API
 
-When user asks "can I use this in code?":
+When a user asks whether DCV can be used in code:
 
-```typescript
+```ts
 import { validate } from 'design-constraint-validator';
 
-// Synchronous. Point at files, or pass `tokens` / `constraints` inline.
 const result = validate({
   tokensPath: './tokens.json',
-  configPath: './dcv.config.json', // omit to auto-discover dcv.config.json in cwd
+  configPath: './dcv.config.json',
+  constraintsDir: './themes'
 });
 
 if (!result.ok) {
-  for (const v of result.violations) console.error(`[${v.ruleId}] ${v.message}`);
-  process.exit(1);
+  for (const violation of result.violations) {
+    console.error(`[${violation.ruleId}] ${violation.message}`);
+  }
+  process.exitCode = 1;
 }
 ```
 
-## MCP Server (dcv-mcp)
+Inline tokens and constraints are also supported:
 
-DCV ships a [Model Context Protocol](https://modelcontextprotocol.io) server so
-agents can validate tokens directly. It runs over **stdio** and exposes three
-**read-only** tools:
+```ts
+const result = validate({
+  tokens: {
+    color: {
+      text: { $value: '#888888' },
+      bg: { $value: '#999999' }
+    }
+  },
+  constraints: {
+    enableBuiltInThreshold: false,
+    enableBuiltInWcagDefaults: false,
+    wcag: [
+      {
+        foreground: 'color.text',
+        background: 'color.bg',
+        ratio: 4.5
+      }
+    ]
+  }
+});
+```
 
-| Tool | Does |
-|------|------|
-| `validate` | Validate a token set against constraints → structured `{ok, counts, violations, warnings}` |
-| `why` | Explain a token's provenance / resolution chain |
+## MCP Server
+
+DCV ships a Model Context Protocol server over stdio. It exposes read-only
+tools:
+
+| Tool | Purpose |
+|------|---------|
+| `validate` | Validate a token set and return structured issues |
+| `why` | Explain token provenance and references |
 | `graph` | Return the token dependency graph |
 
-> **Availability:** the server ships in the npm package as the `dcv-mcp` bin. The
-> package publishes at **v2.1.0** — until then, use the local-dev form below.
-
-**Claude Desktop / MCP client config** (once published):
+Published package config:
 
 ```json
 {
@@ -217,7 +284,7 @@ agents can validate tokens directly. It runs over **stdio** and exposes three
 }
 ```
 
-**Local-dev form** (from a clone, after `npm run build`):
+Local development config after `npm run build`:
 
 ```json
 {
@@ -230,57 +297,48 @@ agents can validate tokens directly. It runs over **stdio** and exposes three
 }
 ```
 
-Registry metadata lives in `server.json` (name
-`io.github.cseperkepapp/design-constraint-validator`). The tools are read-only —
-no token files are written.
+Registry metadata lives in `server.json` with MCP name
+`io.github.cseperkepapp/design-constraint-validator`.
 
 ## Troubleshooting Quick Fixes
 
 | Error | Solution |
 |-------|----------|
-| "Cannot find module" | Run `npm install design-constraint-validator` |
-| "ESM import error" | Add `"type": "module"` to package.json |
-| "No constraints found" | Create `themes/` folder with `.json` constraint files |
-| "Unknown token reference" | Check token IDs match exactly (case-sensitive, dot notation) |
+| Cannot find module | Run `npm install design-constraint-validator` |
+| ESM import error | Add `"type": "module"` to `package.json` |
+| No active constraint references tokens | Add matching `constraints.wcag` / `constraints.thresholds`, or point `--constraints-dir` at order/cross-axis files |
+| Unknown token reference | Check token IDs exactly, including case and dots |
+| Receipt file missing | Use `dcv validate --format json --receipt audit.json` |
 
-## Installation Paths
+## Install Patterns
 
-When user asks "how to install?":
-
-**Local (recommended for projects):**
 ```bash
+# Local project install
 npm install -D design-constraint-validator
 npx dcv validate
-```
 
-**Global (for CLI everywhere):**
-```bash
+# Global CLI
 npm install -g design-constraint-validator
 dcv validate
-```
 
-**No install (quick try):**
-```bash
+# No project install
 npx design-constraint-validator validate
 ```
 
-## Links for Deeper Help
+## Common Patterns
 
-- Docs: https://github.com/CseperkePapp/design-constraint-validator/tree/main/docs
-- Examples: https://github.com/CseperkePapp/design-constraint-validator/tree/main/examples
-- Issues: https://github.com/CseperkePapp/design-constraint-validator/issues
+### CI Report Mode
 
-## Common Patterns to Suggest
-
-### CI Integration
 ```yaml
-# Report violations but don't block
 - run: npx dcv validate --fail-on off --format json --output results.json
-- uses: actions/upload-artifact@v3
-  with: { name: dcv-results, path: results.json }
+- uses: actions/upload-artifact@v4
+  with:
+    name: dcv-results
+    path: results.json
 ```
 
-### Pre-commit Hook
+### Pre-Commit Hook
+
 ```json
 {
   "husky": {
@@ -291,15 +349,24 @@ npx design-constraint-validator validate
 }
 ```
 
-### Watch Mode (requires custom script)
+### Watch Mode
+
 ```json
 {
   "scripts": {
-    "validate:watch": "nodemon -e json --exec 'npx dcv validate'"
+    "validate:watch": "nodemon -e json --exec \"npx dcv validate\""
   }
 }
 ```
 
----
+## Mental Model
 
-**Note to AI:** This tool validates *relationships* between tokens (contrast, hierarchy, thresholds), not schemas. Think "linter for design decisions" not "JSON validator."
+DCV validates relationships between tokens: contrast, hierarchy, thresholds, and
+cross-property rules. It is a design-token constraint checker, not a general JSON
+schema validator.
+
+## Links
+
+- Docs: https://github.com/CseperkePapp/design-constraint-validator/tree/main/docs
+- Examples: https://github.com/CseperkePapp/design-constraint-validator/tree/main/examples
+- Issues: https://github.com/CseperkePapp/design-constraint-validator/issues

@@ -1,0 +1,14 @@
+{
+  "constraints": {
+    "enableBuiltInThreshold": false,
+    "enableBuiltInWcagDefaults": false,
+    "wcag": [
+      {
+        "foreground": "color.text",
+        "background": "color.background",
+        "ratio": 4.5,
+        "description": "Text on background"
+      }
+    ]
+  }
+}

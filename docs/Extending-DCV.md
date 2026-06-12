@@ -496,7 +496,7 @@ Take advantage of TypeScript for type safety:
 export type MyRuleConfig = {
   tokenA: TokenId;
   tokenB: TokenId;
-  threshold: number;
+  minDelta: number;
   level?: 'error' | 'warn';
 };
 

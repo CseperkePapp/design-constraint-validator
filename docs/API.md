@@ -1,776 +1,361 @@
 # API Reference
 
-Programmatic usage of Design Constraint Validator.
+Programmatic usage of Design Constraint Validator (DCV).
 
-## Installation
+DCV is ESM-only and requires Node.js 18 or newer.
 
 ```bash
 npm install -D design-constraint-validator
 ```
 
-## ESM/TypeScript
-
-DCV is an **ESM-only** package. Requires Node.js ≥18.
-
-```typescript
-import { validate, Engine } from 'design-constraint-validator';
+```ts
+import { Engine, validate } from 'design-constraint-validator';
+import type {
+  ConstraintIssue,
+  ConstraintPlugin,
+  ValidateInput,
+  ValidateResult
+} from 'design-constraint-validator';
 ```
 
----
+The package root currently exposes the validation convenience API, the low-level
+engine, and core types. CLI commands such as `build`, `graph`, `set`, `patch`,
+and `why` are command-line surfaces; they are not exported as root package
+functions.
 
-## Quick Start
+## `validate(input?)`
 
-### Basic Validation
+Validate a token set against configured constraints and return structured
+results. This API is synchronous.
 
-```typescript
+```ts
+function validate(input?: ValidateInput): ValidateResult;
+```
+
+```ts
+interface ValidateInput {
+  tokens?: TokenNode;
+  tokensPath?: string;
+  constraints?: DcvConfig['constraints'];
+  configPath?: string;
+  constraintsDir?: string;
+  breakpoint?: 'sm' | 'md' | 'lg';
+}
+
+interface ValidateResult {
+  ok: boolean;
+  counts: {
+    checked: number;
+    violations: number;
+    warnings: number;
+  };
+  violations: ConstraintViolation[];
+  warnings: ConstraintViolation[];
+  note?: string;
+}
+```
+
+### Inputs
+
+- `tokens`: Inline nested token object using `$value` token leaves.
+- `tokensPath`: JSON token file path. Ignored when `tokens` is provided.
+- `constraints`: Inline config `constraints` block. Ignored only when omitted.
+- `configPath`: JSON config file path. When omitted, DCV checks `dcv.config.json`,
+  `.dcvrc.json`, then `package.json` in the current working directory.
+- `constraintsDir`: Directory containing order and cross-axis constraint files.
+  Defaults to `themes`.
+- `breakpoint`: Optional breakpoint for breakpoint-specific order and cross-axis
+  files, such as `typography.md.order.json`.
+
+### Result Shape
+
+`validate()` returns the same core issue format used by CLI JSON output, without
+CLI-only `stats` or package metadata.
+
+```ts
+interface ConstraintViolation {
+  ruleId: string;
+  level: 'error' | 'warn';
+  message: string;
+  nodes?: string[];
+  edges?: [string, string][];
+  context?: Record<string, unknown>;
+}
+```
+
+`ok` is `true` only when there are no error-level violations. Warning-level
+issues are reported in `warnings` and counted in `counts.warnings`.
+
+### File-Based Example
+
+```ts
 import { validate } from 'design-constraint-validator';
 
-const result = await validate({
+const result = validate({
   tokensPath: './tokens.json',
-  themesPath: './themes'
+  configPath: './dcv.config.json',
+  constraintsDir: './themes'
 });
 
 if (!result.ok) {
-  console.error('Validation failed!');
   for (const v of result.violations) {
-    console.error(`[${v.kind}] ${v.message}`);
+    console.error(`[${v.ruleId}] ${v.message}`);
   }
   process.exitCode = 1;
 }
 ```
 
----
+### Inline Example
 
-## API Functions
+```ts
+import { validate } from 'design-constraint-validator';
 
-### `validate(options)`
-
-Validate design tokens against constraints.
-
-**Signature:**
-```typescript
-function validate(options: ValidateOptions): Promise<ValidationResult>
-```
-
-**Options:**
-```typescript
-interface ValidateOptions {
-  tokensPath?: string | string[];
-  themesPath?: string | string[];
-  configPath?: string;
-  breakpoint?: string;
-  allBreakpoints?: boolean;
-  failOn?: 'error' | 'warn' | 'off';
-  strict?: boolean;
-  quiet?: boolean;
-}
-```
-
-**Returns:**
-```typescript
-interface ValidationResult {
-  ok: boolean;
-  violations: Violation[];
-  stats: {
-    checked: number;
-    errors: number;
-    warnings: number;
-    durationMs: number;
-  };
-}
-
-interface Violation {
-  severity: 'error' | 'warn';
-  kind: string;
-  token: string;
-  message: string;
-  source?: string;
-  nodes?: string[];
-  edges?: [string, string][];
-}
-```
-
-**Example:**
-```typescript
-const result = await validate({
-  tokensPath: './tokens.json',
-  themesPath: './themes',
-  failOn: 'warn',
-  strict: true
+const result = validate({
+  tokens: {
+    color: {
+      text: { $value: '#888888' },
+      background: { $value: '#999999' }
+    }
+  },
+  constraints: {
+    enableBuiltInThreshold: false,
+    enableBuiltInWcagDefaults: false,
+    wcag: [
+      {
+        foreground: 'color.text',
+        background: 'color.background',
+        ratio: 4.5,
+        description: 'Body text on page background'
+      }
+    ]
+  }
 });
 
-console.log(`Checked ${result.stats.checked} tokens`);
-console.log(`Found ${result.stats.errors} errors, ${result.stats.warnings} warnings`);
-console.log(`Took ${result.stats.durationMs}ms`);
+console.log(result.counts);
+console.log(result.violations[0]?.context);
 ```
 
----
+### No-Match Note
 
-### `build(options)`
+If tokens are supplied but no active constraint references any of them,
+`validate()` returns a `note` so callers do not treat a zero-issue run as proof
+that meaningful rules were checked.
 
-Build token outputs.
+## Engine
 
-**Signature:**
-```typescript
-function build(options: BuildOptions): Promise<BuildResult>
-```
+`Engine` is the low-level in-memory validator. It stores flat token values,
+tracks dependency edges, and runs registered constraint plugins.
 
-**Options:**
-```typescript
-interface BuildOptions {
-  tokensPath?: string;
-  output?: string;
-  format?: 'css' | 'json' | 'js';
-  breakpoint?: string;
-  watch?: boolean;
-  dryRun?: boolean;
-}
-```
-
-**Returns:**
-```typescript
-interface BuildResult {
-  output: string;
-  format: string;
-  stats: {
-    tokens: number;
-    bytes: number;
-    durationMs: number;
-  };
-}
-```
-
-**Example:**
-```typescript
-import { build } from 'design-constraint-validator';
-
-const result = await build({
-  tokensPath: './tokens.json',
-  output: './dist/tokens.css',
-  format: 'css'
-});
-
-console.log(`Generated ${result.stats.bytes} bytes in ${result.stats.durationMs}ms`);
-```
-
----
-
-### `graph(options)`
-
-Generate dependency/constraint graph.
-
-**Signature:**
-```typescript
-function graph(options: GraphOptions): Promise<GraphResult>
-```
-
-**Options:**
-```typescript
-interface GraphOptions {
-  tokensPath?: string;
-  format?: 'mermaid' | 'dot' | 'json';
-  hasse?: string;
-  filter?: string;
-  onlyViolations?: boolean;
-  highlightViolations?: boolean;
-}
-```
-
-**Returns:**
-```typescript
-interface GraphResult {
-  output: string;
-  format: string;
-  stats: {
-    nodes: number;
-    edges: number;
-  };
-}
-```
-
-**Example:**
-```typescript
-import { graph } from 'design-constraint-validator';
-
-const result = await graph({
-  tokensPath: './tokens.json',
-  format: 'json',
-  hasse: 'typography'
-});
-
-const data = JSON.parse(result.output);
-console.log(`Graph has ${data.nodes.length} nodes and ${data.edges.length} edges`);
-```
-
----
-
-### `why(tokenId, options)`
-
-Explain token provenance.
-
-**Signature:**
-```typescript
-function why(tokenId: string, options?: WhyOptions): Promise<ProvenanceResult>
-```
-
-**Options:**
-```typescript
-interface WhyOptions {
-  tokensPath?: string;
-  format?: 'json' | 'table';
-}
-```
-
-**Returns:**
-```typescript
-interface ProvenanceResult {
-  token: string;
-  value: any;
-  source: string;
-  dependencies: Array<{
-    id: string;
-    value: any;
-    relation: string;
-  }>;
-  constraints: Array<{
-    type: string;
-    satisfied: boolean;
-    rule: string;
-    actual?: string;
-  }>;
-}
-```
-
-**Example:**
-```typescript
-import { why } from 'design-constraint-validator';
-
-const result = await why('typography.size.h1', {
-  tokensPath: './tokens.json',
-  format: 'json'
-});
-
-console.log(`Token: ${result.token}`);
-console.log(`Value: ${result.value}`);
-console.log(`Dependencies: ${result.dependencies.length}`);
-```
-
----
-
-## Engine Class
-
-Low-level validation engine for advanced use cases.
-
-### Constructor
-
-```typescript
+```ts
 import { Engine } from 'design-constraint-validator';
 
 const engine = new Engine(
-  initialValues: Record<string, any>,
-  edges?: Array<[string, string]>
+  {
+    'typography.size.h1': '32px',
+    'typography.size.h2': '24px',
+    'typography.size.body': '16px'
+  },
+  []
 );
 ```
 
-**Example:**
-```typescript
-const engine = new Engine({
-  'typography.size.h1': '32px',
-  'typography.size.h2': '24px',
-  'typography.size.body': '16px'
-});
+### Constructor
+
+```ts
+new Engine(
+  initValues: Record<string, string | number>,
+  edges: Array<[string, string]>
+);
 ```
+
+`edges` are reference dependency edges where each tuple is `[from, to]`.
 
 ### Methods
 
-#### `get(tokenId)`
-
-Get token value.
-
-```typescript
-const value = engine.get('typography.size.h1');
-// Returns: '32px'
-```
-
-#### `set(tokenId, value)`
-
-Set token value.
-
-```typescript
+```ts
+engine.use(plugin);
+engine.get('typography.size.h1');
 engine.set('typography.size.h1', '36px');
+engine.getAllIds();
+engine.getFlatTokens();
+engine.affected('typography.size.body');
+engine.evaluate(new Set(engine.getAllIds()));
+engine.commit('typography.size.h1', '36px');
 ```
 
-#### `use(plugin)`
+- `use(plugin)`: Register a constraint plugin and return the engine.
+- `get(id)`: Read the current token value.
+- `set(id, value)`: Set a token value without evaluating constraints.
+- `getAllIds()`: Return every token ID in the engine.
+- `getFlatTokens()`: Return the current flat `{ [id]: value }` map.
+- `affected(id)`: Return tokens that depend on a changed token.
+- `evaluate(candidates)`: Run plugins for candidate token IDs.
+- `commit(id, value)`: Set a value, evaluate changed/affected tokens, and
+  return `{ affected, issues, patch }`.
 
-Register constraint plugin.
+## Built-In Plugin Factories
 
-```typescript
-import { MonotonicPlugin } from 'design-constraint-validator';
+Built-in constraint plugins are factory functions. Import them from subpaths when
+you need direct engine control.
 
-engine.use(new MonotonicPlugin([
-  ['typography.size.h1', '>=', 'typography.size.h2']
-], parsePx));
-```
+### Monotonic Ordering
 
-#### `validate()`
+```ts
+import { Engine } from 'design-constraint-validator';
+import {
+  MonotonicPlugin,
+  parseSize
+} from 'design-constraint-validator/core/constraints/monotonic.js';
 
-Run all plugins and return violations.
-
-```typescript
-const violations = engine.validate();
-
-for (const v of violations) {
-  console.error(`${v.severity}: ${v.message}`);
-}
-```
-
-#### `getGraph()`
-
-Get dependency graph.
-
-```typescript
-const { nodes, edges} = engine.getGraph();
-
-console.log(`Graph has ${nodes.length} nodes and ${edges.length} edges`);
-```
-
-#### `getAllIds()` ✨ New in Phase 3C
-
-Get all token IDs in the engine.
-
-```typescript
-const allIds: string[] = engine.getAllIds();
-
-// Useful for creating full candidate sets
-const fullCandidates = new Set(engine.getAllIds());
-const issues = engine.evaluate(fullCandidates);
-```
-
-**Use cases:**
-- Iterate over all tokens
-- Create full candidate set for validation
-- Export token lists
-
-#### `getFlatTokens()` ✨ New in Phase 3C
-
-Get flat token map without re-flattening.
-
-```typescript
-const tokens: Record<string, string | number> = engine.getFlatTokens();
-
-// Example output:
-// {
-//   'typography.size.h1': '32px',
-//   'typography.size.h2': '24px',
-//   'color.text.body': '#333333'
-// }
-```
-
-**Use cases:**
-- Export token values for adapters
-- Serialize engine state
-- Avoid duplicate flattening operations
-
-**Note:** This returns the current state. Changes via `set()` or `commit()` are reflected immediately.
-
----
-
-## Plugins
-
-### Built-in Plugins
-
-#### MonotonicPlugin
-
-Validate ordering constraints.
-
-```typescript
-import { MonotonicPlugin } from 'design-constraint-validator/core';
-
-const plugin = new MonotonicPlugin(
-  rules: [string, '>=' | '<=', string][],
-  parser: (value: any) => number,
-  name?: string
-);
-
-engine.use(plugin);
-```
-
-**Example:**
-```typescript
-import { MonotonicPlugin } from 'design-constraint-validator';
-
-function parsePx(value: string | number): number {
-  if (typeof value === 'number') return value;
-  return parseFloat(value.replace('px', ''));
-}
-
-const plugin = new MonotonicPlugin([
-  ['typography.size.h1', '>=', 'typography.size.h2'],
-  ['typography.size.h2', '>=', 'typography.size.body']
-], parsePx, 'typography-scale');
-
-engine.use(plugin);
-```
-
-#### WcagContrastPlugin
-
-Validate color contrast.
-
-```typescript
-import { WcagContrastPlugin } from 'design-constraint-validator/core';
-
-const plugin = new WcagContrastPlugin(
-  rules: Array<{
-    fg: string;
-    bg: string;
-    min: number;
-    where: string;
-  }>
-);
-
-engine.use(plugin);
-```
-
-**Example:**
-```typescript
-import { WcagContrastPlugin } from 'design-constraint-validator';
-
-const plugin = new WcagContrastPlugin([
+const engine = new Engine(
   {
-    fg: 'color.text.body',
-    bg: 'color.bg.surface',
-    min: 4.5,
-    where: 'Body text (AA)'
+    'typography.size.h1': '32px',
+    'typography.size.h2': '40px'
   },
-  {
-    fg: 'color.text.heading',
-    bg: 'color.bg.surface',
-    min: 7.0,
-    where: 'Headings (AAA)'
-  }
-]);
-
-engine.use(plugin);
-```
-
-#### MonotonicLightness
-
-Validate color lightness ordering.
-
-```typescript
-import { MonotonicLightness } from 'design-constraint-validator/core';
-
-const plugin = new MonotonicLightness(
-  rules: [string, '>=' | '<=', string][]
+  []
 );
 
-engine.use(plugin);
+engine.use(
+  MonotonicPlugin(
+    [['typography.size.h1', '>=', 'typography.size.h2']],
+    parseSize,
+    'monotonic-typography'
+  )
+);
+
+const issues = engine.evaluate(new Set(engine.getAllIds()));
 ```
 
----
+### WCAG Contrast
 
-### Custom Plugins
+```ts
+import { WcagContrastPlugin } from 'design-constraint-validator/core/constraints/wcag.js';
 
-Create custom constraint plugins:
-
-```typescript
-import { Engine, ConstraintPlugin, Violation } from 'design-constraint-validator';
-
-class MyPlugin implements ConstraintPlugin {
-  name = 'my-custom-plugin';
-  
-  check(engine: Engine): Violation[] {
-    const violations: Violation[] = [];
-    
-    // Your validation logic
-    const value = engine.get('my.token');
-    
-    if (!this.isValid(value)) {
-      violations.push({
-        severity: 'error',
-        kind: 'custom',
-        token: 'my.token',
-        message: 'Validation failed',
-        nodes: ['my.token'],
-        edges: []
-      });
+engine.use(
+  WcagContrastPlugin([
+    {
+      fg: 'color.text.default',
+      bg: 'color.bg.surface',
+      min: 4.5,
+      where: 'Body text on surface'
     }
-    
-    return violations;
-  }
-  
-  private isValid(value: any): boolean {
-    // Your validation logic
-    return true;
-  }
-}
-
-// Use plugin
-engine.use(new MyPlugin());
-const violations = engine.validate();
+  ])
+);
 ```
 
----
+WCAG contrast violations include `context.actual` and `context.required` after
+formatting through the JSON output helpers or `validate()`.
 
-## Utilities
+### Threshold
 
-### Color Utilities
+```ts
+import { ThresholdPlugin } from 'design-constraint-validator/core/constraints/threshold.js';
 
-```typescript
-import { 
-  toOKLCH,
-  contrastRatio,
-  relativeLuminance 
-} from 'design-constraint-validator/core/color';
-
-// Convert to OKLCH
-const oklch = toOKLCH('#0066cc');
-console.log(oklch); // { L: 0.55, C: 0.20, H: 265 }
-
-// Calculate contrast ratio
-const ratio = contrastRatio('#000000', '#ffffff');
-console.log(ratio); // 21
-
-// Get relative luminance
-const lum = relativeLuminance('#808080');
-console.log(lum); // ~0.22
-```
-
-### Token Utilities
-
-```typescript
-import { 
-  flattenTokens,
-  parseAndFlatten 
-} from 'design-constraint-validator/core/flatten';
-
-// Flatten nested tokens
-const flat = flattenTokens({
-  color: {
-    brand: {
-      primary: { $value: '#0066cc' }
+engine.use(
+  ThresholdPlugin([
+    {
+      id: 'control.size.min',
+      op: '>=',
+      valuePx: 44,
+      where: 'Touch target'
     }
-  }
-});
-
-console.log(flat);
-// { 'color.brand.primary': { value: '#0066cc', ... } }
+  ])
+);
 ```
 
-### Graph Utilities
+### Lightness And Cross-Axis
 
-```typescript
-import { Poset } from 'design-constraint-validator/core/poset';
-
-// Create partial order set
-const poset = new Poset<string>();
-
-poset.add('h1');
-poset.add('h2');
-poset.add('h3');
-
-poset.addEdge('h1', 'h2');  // h1 > h2
-poset.addEdge('h2', 'h3');  // h2 > h3
-
-// Get transitive closure
-const closure = poset.transitiveClosure();
-
-// Export Hasse diagram
-const hasse = poset.toHasse();
+```ts
+import { MonotonicLightness } from 'design-constraint-validator/core/constraints/monotonic-lightness.js';
+import { CrossAxisPlugin } from 'design-constraint-validator/core/constraints/cross-axis.js';
 ```
 
----
+Most consumers should configure these through the CLI and constraint files:
 
-## TypeScript Types
+- `color.order.json` for lightness ordering.
+- `cross-axis.rules.json` or `cross-axis.<bp>.rules.json` for cross-axis rules.
 
-### Core Types
+## Custom Plugins
 
-```typescript
+A plugin exposes an `id` and an `evaluate(engine, candidates)` method.
+
+```ts
 import type {
-  Token,
-  FlatToken,
-  TokenValue,
-  TokenNode,
-  Violation,
-  ValidationResult,
+  ConstraintIssue,
   ConstraintPlugin
 } from 'design-constraint-validator';
+
+export function MaxFontSizePlugin(maxPx = 72): ConstraintPlugin {
+  return {
+    id: 'max-font-size',
+    evaluate(engine, candidates) {
+      const issues: ConstraintIssue[] = [];
+
+      for (const id of candidates) {
+        if (!id.startsWith('typography.size.')) continue;
+        const raw = engine.get(id);
+        const px = typeof raw === 'string' ? Number.parseFloat(raw) : NaN;
+
+        if (Number.isFinite(px) && px > maxPx) {
+          issues.push({
+            id,
+            rule: 'max-font-size',
+            level: 'warn',
+            message: `${id} exceeds ${maxPx}px`,
+            involvedTokens: [id],
+            metadata: { actual: px, max: maxPx }
+          });
+        }
+      }
+
+      return issues;
+    }
+  };
+}
 ```
 
-### Configuration Types
+Plugins should honor the `candidates` set so incremental evaluation remains
+correct.
 
-```typescript
-import type {
-  DcvConfig,
-  ValidateOptions,
-  BuildOptions,
-  GraphOptions,
-  WhyOptions
-} from 'design-constraint-validator';
+## Utility Subpaths
+
+Some internal helpers are available through package subpaths:
+
+```ts
+import { flattenTokens } from 'design-constraint-validator/core/flatten.js';
+import { parseCssColor, contrastRatio } from 'design-constraint-validator/core/color.js';
+import { buildPoset, transitiveReduction } from 'design-constraint-validator/core/poset.js';
 ```
 
----
+These are lower-level building blocks. Prefer `validate()` unless you need to
+assemble the engine yourself.
 
 ## Error Handling
 
-```typescript
+`validate()` throws for runtime/setup failures such as missing token files,
+invalid JSON, or invalid config files. Constraint failures are returned in the
+result.
+
+```ts
 import { validate } from 'design-constraint-validator';
 
 try {
-  const result = await validate({
-    tokensPath: './tokens.json'
-  });
-  
+  const result = validate({ tokensPath: './tokens.json' });
+
   if (!result.ok) {
-    // Handle validation errors (expected)
     for (const v of result.violations) {
-      console.error(`[${v.kind}] ${v.message}`);
+      console.error(`[${v.ruleId}] ${v.message}`);
     }
   }
 } catch (error) {
-  // Handle runtime errors (unexpected)
-  console.error('Fatal error:', error);
-  process.exit(1);
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 2;
 }
 ```
 
----
+## Related Docs
 
-## Watch Mode
-
-```typescript
-import { build } from 'design-constraint-validator';
-import { watch } from 'node:fs';
-
-// Manual watch
-watch('./tokens.json', async () => {
-  console.log('Tokens changed, rebuilding...');
-  await build({
-    tokensPath: './tokens.json',
-    output: './dist/tokens.css',
-    format: 'css'
-  });
-});
-
-// Or use built-in watch
-await build({
-  tokensPath: './tokens.json',
-  output: './dist/tokens.css',
-  format: 'css',
-  watch: true
-});
-```
-
----
-
-## Examples
-
-### Full Validation Pipeline
-
-```typescript
-import { validate, graph, build } from 'design-constraint-validator';
-
-async function runPipeline() {
-  // 1. Validate
-  console.log('Validating tokens...');
-  const validation = await validate({
-    tokensPath: './tokens.json',
-    themesPath: './themes',
-    failOn: 'warn'
-  });
-  
-  if (!validation.ok) {
-    console.error(`Found ${validation.violations.length} violations`);
-    for (const v of validation.violations) {
-      console.error(`  ${v.severity}: ${v.message}`);
-    }
-    return false;
-  }
-  
-  // 2. Generate graph
-  console.log('Generating graph...');
-  const graphResult = await graph({
-    tokensPath: './tokens.json',
-    format: 'mermaid',
-    hasse: 'typography'
-  });
-  
-  await writeFile('./docs/graph.mmd', graphResult.output);
-  
-  // 3. Build outputs
-  console.log('Building outputs...');
-  await build({
-    tokensPath: './tokens.json',
-    output: './dist/tokens.css',
-    format: 'css'
-  });
-  
-  await build({
-    tokensPath: './tokens.json',
-    output: './dist/tokens.js',
-    format: 'js'
-  });
-  
-  console.log('Pipeline complete!');
-  return true;
-}
-
-runPipeline().then(success => {
-  process.exitCode = success ? 0 : 1;
-});
-```
-
-### Custom Constraint
-
-```typescript
-import { Engine, ConstraintPlugin, Violation } from 'design-constraint-validator';
-
-class MaxFontSizePlugin implements ConstraintPlugin {
-  name = 'max-font-size';
-  
-  constructor(private maxSizePx: number = 72) {}
-  
-  check(engine: Engine): Violation[] {
-    const violations: Violation[] = [];
-    
-    // Check all typography.size.* tokens
-    const tokens = engine.getAllTokens();
-    for (const [id, value] of Object.entries(tokens)) {
-      if (!id.startsWith('typography.size.')) continue;
-      
-      const sizePx = parseFloat(String(value).replace('px', ''));
-      if (sizePx > this.maxSizePx) {
-        violations.push({
-          severity: 'warn',
-          kind: 'max-font-size',
-          token: id,
-          message: `Font size ${sizePx}px exceeds maximum ${this.maxSizePx}px`,
-          nodes: [id]
-        });
-      }
-    }
-    
-    return violations;
-  }
-}
-
-// Use it
-const engine = new Engine({
-  'typography.size.display': '96px',
-  'typography.size.h1': '32px'
-});
-
-engine.use(new MaxFontSizePlugin(72));
-
-const violations = engine.validate();
-// Will warn about display size (96px > 72px)
-```
-
----
-
-## Next Steps
-
-- **[Getting Started](./Getting-Started.md)** - Quick start guide
-- **[Constraints](./Constraints.md)** - Constraint types
-- **[CLI Reference](./CLI.md)** - CLI commands
-- **[Architecture](./Architecture.md)** - How it works
+- [CLI Reference](./CLI.md)
+- [Configuration](./Configuration.md)
+- [JSON Output Schema](./JSON-OUTPUT.md)
+- [Concepts](./Concepts.md)

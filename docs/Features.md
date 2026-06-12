@@ -1,23 +1,10 @@
 # Features & Complete Guide
 
-Complete feature guide for Design Constraint Validator (DCV).
+Design Constraint Validator (DCV) validates relationships between design tokens:
+accessibility contrast, ordering, thresholds, cross-property rules, and token
+dependency provenance.
 
----
-
-## Table of Contents
-
-- [Your First Validation](#your-first-validation-5-minutes)
-- [Example Output](#example-output)
-- [Constraint Types](#constraint-types)
-- [CLI Commands](#cli-commands)
-- [Use Cases](#use-cases)
-- [Architecture Overview](#architecture-overview)
-- [Programmatic API](#programmatic-api)
-- [FAQ](#faq)
-
----
-
-## Your First Validation (5 minutes)
+## Your First Validation
 
 ### 1. Install
 
@@ -25,7 +12,7 @@ Complete feature guide for Design Constraint Validator (DCV).
 npm install -D design-constraint-validator
 ```
 
-### 2. Create `tokens.json` in your project root
+### 2. Create `tokens.json`
 
 ```json
 {
@@ -39,25 +26,37 @@ npm install -D design-constraint-validator
       "h2": { "$value": "24px" },
       "body": { "$value": "16px" }
     }
+  },
+  "control": {
+    "size": {
+      "min": { "$value": "44px" }
+    }
   }
 }
 ```
 
-### 3. Create `themes/wcag.json` (WCAG contrast constraint)
+### 3. Create `dcv.config.json`
+
+WCAG and threshold rules are configured under `constraints`.
 
 ```json
 {
   "constraints": {
-    "wcag": [{
-      "foreground": "color.text",
-      "background": "color.background",
-      "ratio": 4.5
-    }]
+    "wcag": [
+      {
+        "foreground": "color.text",
+        "background": "color.background",
+        "ratio": 4.5,
+        "description": "Body text on background"
+      }
+    ]
   }
 }
 ```
 
-### 4. Create `themes/typography.order.json` (size hierarchy)
+### 4. Create `themes/typography.order.json`
+
+`themes/` is the default constraint directory for order and cross-axis files.
 
 ```json
 {
@@ -71,86 +70,42 @@ npm install -D design-constraint-validator
 ### 5. Validate
 
 ```bash
-npx dcv validate
+npx dcv validate --tokens tokens.json
 ```
 
-**Output:**
-```
-✅ validate: 0 error(s), 0 warning(s)
-```
+Passing output:
 
-Success! Your tokens pass all constraints.
-
-### What if validation fails?
-
-Try changing `h2` to `"40px"` (larger than h1) and run validation again:
-
-```bash
-npx dcv validate
+```text
+validate: 0 error(s), 0 warning(s)
 ```
 
-**Output:**
-```
+If `typography.size.h2` is changed to `40px`, the monotonic rule fails:
+
+```text
 validate: 1 error(s), 0 warning(s)
-ERROR monotonic  typography.size.h2 @ typography.order.json — typography.size.h1 >= typography.size.h2 violated: 32px < 40px
+ERROR monotonic  typography.size.h1|typography.size.h2 - typography.size.h1 >= typography.size.h2 violated: 32 vs 40
 ```
 
-The validator explains exactly what failed and why.
-
-### Minimal Working Example
-
-See [examples/minimal/](../examples/minimal/) for a complete minimal setup you can copy.
-
----
-
-## Example Output
-
-### ✅ Successful Validation
-
-```bash
-$ npx dcv validate
-✅ validate: 0 error(s), 0 warning(s)
-```
-
-### ❌ Failed Validation
-
-```bash
-$ npx dcv validate
-validate: 2 error(s), 1 warning(s)
-
-ERROR monotonic  typography.size.h2
-  typography.size.h1 >= typography.size.h2 violated: 32px < 40px
-  Defined in: themes/typography.order.json
-
-ERROR wcag  color.text vs color.background
-  Contrast ratio 4.5:1 required, got 2.1:1
-  Defined in: themes/wcag.json
-
-WARN threshold  control.size.min
-  Touch target should be >= 44px, got 30px
-  Defined in: themes/touch.json
-```
-
----
+See [examples/minimal/](../examples/minimal/) for a working setup.
 
 ## Constraint Types
 
-### 1. Monotonic Constraints
+### Monotonic Ordering
 
-Enforce ordering relationships (e.g., h1 ≥ h2 ≥ h3)
+Order files live in the constraints directory:
 
 ```json
 {
   "order": [
     ["typography.size.h1", ">=", "typography.size.h2"],
-    ["typography.size.h2", ">=", "typography.size.h3"]
+    ["spacing.xl", ">=", "spacing.lg"]
   ]
 }
 ```
 
-### 2. WCAG Contrast
+### WCAG Contrast
 
-Validate color accessibility
+WCAG rules live in `dcv.config.json`:
 
 ```json
 {
@@ -166,22 +121,35 @@ Validate color accessibility
 }
 ```
 
-### 3. Threshold Rules
+WCAG violations include structured `context.actual` and `context.required` in
+JSON output.
 
-Size guardrails (e.g., ≥44px touch targets)
+### Threshold Rules
 
-```typescript
+Custom thresholds live in `constraints.thresholds`:
+
+```json
 {
-  id: 'control.size.min',
-  op: '>=',
-  valuePx: 44,
-  where: 'Touch target (WCAG / Apple HIG)'
+  "constraints": {
+    "thresholds": [
+      {
+        "id": "control.size.min",
+        "op": ">=",
+        "valuePx": 44,
+        "where": "Touch target"
+      }
+    ]
+  }
 }
 ```
 
-### 4. Lightness Ordering
+DCV also enables a built-in touch-target threshold by default. Disable it with
+`constraints.enableBuiltInThreshold: false`.
 
-Color palette progression
+### Lightness Ordering
+
+`themes/color.order.json` uses the same `order` format and compares parsed color
+lightness:
 
 ```json
 {
@@ -192,308 +160,163 @@ Color palette progression
 }
 ```
 
-### 5. Cross-Axis Constraints ⚡
+### Cross-Axis Constraints
 
-**Multi-property conditional rules** - the most powerful constraint type
-
-Cross-axis constraints enforce relationships between **different token properties**, enabling sophisticated design system rules that standard validators can't handle.
-
-**Real-World Examples:**
+Cross-axis files express multi-property rules:
 
 ```json
 {
   "rules": [
-    {
-      "id": "readable-light-text",
-      "when": { "id": "typography.weight.body", "test": "v <= 400" },
-      "require": {
-        "id": "typography.size.body",
-        "test": "v >= 16",
-        "msg": "Light font weights (≤400) require larger sizes (≥16px) for readability"
-      }
-    },
     {
       "id": "accessible-touch-targets",
       "when": { "id": "typography.size.button", "test": "v < 18" },
       "require": {
         "id": "control.size.min",
         "test": "v >= 44",
-        "msg": "Small button text (<18px) requires larger tap targets (≥44px) for accessibility"
-      }
-    },
-    {
-      "id": "high-contrast-small-text",
-      "contrast": {
-        "text": "color.text.secondary",
-        "bg": "color.bg.default",
-        "min": "bp => bp === 'sm' ? 7 : 4.5",
-        "msg": "Small screens require higher contrast for readability"
+        "msg": "Small button text requires larger tap targets"
       }
     }
   ]
 }
 ```
 
-**Why This Matters:**
-- ✅ Enforces **responsive design principles** (adapt rules per breakpoint)
-- ✅ Validates **accessibility combinations** (WCAG + touch targets + text size)
-- ✅ Catches **subtle bugs** that single-property checks miss
-- ✅ Documents **design intent** in machine-readable format
-
-See [Constraints.md](./Constraints.md#5-cross-axis-constraints) for complete syntax and examples.
-
----
+Use `themes/cross-axis.rules.json` for global rules and
+`themes/cross-axis.md.rules.json` for breakpoint-specific rules.
 
 ## CLI Commands
 
 ### Validate
 
 ```bash
-# Validate all tokens
-dcv validate
-
-# Validate specific breakpoint
+dcv validate --tokens tokens.json
 dcv validate --breakpoint md
-
-# All breakpoints with summary
 dcv validate --all-breakpoints --summary table
-
-# Fail on warnings
 dcv validate --fail-on warn
+dcv validate --format json --output validation.json
 ```
 
-See [CLI.md](./CLI.md) for complete command reference.
-
-### Graph Visualization
-
-Export token dependency graphs in text formats (Mermaid, Graphviz DOT):
+### Graph
 
 ```bash
-# Export Mermaid format (renders on GitHub)
-dcv graph --hasse typography --format mermaid > typography.mmd
-
-# Export Graphviz DOT format
-dcv graph --hasse color --format dot > color.dot
-
-# JSON format for programmatic use
-dcv graph --hasse layout --format json > layout.json
-
-# Show only violations
-dcv graph --hasse color --only-violations --format mermaid
-
-# Highlight violations
-dcv graph --hasse layout --highlight-violations --format mermaid
+dcv graph --format mermaid > graph.mmd
+dcv graph --hasse typography --format dot > typography.dot
+dcv graph --format json > graph.json
 ```
 
-**Rendering Options:**
-1. **GitHub** - Paste Mermaid code into `.md` files (native support)
-2. **mermaid.live** - Online Mermaid editor and renderer
-3. **VS Code** - Use Mermaid Preview extension
-4. **Graphviz** - Render DOT files: `dot -Tpng color.dot -o color.png`
+JSON dependency graph output uses string nodes and tuple edges:
 
-**For PNG/SVG generation** (optional):
-```bash
-# Install Mermaid CLI globally
-npm install -g @mermaid-js/mermaid-cli
-
-# Generate image
-mmdc -i typography.mmd -o typography.png
-```
-
-### Provenance Analysis
-
-```bash
-# Why does this token have this value?
-dcv why typography.size.h1
-
-# JSON output
-dcv why color.role.text.default --format json
-```
-
-### Build Tokens
-
-```bash
-# Build tokens
-dcv build
-
-# Build all formats
-dcv build --all-formats
-
-# Watch mode
-dcv build --watch
-```
-
-### Set Token Values
-
-```bash
-# Set a single token
-dcv set typography.size.h1=32px
-
-# Set color with OKLCH
-dcv set color.palette.brand.500=oklch(0.65 0.15 280)
-```
-
----
-
-## Use Cases
-
-✅ **Design System Validation** - Catch inconsistencies in CI/CD
-✅ **Accessibility Compliance** - Ensure WCAG 2.1 AA/AAA
-✅ **Multi-Breakpoint** - Validate responsive token overrides
-✅ **Dependency Analysis** - Visualize token relationships
-✅ **Token Debugging** - Understand where values come from
-
----
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────┐
-│     Token Dependency Graph (DAG)    │
-│   Tracks references & dependencies  │
-└─────────────────────────────────────┘
-                 ↓
-┌─────────────────────────────────────┐
-│      Constraint Validation Engine   │
-│  ┌──────────────────────────────┐  │
-│  │  Plugin-based architecture   │  │
-│  │  - Monotonic                 │  │
-│  │  - WCAG Contrast             │  │
-│  │  - Threshold                 │  │
-│  │  - Lightness                 │  │
-│  │  - Cross-Axis                │  │
-│  └──────────────────────────────┘  │
-└─────────────────────────────────────┘
-                 ↓
-┌─────────────────────────────────────┐
-│        Violation Reporting          │
-│  - Descriptive error messages       │
-│  - Provenance tracing               │
-│  - Graph visualization              │
-└─────────────────────────────────────┘
-```
-
-See [Architecture.md](./Architecture.md) for complete technical details.
-
----
-
-## Programmatic API
-
-### Basic Usage
-
-```typescript
-import { validate, flattenTokens } from 'design-constraint-validator';
-
-// Load and flatten tokens
-const tokens = await flattenTokens('./tokens/tokens.json', {
-  overridesDir: './tokens/overrides',
-  breakpoint: 'md'
-});
-
-// Run validation
-const result = await validate(tokens, {
-  constraintsDir: './themes',
-  failOn: 'error'
-});
-
-// Check results
-console.log(JSON.stringify(result, null, 2));
-// {
-//   "ok": false,
-//   "counts": { "checked": 42, "violations": 3, "warnings": 0 },
-//   "violations": [
-//     {
-//       "ruleId": "wcag-contrast",
-//       "level": "error",
-//       "message": "Insufficient contrast ratio: 2.3:1 (requires 4.5:1)",
-//       "nodes": ["color.text.primary", "color.bg.surface"]
-//     }
-//   ],
-//   "stats": { "durationMs": 124 }
-// }
-
-if (!result.ok) {
-  process.exit(1);
+```json
+{
+  "nodes": ["typography.size.body", "typography.size.h2"],
+  "edges": [["typography.size.body", "typography.size.h2"]]
 }
 ```
 
-### Available Exports
+### Why
 
-```typescript
-// Core engine
-export { validate, validateConstraint } from 'design-constraint-validator';
+```bash
+dcv why typography.size.h1 --format json
+```
 
-// Token utilities
-export { flattenTokens, applyPatch } from 'design-constraint-validator';
+### Build
 
-// Constraint plugins
-export {
-  wcagConstraint,
-  monotonicConstraint,
-  thresholdConstraint,
-  crossAxisConstraint
-} from 'design-constraint-validator';
+```bash
+dcv build --format css --output tokens.css
+dcv build --all-formats
+```
 
-// Types
+### Set And Patch
+
+```bash
+dcv set typography.size.h1=36px
+dcv patch --overrides tokens/overrides/md.json
+dcv patch:apply patches/md-patch.json --output tokens-md.json
+```
+
+`patch:apply` is a pure transform. Run `dcv validate` separately on the output.
+
+## Programmatic API
+
+```ts
+import { validate } from 'design-constraint-validator';
+
+const result = validate({
+  tokensPath: './tokens.json',
+  configPath: './dcv.config.json',
+  constraintsDir: './themes'
+});
+
+console.log(result.counts);
+
+if (!result.ok) {
+  for (const violation of result.violations) {
+    console.error(`[${violation.ruleId}] ${violation.message}`);
+  }
+  process.exitCode = 1;
+}
+```
+
+Available root exports:
+
+```ts
+export { Engine, validate } from 'design-constraint-validator';
 export type {
-  Token,
-  ValidationResult,
-  Constraint,
-  ConstraintViolation
+  ConstraintIssue,
+  ConstraintPlugin,
+  Graph,
+  TokenId,
+  TokenValue,
+  ValidateInput,
+  ValidateResult
 } from 'design-constraint-validator';
 ```
 
-See [API.md](./API.md) for complete API reference.
+Use subpath imports for lower-level helpers and plugin factories. See
+[API.md](./API.md).
 
----
+## Use Cases
+
+- Design system validation in CI.
+- Accessibility checks for color token pairs.
+- Typography, spacing, layout, and color-order safeguards.
+- Multi-breakpoint validation with token overrides.
+- Token dependency and provenance inspection.
+- Machine-readable reports for dashboards and agents.
 
 ## FAQ
 
 ### How does the tool find my tokens and constraints?
 
-By default, it looks for:
-- **Tokens**: `tokens.json` or `tokens/*.json`
-- **Constraints**: `themes/*.json` or `themes/**/*.json`
+By default:
 
-You can customize paths in a `dcv.config.json` file. See [Configuration.md](./Configuration.md) for details.
+- Tokens: `tokens/tokens.example.json`.
+- Order/cross-axis constraints: `.json` files in `themes/`.
+- WCAG and custom thresholds: `dcv.config.json` in the current working
+  directory, or a file passed with `--config`.
 
-### What's the relationship with DecisionThemes?
+Use `--tokens` and `--constraints-dir` to point at project-specific paths.
 
-`design-constraint-validator` is the **core validation engine** - it validates any design tokens against constraints.
+### Can I use this with existing tokens?
 
-**DecisionThemes** (coming soon) is a complete design system framework that uses this validator under the hood, plus adds:
-- 5-axis decision framework (Tone, Emphasis, Size, Density, Shape)
-- Theme configurator UI
-- Decision → Token mapping
+Yes, if they can be represented as nested JSON with `$value` token leaves. DCV
+supports `{token.path}` references and common DTCG-style token objects.
 
-Think of it as: **design-constraint-validator** = engine, **DecisionThemes** = full product built on the engine.
+### Does `dcv validate` cache incremental results?
 
-### Can I use this with my existing tokens?
-
-Yes! As long as your tokens follow a structured JSON format. The tool supports:
-- [W3C Design Tokens Community Group](https://design-tokens.github.io/community-group/) format
-- Custom nested JSON structures
-- Token references with `{token.path}` syntax
-
-### How do I use incremental validation?
-
-Incremental validation automatically detects changed tokens and only validates those tokens plus their dependents. This feature is built-in - no configuration needed. When you run `dcv validate`, it will use cached results for unchanged tokens.
+No. The engine supports incremental evaluation through `commit()` and
+`affected()`, but each CLI validation run performs a full validation for the
+selected token set and breakpoint(s).
 
 ### What breakpoints are supported?
 
-The tool supports responsive tokens with breakpoint-specific overrides. Place override files in `tokens/overrides/`:
-- `tokens/overrides/sm.json` - Small screens
-- `tokens/overrides/md.json` - Medium screens
-- `tokens/overrides/lg.json` - Large screens
-
-Validate specific breakpoints with `--breakpoint md` or all breakpoints with `--all-breakpoints`.
+The built-in breakpoint names are `sm`, `md`, and `lg`. Use override files under
+`tokens/overrides/` and validate with `--breakpoint md` or `--all-breakpoints`.
 
 ### Can I use this in CI/CD?
 
-Absolutely! That's a primary use case:
+Yes:
 
 ```yaml
-# .github/workflows/validate-tokens.yml
 name: Validate Design Tokens
 on: [push, pull_request]
 jobs:
@@ -506,54 +329,13 @@ jobs:
       - run: npx dcv validate --fail-on warn
 ```
 
-The tool exits with non-zero code on validation failures, making it perfect for CI/CD gates.
+Use `--fail-on off` for report-only adoption.
 
-### How do I visualize my token dependencies?
+## Related Docs
 
-Use the `graph` command:
-
-```bash
-# Generate Mermaid diagram (renders on GitHub)
-dcv graph --hasse typography --format mermaid > typography.mmd
-
-# Generate Graphviz DOT
-dcv graph --hasse color --format dot > color.dot
-
-# Then render with Graphviz
-dot -Tpng color.dot -o color.png
-```
-
-### What Node.js version do I need?
-
-Node.js 18 or higher is required.
-
----
-
-## Related Projects
-
-This is the **core validation engine**. For a complete decision-driven design system with a 5-axis framework (Tone, Emphasis, Size, Density, Shape) and theme configurator UI, see **DecisionThemes** (coming soon).
-
----
-
-## Philosophy
-
-> **Constraints, not conventions.**
-
-Design systems need more than naming conventions - they need mathematical guarantees. This validator:
-
-1. **Enforces relationships** - Typography hierarchies, color progressions
-2. **Validates accessibility** - WCAG contrast with alpha compositing
-3. **Explains violations** - Provenance tracing shows why rules fail
-4. **Scales with complexity** - Incremental validation of 1000s of tokens
-
----
-
-## See Also
-
-- **[Getting Started](./Getting-Started.md)** - Step-by-step tutorial
-- **[Constraints](./Constraints.md)** - All constraint types in detail
-- **[CLI Reference](./CLI.md)** - Complete command documentation
-- **[Configuration](./Configuration.md)** - Config file options
-- **[API Reference](./API.md)** - Programmatic usage
-- **[Architecture](./Architecture.md)** - Internal design
-- **[Examples](./Examples.md)** - Sample projects
+- [Getting Started](./Getting-Started.md)
+- [Constraints](./Constraints.md)
+- [CLI Reference](./CLI.md)
+- [Configuration](./Configuration.md)
+- [API Reference](./API.md)
+- [JSON Output Schema](./JSON-OUTPUT.md)

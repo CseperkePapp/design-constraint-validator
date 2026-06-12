@@ -1,0 +1,14 @@
+{
+  "constraints": {
+    "enableBuiltInThreshold": false,
+    "enableBuiltInWcagDefaults": false,
+    "wcag": [
+      {
+        "foreground": "color.semantic.text.primary",
+        "background": "color.semantic.background.default",
+        "ratio": 4.5,
+        "description": "Primary text on default background"
+      }
+    ]
+  }
+}
