@@ -1,9 +1,15 @@
+import { normalizeDtcgValue } from "./dtcg.js";
+
 export type TokenId = string; // e.g. "color.palette.brand.600"
 export type TokenValue = string | number;
-export type TokenNode = { 
-  $type?: string; 
-  $value?: TokenValue; 
-  [k: string]: TokenNode | string | number | undefined;
+// $value may also be a DTCG 2025.10 structured object (color / dimension); it is
+// normalized to a TokenValue at ingestion. See normalizeDtcgValue.
+export type DtcgStructuredValue = Record<string, unknown>;
+export type TokenNode = {
+  $type?: string;
+  $value?: TokenValue | DtcgStructuredValue;
+  $extensions?: DtcgStructuredValue; // spec passthrough — preserved, never interpreted
+  [k: string]: TokenNode | string | number | DtcgStructuredValue | undefined;
 };
 
 export type FlatToken = {
@@ -31,9 +37,12 @@ export function flattenTokens(root: TokenNode): FlattenResult {
     
     if (Object.prototype.hasOwnProperty.call(node, '$value')) {
       const id = path.join('.');
-      const raw = node.$value;
-      if (raw === undefined) return; // Skip tokens without values
-      
+      if (node.$value === undefined) return; // Skip tokens without values
+      // Normalize DTCG 2025.10 structured color/dimension objects to the
+      // string/number form the engine + plugins expect (strings, incl. aliases,
+      // pass through unchanged). Keeps the color math in core/color.ts untouched.
+      const raw = normalizeDtcgValue(node.$value, node.$type);
+
       const refs: TokenId[] = [];
       
       // Find all references in the value

@@ -1889,32 +1889,6 @@ export declare const TokensSchema: z.ZodObject<{
         $value?: any;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    typography: {
-        lineHeight: {
-            body?: {
-                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                $value?: any;
-            } | undefined;
-        } & {
-            [k: string]: unknown;
-        };
-        font: {
-            body?: {
-                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                $value?: any;
-            } | undefined;
-        } & {
-            [k: string]: unknown;
-        };
-        size: {
-            body?: {
-                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                $value?: any;
-            } | undefined;
-        } & {
-            [k: string]: unknown;
-        };
-    };
     color: {
         palette: {
             [x: string]: any;
@@ -2054,6 +2028,32 @@ export declare const TokensSchema: z.ZodObject<{
             [k: string]: unknown;
         };
     };
+    typography: {
+        lineHeight: {
+            body?: {
+                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                $value?: any;
+            } | undefined;
+        } & {
+            [k: string]: unknown;
+        };
+        font: {
+            body?: {
+                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                $value?: any;
+            } | undefined;
+        } & {
+            [k: string]: unknown;
+        };
+        size: {
+            body?: {
+                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                $value?: any;
+            } | undefined;
+        } & {
+            [k: string]: unknown;
+        };
+    };
     size: {
         radius: Record<string, {
             $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
@@ -2091,32 +2091,6 @@ export declare const TokensSchema: z.ZodObject<{
         $value?: any;
     }>;
 }, {
-    typography: {
-        lineHeight: {
-            body?: {
-                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                $value?: any;
-            } | undefined;
-        } & {
-            [k: string]: unknown;
-        };
-        font: {
-            body?: {
-                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                $value?: any;
-            } | undefined;
-        } & {
-            [k: string]: unknown;
-        };
-        size: {
-            body?: {
-                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
-                $value?: any;
-            } | undefined;
-        } & {
-            [k: string]: unknown;
-        };
-    };
     color: {
         palette: {
             [x: string]: any;
@@ -2252,6 +2226,32 @@ export declare const TokensSchema: z.ZodObject<{
                     $value?: any;
                 }>>;
             }, z.ZodTypeAny, "passthrough"> | undefined;
+        } & {
+            [k: string]: unknown;
+        };
+    };
+    typography: {
+        lineHeight: {
+            body?: {
+                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                $value?: any;
+            } | undefined;
+        } & {
+            [k: string]: unknown;
+        };
+        font: {
+            body?: {
+                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                $value?: any;
+            } | undefined;
+        } & {
+            [k: string]: unknown;
+        };
+        size: {
+            body?: {
+                $type: "color" | "dimension" | "borderRadius" | "fontSize" | "shadow" | "duration" | "easing" | "fontFamily" | "lineHeight";
+                $value?: any;
+            } | undefined;
         } & {
             [k: string]: unknown;
         };

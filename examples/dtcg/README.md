@@ -1,6 +1,17 @@
 # DTCG (Design Tokens Community Group) Integration
 
-DCV fully supports the [DTCG specification](https://tr.designtokens.org/format/) using `$type`, `$value`, and `$description` properties.
+DCV reads [DTCG](https://tr.designtokens.org/format/) tokens, including the **2025.10 stable spec** that Figma exports natively. Precise scope:
+
+| Stable-spec feature | Support |
+| --- | --- |
+| Structured **color** objects (`{ colorSpace, components, alpha, hex }`) | ✅ sRGB validated (prefers `hex`, else maps `srgb` components) |
+| Non-sRGB color spaces (e.g. `display-p3`) | ⚠️ explicit "unparseable" warning — never coerced into sRGB math |
+| Structured **dimension** objects (`{ value, unit }`) | ✅ normalized for threshold checks |
+| `{alias.path}` references | ✅ resolved (`why` shows the chain) |
+| `$extensions` | ✅ preserved, never interpreted, never crashes |
+| Composite types (typography, shadow, border, gradient) | ❌ out of scope — parsed but not constraint-validated |
+
+The committed [`figma-export.tokens.json`](figma-export.tokens.json) fixture exercises all of the above end-to-end in CI (`test/dtcg.test.ts`). Color/contrast math lives in `core/color.ts` and is unchanged — structured values are normalized to the legacy string/number forms at ingestion only.
 
 ## Quick Start
 
@@ -95,10 +106,10 @@ DTCG-compliant tokens:
 
 ## DCV Compatibility
 
-DCV is **fully DTCG-compliant**:
+DCV's DTCG support (see the scope table at the top for the precise stable-spec coverage):
 
 - ✅ `$type` property recognized and preserved
-- ✅ `$value` property used for validation
+- ✅ `$value` property used for validation (legacy strings and 2025.10 structured objects)
 - ✅ `$description` preserved in metadata
 - ✅ Token references `{path.to.token}` resolved automatically
 - ✅ Nested type inheritance (e.g., `color.$type` applies to all children)

@@ -1,0 +1,14 @@
+{
+  "constraints": {
+    "enableBuiltInWcagDefaults": false,
+    "enableBuiltInThreshold": false,
+    "wcag": [
+      { "foreground": "color.text", "background": "color.bg", "ratio": 4.5, "description": "Body text on surface" },
+      { "foreground": "color.brand", "background": "color.bg", "ratio": 4.5, "description": "Brand (aliased) on surface" },
+      { "foreground": "color.neon", "background": "color.bg", "ratio": 4.5, "description": "Non-sRGB neon on surface" }
+    ],
+    "thresholds": [
+      { "id": "size.touch", "op": ">=", "valuePx": 44, "where": "Touch target (WCAG / Apple HIG)" }
+    ]
+  }
+}

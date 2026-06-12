@@ -1,8 +1,9 @@
 # Task 008 CLAUDE: DCV — DTCG 2025.10 stable-spec compliance (fixture, structured colors, aliases)
 
-**Status:** todo
+**Status:** done
 **Priority:** P2
 **Created:** 2026-06-11
+**Completed:** 2026-06-12
 **Effort:** M
 **Dependencies:** none
 **Phase:** DTCG Compliance
@@ -52,12 +53,31 @@ Full spec conformance (composite types like typography/shadow tokens — warn-an
 
 ## Acceptance criteria
 
-- [ ] A genuine stable-spec (2025.10) fixture lives in `examples/dtcg/` and is validated in CI.
-- [ ] Structured sRGB colors validate with correct WCAG ratios (spot-check one pair by hand).
-- [ ] Non-sRGB color spaces produce an explicit warning, never silent wrong math.
-- [ ] `{alias.path}` chains resolve; `why` shows the chain for an aliased token.
-- [ ] `$extensions` present anywhere causes no error.
-- [ ] README's DTCG claim updated to state precisely what is and isn't supported (honest scope beats broad claims — this text becomes the listing description).
+- [x] A genuine stable-spec (2025.10) fixture lives in `examples/dtcg/` and is validated in CI. (`examples/dtcg/figma-export.tokens.json` + `test/dtcg.test.ts`.)
+- [x] Structured sRGB colors validate with correct WCAG ratios (spot-check one pair by hand). (`color.text` #888888 on `color.bg` #999999 → 1.24:1; `color.bg` has no `hex`, proving the `srgb` components → color path.)
+- [x] Non-sRGB color spaces produce an explicit warning, never silent wrong math. (`color.neon` display-p3 → `WARN Unparseable color(s): fg="<unsupported colorSpace: display-p3>"`.)
+- [x] `{alias.path}` chains resolve; `why` shows the chain for an aliased token. (`color.brand` → `#888888`; `why color.brand` → chain `[color.brand, color.text]`.)
+- [x] `$extensions` present anywhere causes no error. (`color.text` carries `$extensions`; flatten/validate unaffected.)
+- [x] README's DTCG claim updated to state precisely what is and isn't supported. (`examples/dtcg/README.md` scope table + root README adapter line.)
+
+---
+
+## Resolution (2026-06-12, Claude)
+
+Root cause: `core/flatten.ts` typed `$value` as `string | number` and only scanned
+strings for refs, so DTCG 2025.10 **structured** color/dimension objects passed
+through as raw objects and reached the string-only `parseCssColor` / `parseSizePx`
+as `[object Object]` — a Figma stable export validated nothing.
+
+Fix (normalization in ONE place, `core/color.ts` math untouched):
+
+- New `core/dtcg.ts` `normalizeDtcgValue(raw, $type)` — structured color → `hex`
+  if present, else map `srgb` components to a CSS string; structured dimension →
+  `"<value><unit>"`; non-sRGB without hex → a sentinel the parser rejects (explicit
+  warning, never coerced to sRGB); unknown composite objects → non-crashing sentinel.
+- `core/flatten.ts` calls it at ingestion and widens the `$value` / `$extensions`
+  types. String aliases keep flowing through the existing ref fixpoint unchanged.
+- Fixture + `test/dtcg.test.ts` (5 cases) prove all acceptance behaviors end-to-end.
 
 ## Gotchas
 

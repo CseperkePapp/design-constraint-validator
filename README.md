@@ -169,7 +169,7 @@ Adapters normalize common ecosystems:
 
 - **Style Dictionary** - See [examples/style-dictionary/](examples/style-dictionary/)
 - **Tokens Studio JSON** - See [examples/tokens-studio/](examples/tokens-studio/)
-- **DTCG** (Design Tokens Community Group) - See [examples/dtcg/](examples/dtcg/)
+- **DTCG** (Design Tokens Community Group) — reads the **2025.10 stable spec** (structured sRGB colors, structured dimensions, `{alias}` references, `$extensions` passthrough; non-sRGB spaces warn rather than mis-calculate; composite types out of scope). See [examples/dtcg/](examples/dtcg/)
 
 Full adapter documentation: **[Adapters](docs/Adapters.md)**
 
