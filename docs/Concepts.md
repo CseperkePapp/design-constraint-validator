@@ -1,143 +1,161 @@
 # Concepts & Terminology
 
-Core concepts and terms used across the Design Constraint Validator (DCV) codebase and documentation.
+Core terms used across Design Constraint Validator (DCV).
 
 ## Design Tokens
 
-- **Token**: A named design value, typically represented as a nested JSON object with a `$value` field.
-- **Token ID**: The dot-notated identifier derived from the nesting path, e.g. `typography.size.h1` or `color.palette.brand.500`.
-- **References**: Tokens may reference other tokens using `{path.to.token}` syntax. DCV resolves these references during flattening.
-- **Effective token set**: The fully-resolved, flattened map of token IDs to final values after merging overrides and resolving references. This is what DCV validates.
+- **Token**: A named design value, typically represented as a nested JSON object
+  with a `$value` field.
+- **Token ID**: Dot-notated identifier derived from nesting, such as
+  `typography.size.h1` or `color.palette.brand.500`.
+- **Reference**: A token value that points at another token using
+  `{path.to.token}` syntax.
+- **Effective token set**: The fully resolved, flattened map of token IDs to
+  final values after references, overrides, themes, or breakpoint overlays have
+  been applied.
 
 ## Constraints & Policies
 
-- **Constraint**: A rule that must hold over one or more tokens. Constraints reason about relationships (e.g. `>=`, contrast ratios) rather than just structure.
-- **Constraint types**:
-  - **Monotonic**: Enforce ordering relationships between tokens (typography scales, spacing scales, lightness ramps).
-  - **WCAG**: Enforce minimum contrast ratios between foreground and background token pairs.
-  - **Threshold**: Enforce minimum/maximum numeric values (for example, minimum touch target size).
-  - **Lightness**: Enforce perceptual lightness progression across a color scale (using OKLCH).
-  - **Cross-axis**: Express multi-dimensional rules that tie together different properties (e.g. size, weight, contrast, breakpoints).
-- **Policy / Policy file**: A collection of constraints that represents an accessibility standard (e.g. AA) or an organizational rule-set. In practice:
-  - Constraint data is usually stored as JSON in the `themes/` directory (for example `themes/wcag.json`, `themes/typography.order.json`, `themes/cross-axis.rules.json`).
-  - A “policy profile” is effectively the set of constraint JSON files DCV loads for a given validation run.
+- **Constraint**: A rule over one or more tokens. Constraints reason about
+  relationships, such as ordering, contrast, and minimum sizes.
+- **Policy**: A collection of constraints representing a standard or
+  organizational rule set.
+- **Config constraints**: WCAG and custom threshold policies in
+  `dcv.config.json` under `constraints`.
+- **Constraint directory**: Directory for order and cross-axis files. The
+  default is `themes/`, a historical name that means "constraint policy files"
+  in DCV.
+
+Common constraint types:
+
+- **Monotonic**: Ordering relationships for typography, spacing, layout, or
+  other scales.
+- **WCAG**: Minimum contrast ratios between foreground/background token pairs.
+- **Threshold**: Minimum or maximum numeric values, such as touch target size.
+- **Lightness**: Perceptual lightness ordering across color scales.
+- **Cross-axis**: Multi-property rules tying together size, weight, contrast,
+  breakpoints, or other dimensions.
 
 ## Themes, Breakpoints, Overrides
 
-- **Theme (tokens)**: A coherent set of tokens representing a visual theme (for example light vs dark). DCV does not compute themes; it validates whatever token set you provide.
-- **Themes directory (`themes/`)**: By default, DCV expects constraint definitions under `themes/`. **Important naming note:** The name is historical and can be confusing. This directory holds **constraints/policies**, not visual themes. You may configure a different directory name (like `constraints/` or `policies/`) in your config.
-- **EffectiveConfig**: The fully-resolved, flattened token set after all references, overrides, and merges have been applied. This is what DCV validates. The term comes from the prior-art documentation and emphasizes that validation happens on "effective" (final) values, not intermediate build artifacts.
-- **Breakpoints**: Named responsive contexts (e.g. `sm`, `md`, `lg`) for which override token files may exist.
-  - Base tokens are typically in `tokens/tokens.json` or similar.
-  - Overrides live in `tokens/overrides/<breakpoint>.json`.
-  - For `--all-breakpoints`, DCV merges base tokens with each override file in turn and validates each resulting effective token set separately.
-- **Overrides**: Token values that replace base values at a particular breakpoint or for local experimentation (for example `tokens/overrides/local.json`).
+- **Theme tokens**: Visual theme overlays, such as light or dark token values.
+  DCV validates the token set it is given; it does not compute visual themes.
+- **`themes/` directory**: Default directory for order and cross-axis constraint
+  files, not visual themes. Use `--constraints-dir` to point at another policy
+  directory such as `constraints/`.
+- **Breakpoints**: Named responsive contexts (`sm`, `md`, `lg`) with optional
+  override token files.
+- **Overrides**: Token values that replace base values for a breakpoint or local
+  experiment.
 
 ## Engine, Graph, Plugins
 
-- **Engine**: The core in-memory model used by DCV to validate tokens.
-  - Holds the flat token map (ID → final value).
-  - Maintains a directed acyclic graph (DAG) of reference dependencies between tokens.
-  - Orchestrates the execution of constraint plugins over the token set.
-- **Dependency graph**: A DAG whose nodes are token IDs and edges represent reference dependencies (`A → B` if `B`’s value refers to `A`).
-  - Used to find all tokens affected by a change.
-  - Used by `dcv graph` (dependency mode) and by `dcv why` to explain provenance.
-- **Poset / Hasse diagram**:
-  - A partial order (poset) is the abstract ordering induced by monotonic constraints (for example size hierarchies).
-  - DCV builds posets from `.order.json` files and can export Hasse diagrams (reduced graphs that show only the essential ordering edges) via `dcv graph --hasse`.
-- **Plugin (constraint plugin)**:
-  - A module implementing a specific constraint kind (monotonic, WCAG, threshold, lightness, cross-axis).
-  - Plugins are registered on the engine and evaluated over the token graph.
-  - Plugins are pure checks: they read values and report issues but do not mutate tokens.
+- **Engine**: The core in-memory validator. It stores flat token values, tracks
+  reference dependency edges, and runs registered constraint plugins.
+- **Dependency graph**: Directed graph where nodes are token IDs and edges
+  represent references.
+- **Poset / Hasse diagram**: A partial order induced by monotonic constraints.
+  `dcv graph --hasse` can export reduced order diagrams.
+- **Plugin**: A pure constraint checker with an `id` and
+  `evaluate(engine, candidates)` method. Plugins read token values and report
+  issues; they do not mutate tokens.
 
 ## Violations, Output, Receipts
 
-- **Violation**: A specific instance where a constraint is not satisfied.
-  - In JSON output: `ConstraintViolation` with `ruleId`, `level` (`error` or `warn`), `message`, and optional `nodes` (tokens) and `edges` (graph edges) for context.
-  - In text output: printed as `ERROR` or `WARN` lines with rule name, token(s) and message.
-- **Validation result**:
-  - Summarized in JSON as `ValidationResult` (see `docs/JSON-OUTPUT.md`).
-  - Contains `ok`, `counts`, `violations`, optional `warnings`, and `stats` (duration, version, timestamp).
-- **Receipt**:
-  - A validation result enriched with environment and input metadata (`ValidationReceipt`).
-  - Includes Node/OS info (`nodeVersion`, `platform`, `arch`), the token file path and a content hash, the constraints directory and per-file hashes, the breakpoint, and effective configuration (`failOn`).
-  - Generated with `dcv validate --format json --receipt <path>`.
-  - **Hash format (audited TASK-009):** each hash is `sha256:` followed by the **first 16 hex chars** (a 64-bit prefix of the SHA-256 of the file's bytes) — enough for drift detection, not a full digest.
-  - **Constraint hashing scope:** only `.json` files in the constraints directory (`themes/` by default, or `--constraints-dir`) are hashed. Constraints supplied through a discovered `dcv.config.json` are **not** currently included in `constraintHashes`.
-  - Receipts are **not signed** — signing is on the roadmap.
+- **Violation**: A specific failed constraint. JSON violations use `ruleId`,
+  `level`, `message`, optional `nodes`, optional `edges`, and optional
+  `context`.
+- **CLI validation result**: `dcv validate --format json` returns `ok`,
+  `counts`, `violations`, optional `warnings`, optional `note`, `stats`, and
+  `dcv` package metadata.
+- **Programmatic validation result**: `validate()` returns `ok`, `counts`,
+  `violations`, `warnings`, and optional `note`. It does not add CLI-only
+  `stats` or `dcv` metadata.
+- **Receipt**: A validation result enriched with environment and input metadata.
+  Generate one with:
+
+```bash
+dcv validate --format json --receipt validation.receipt.json
+```
+
+Receipt hash values are `sha256:` plus the first 16 hex characters of the file
+digest. Constraint hashes cover `.json` files in the active constraints
+directory. Config-file constraints are not currently included in
+`constraintHashes`.
 
 ## Defaults & Assumptions
 
-The current implementation includes a few important defaults and conventions:
+- **Token path**: CLI validation defaults to `tokens/tokens.example.json`.
+  Override with `--tokens` or the positional token path.
+- **Constraint directory**: Defaults to `themes/`. Override with
+  `--constraints-dir`.
+- **Override directory**: Breakpoint token overrides default to
+  `tokens/overrides/`.
+- **Built-in threshold**: Enabled by default. Enforces
+  `control.size.min >= 44px` with `where: "Touch target (WCAG / Apple HIG)"`.
+  Disable with `constraints.enableBuiltInThreshold: false`.
+- **Built-in WCAG defaults**: Enabled by default for common role token IDs such
+  as `color.role.text.default` on `color.role.bg.surface`. Disable with
+  `constraints.enableBuiltInWcagDefaults: false`.
+- **Unknown IDs**: Constraint rules that reference missing token IDs are skipped
+  or reported as warnings depending on the constraint type.
+- **Unparseable values**: Monotonic and threshold checks skip values they cannot
+  parse numerically. WCAG contrast reports warnings for unparseable colors.
+- **Incremental engine support**: `Engine.commit()` and `Engine.affected()` can
+  evaluate changed tokens plus dependents. Each `dcv validate` CLI run performs
+  a full validation of the effective token set for each selected breakpoint.
 
-- **Token paths**
-  - CLI default tokens path: `tokens/tokens.example.json` (can be overridden with `--tokens` or via config).
-  - Default constraints directory: `themes/`.
-  - Default overrides directory: `tokens/overrides/`.
+## `--fail-on` Values
 
-- **Built-in constraints**
-  - **Threshold**: DCV always enforces a touch target minimum on `control.size.min` using a threshold rule equivalent to:
-    - `id: "control.size.min"`, `op: ">="`, `valuePx: 44`, `where: "Touch target (WCAG / Apple HIG)"`.
-  - **WCAG defaults**: In addition to user-configured WCAG constraints, DCV applies a small set of built-in contrast checks for commonly named roles, for example:
-    - `color.role.text.default` on `color.role.bg.surface`.
-    - `color.role.accent.default` on `color.role.bg.surface`.
-    - `color.role.focus.ring` on `color.role.bg.surface`.
-    - These defaults only have an effect if your token IDs match the expected names.
+`dcv validate --fail-on` accepts:
 
-- **Unknown IDs in constraints**
-  - If a constraint file (especially cross-axis rules) references token IDs that do not exist in the token set, DCV skips those rules.
-  - Unknown IDs are surfaced in debug logging and may be promoted to user-visible warnings in future versions, but they are currently non-fatal.
+- `off`: Always exit `0` after reporting issues.
+- `warn`: Exit `1` when warnings or errors are present.
+- `error`: Exit `1` only when error-level violations are present.
 
-- **Unparseable values**
-  - Monotonic and threshold plugins skip tokens whose values cannot be parsed as numbers / sizes. This avoids false positives when a non-numeric token appears in an order list.
-  - WCAG contrast constraints emit warnings when colors cannot be parsed (or references cannot be resolved), because that usually indicates a data issue.
+Earlier docs may mention `"never"` or a config-file `failOn` option. The current
+runtime uses the CLI flag, and the non-blocking value is `off`.
 
-- **Incremental evaluation**
-  - The engine’s `commit`/`affected` mechanism supports incremental validation (validate only changed token(s) plus dependents) and is used by commands like `dcv set`.
-  - Each `dcv validate` CLI run currently performs a full validation of the effective token set for each breakpoint; there is no cross-run caching.
+## JSON Field Names
 
-These defaults are intentionally conservative: they provide useful safeguards out-of-the-box while still allowing projects to add explicit constraints via JSON files and configuration.
+Canonical validation JSON field names:
 
----
+- `ruleId`: Constraint identifier, such as `wcag-contrast`, `threshold`, or
+  `monotonic`.
+- `level`: `error` or `warn`.
+- `message`: Human-readable description.
+- `nodes`: Token IDs involved in the issue.
+- `edges`: Graph edges involved in the issue, when available.
+- `context`: Rule-specific structured metadata. WCAG contrast uses
+  `actual` and `required`.
 
-## Terminology Clarifications
+Older examples may have used `kind`/`severity`; the current JSON shape uses
+`ruleId`/`level`.
 
-### failOn Values
+## Policy vs Constraints vs Themes
 
-The `--fail-on` CLI flag and `failOn` config option accept three values:
+- **Constraints** are individual rules.
+- **Policy** is a collection of rules.
+- **Config policy** includes `constraints.wcag` and `constraints.thresholds`.
+- **Constraint files** include order and cross-axis JSON files.
+- **Themes directory** is the default constraint-file directory despite its
+  historical name.
 
-- **`off`**: Do not fail the build on any violations (exit code 0 even with errors). Useful for reporting-only mode in CI.
-- **`warn`**: Fail on warnings and errors (exit code 1 if warnings or errors are present).
-- **`error`** (default): Fail only on errors (exit code 1 if errors present, 0 if only warnings).
+## Manifest
 
-**Note:** Earlier documentation may have referenced `"never"` as a value - this has been standardized to `"off"`.
+In DCV, a manifest usually means a CSS variable mapping file used by
+`dcv build --mapper`. It maps token IDs to generated CSS variable names.
 
-### JSON Output Field Names
+```json
+{
+  "color.brand.primary": "--brand-primary",
+  "typography.size.h1": "--heading-xl"
+}
+```
 
-For consistency, DCV's JSON output uses the following field names:
+## Related Docs
 
-- **`ruleId`**: The identifier of the constraint rule that was violated (e.g., `"wcag-contrast"`, `"monotonic-order"`).
-- **`level`**: The severity level, either `"error"` or `"warn"`.
-- **`message`**: Human-readable description of the violation.
-- **`nodes`**: Array of token IDs involved in the violation (optional).
-- **`edges`**: Array of graph edges `[from, to]` implicated in the violation (optional).
-- **`context`**: Additional structured data about the violation (optional).
-
-**Historical note:** Some older documentation or examples may have used `kind` instead of `ruleId` or `severity` instead of `level`. The canonical names are `ruleId` and `level` as documented in [JSON-OUTPUT.md](./JSON-OUTPUT.md).
-
-### Policy vs Constraints vs Themes
-
-These terms can be confusing. Here's how they relate:
-
-- **Constraints**: Individual rules that tokens must satisfy (e.g., a WCAG contrast rule, a monotonic ordering rule).
-- **Policy** or **Policy file**: A collection of constraints, often representing a standard (AA/AAA) or organizational requirements. A policy is typically expressed as one or more JSON files containing constraint definitions.
-- **Themes directory**: The default location (`themes/`) where constraint JSON files are stored. Despite the name suggesting "visual themes," this directory contains **constraint definitions** (policies). The naming is historical from the broader Decision Themes framework documented in the prior-art papers.
-
-**Clarification for users**: When documentation refers to "constraint files" or "policy files," these are the same thing: JSON files defining rules for DCV to check. They live in the `themes/` directory by default (configurable).
-
-### Manifest
-
-In DCV context, "manifest" typically refers to a **CSS variable mapping file** used by the `dcv build --mapper` command. This JSON file maps canonical token names to CSS variable names (or other naming schemes) for output generation. It's not a core validation concept but a build-time utility.
-
-Example: `examples/manifest.example.json` might map `typography.size.h1` → `--text-xl` for generated CSS.
-
+- [Configuration](./Configuration.md)
+- [JSON Output Schema](./JSON-OUTPUT.md)
+- [API Reference](./API.md)
+- [CLI Reference](./CLI.md)

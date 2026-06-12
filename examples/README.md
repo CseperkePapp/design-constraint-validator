@@ -5,99 +5,78 @@ CLI-focused examples demonstrating Design Constraint Validator features.
 ## Directories
 
 ### `minimal/`
-The simplest working example - great starting point for new users.
-- `tokens.json` - Basic color and typography tokens
-- `themes/wcag.json` - WCAG contrast constraints
-- `themes/typography.order.json` - Typography hierarchy
 
-**Try it:**
+The simplest working example.
+
+- `tokens.json`: Basic color, typography, and control tokens.
+- `dcv.config.json`: WCAG contrast policy.
+- `themes/typography.order.json`: Typography hierarchy.
+
 ```bash
 cd examples/minimal
-dcv validate
+npx dcv validate --tokens tokens.json
 ```
 
 ### `tokens-studio/`
-Native Tokens Studio format support with `$type` / `$value` syntax.
-- Complete token file with colors, typography, spacing
-- Constraint files in `themes/` directory
-- Shows how to validate Figma Tokens Studio exports
 
-**Try it:**
+Tokens Studio-style `$type` / `$value` token data with DCV constraint examples.
+
 ```bash
-dcv validate --tokens examples/tokens-studio/tokens.json
+npx dcv validate \
+  --tokens examples/tokens-studio/tokens.json \
+  --config examples/tokens-studio/dcv.config.json \
+  --constraints-dir examples/tokens-studio/themes
 ```
 
 ### `style-dictionary/`
-Style Dictionary integration guide with `value` property format.
-- Example tokens in Style Dictionary format
-- Build integration examples
-- CI/CD workflow templates
 
-**See:** [style-dictionary/README.md](style-dictionary/README.md)
+Guide for using Style Dictionary token exports. DCV expects `$value` token
+leaves, so Style Dictionary `value` fields should be normalized before
+validation.
+
+See [style-dictionary/README.md](style-dictionary/README.md).
 
 ### `dtcg/`
-DTCG (Design Tokens Community Group) specification support.
-- Full DTCG-compliant token examples
-- Type inheritance and composite tokens
-- Reference resolution examples
 
-**See:** [dtcg/README.md](dtcg/README.md)
+DTCG (Design Tokens Community Group) examples, including structured color and
+dimension values.
+
+```bash
+npx dcv validate \
+  --tokens examples/dtcg/figma-export.tokens.json \
+  --config examples/dtcg/dcv.config.json \
+  --constraints-dir __none__
+```
 
 ### `advanced-constraints/`
-Advanced cross-axis constraint examples showing real-world scenarios.
-- Typography readability rules (weight × size)
-- Touch target accessibility (text size × tap target)
-- Responsive contrast rules (breakpoint × contrast)
-- Complete mobile ruleset
 
-**See:** [advanced-constraints/README.md](advanced-constraints/README.md)
+Advanced cross-axis constraint examples.
+
+See [advanced-constraints/README.md](advanced-constraints/README.md).
 
 ### `failing/`
-Intentionally broken examples to demonstrate constraint violations.
-- `contrast-fail.tokens.json` - WCAG contrast failure
-- `monotonicity-fail.tokens.json` - Typography scale out-of-order
 
-**Try it:**
+Intentionally broken token files for testing validation output.
+
 ```bash
-dcv validate examples/failing/contrast-fail.tokens.json
-dcv validate examples/failing/monotonicity-fail.tokens.json
+npx dcv validate --tokens examples/failing/contrast-fail.tokens.json --fail-on off
+npx dcv validate --tokens examples/failing/monotonicity-fail.tokens.json --fail-on off
 ```
 
 ### `patches/`
-Examples of patch/override format for token mutations.
-- Demonstrates the `dcv patch` command
-- Shows how to export and apply token changes
 
-**Try it:**
+Patch and override examples.
+
 ```bash
-dcv patch --overrides examples/patches/basic-override.json
+npx dcv patch --overrides examples/patches/basic-override.json
 ```
 
-### `tokens/`
-Additional token set examples for testing different scenarios.
+## Common Commands
 
-## Usage Patterns
-
-### Validate tokens
-```bash
-dcv validate examples/minimal/tokens.json
-```
-
-### Explain violations
 ```bash
 dcv why typography.size.body --format table
-```
-
-### Export dependency graph
-```bash
 dcv graph --format mermaid --hasse typography > graph.mmd
-```
-
-### Build CSS output
-```bash
 dcv build --format css --tokens examples/minimal/tokens.json
 ```
 
----
-
-For full CLI documentation, see [../README.md](../README.md)
+For full CLI documentation, see [../docs/CLI.md](../docs/CLI.md).

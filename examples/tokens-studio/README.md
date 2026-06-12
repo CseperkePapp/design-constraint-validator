@@ -1,141 +1,87 @@
 # Tokens Studio Integration
 
-DCV natively supports Tokens Studio JSON format using `$type` and `$value` syntax.
+DCV can validate Tokens Studio-style JSON when tokens use `$value` leaves and
+`{token.path}` references.
 
-> **🎨 Figma Users:** Tokens Studio is a Figma plugin that lets you manage design tokens directly in Figma. DCV validates these tokens to ensure consistency and accessibility. Export from Tokens Studio → validate with DCV → sync back to Figma!
-
-## Quick Start
-
-1. **Export tokens from Tokens Studio** (Figma plugin)
-2. **Validate with DCV:**
+## Try This Example
 
 ```bash
-npx design-constraint-validator validate --tokens tokens.json
+npx dcv validate \
+  --tokens examples/tokens-studio/tokens.json \
+  --config examples/tokens-studio/dcv.config.json \
+  --constraints-dir examples/tokens-studio/themes
 ```
 
-**Note:** DCV looks for constraint files in a `themes/` directory (see below)
+## Files
 
-## Example Token File
+```text
+tokens-studio/
+  tokens.json
+  dcv.config.json
+  themes/
+    color.order.json
+    spacing.order.json
+    typography.order.json
+```
+
+- `dcv.config.json` contains WCAG contrast pairs.
+- `themes/*.order.json` files contain tuple-based ordering constraints.
+
+## Token Shape
 
 ```json
 {
   "color": {
-    "palette": {
-      "primary": {
-        "100": { "$type": "color", "$value": "#e3f2fd" },
-        "500": { "$type": "color", "$value": "#2196f3" },
-        "900": { "$type": "color", "$value": "#0d47a1" }
-      }
-    },
     "semantic": {
-      "text": { "$type": "color", "$value": "{color.palette.primary.900}" },
-      "background": { "$type": "color", "$value": "{color.palette.primary.100}" }
-    }
-  },
-  "typography": {
-    "fontSize": {
-      "heading": {
-        "h1": { "$type": "dimension", "$value": "32px" },
-        "h2": { "$type": "dimension", "$value": "24px" },
-        "h3": { "$type": "dimension", "$value": "20px" }
-      },
-      "body": { "$type": "dimension", "$value": "16px" }
+      "text": {
+        "primary": {
+          "$type": "color",
+          "$value": "{color.palette.neutral.900}"
+        }
+      }
     }
   }
 }
 ```
 
-## Constraint Validation
+DCV resolves `{color.palette.neutral.900}` before validation.
 
-DCV uses a `themes/` directory structure for constraint definitions:
+## WCAG Config
 
+```json
+{
+  "constraints": {
+    "wcag": [
+      {
+        "foreground": "color.semantic.text.primary",
+        "background": "color.semantic.background.default",
+        "ratio": 4.5
+      }
+    ]
+  }
+}
 ```
-your-project/
-├── tokens.json                    # Your Tokens Studio export
-└── themes/
-    ├── typography.order.json      # Typography hierarchy
-    ├── color.order.json           # Color scale ordering
-    ├── spacing.order.json         # Spacing scale
-    └── wcag.json                  # Accessibility constraints
-```
 
-### Monotonic Scale Check
+## Order File Format
 
-**themes/typography.order.json:**
 ```json
 {
   "order": [
-    "typography.fontSize.heading.h1",
-    "typography.fontSize.heading.h2",
-    "typography.fontSize.heading.h3",
-    "typography.fontSize.body"
-  ],
-  "direction": "decreasing"
+    ["typography.fontSize.heading.h1", ">=", "typography.fontSize.heading.h2"],
+    ["typography.fontSize.heading.h2", ">=", "typography.fontSize.heading.h3"]
+  ]
 }
 ```
 
-### WCAG Contrast Check
+## Notes
 
-**themes/wcag.json:**
-```json
-{
-  "constraints": [{
-    "type": "wcag",
-    "level": "AA",
-    "context": "normal",
-    "pairs": [
-      {
-        "fg": "color.semantic.text",
-        "bg": "color.semantic.background"
-      }
-    ]
-  }]
-}
-```
-
-## Token References
-
-DCV automatically resolves Tokens Studio references:
-
-```json
-{
-  "color": {
-    "base": { "$type": "color", "$value": "#2196f3" },
-    "text": { "$type": "color", "$value": "{color.base}" }
-  }
-}
-```
-
-No additional configuration needed - references are resolved during validation.
-
-## Multi-File Tokens (Coming Soon)
-
-Tokens Studio supports multi-file token sets. DCV currently validates single merged files. For multi-file workflows:
-
-1. Merge token sets before validation, or
-2. Use Tokens Studio's "Export All" to create a single JSON file
-
-We're exploring native multi-file support - feedback welcome!
-
-## Troubleshooting
-
-### Issue: Token not found
-
-**Error:** `Could not resolve token color.semantic.text`
-
-**Solution:** Ensure token IDs match the nested path structure:
-- `color.semantic.text` maps to `{ "color": { "semantic": { "text": { ... } } } }`
-
-### Issue: Type mismatch
-
-**Error:** `Expected dimension, got color`
-
-**Solution:** Verify `$type` values match constraint expectations:
-- Color constraints require `$type: "color"`
-- Dimension/spacing constraints require `$type: "dimension"`
+- DCV validates a single merged token file. Merge multi-file Tokens Studio sets
+  before running validation.
+- The default constraints directory is `themes/`, but this example passes it
+  explicitly so the command works from the repository root.
 
 ## Resources
 
 - [Tokens Studio Documentation](https://docs.tokens.studio/)
 - [DCV Configuration Guide](../../docs/Configuration.md)
-- [Complete Examples](../../examples/)
+- [DCV API Reference](../../docs/API.md)

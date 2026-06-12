@@ -94,34 +94,40 @@ dcv validate --budget-total-ms 5000
 
 **Table (default):**
 ```
-validate: 2 error(s), 1 warning(s)
-
-ERROR monotonic  typography.size.h2
-  typography.size.h1 >= typography.size.h2 violated: 32px < 40px
-  Defined in: themes/typography.order.json
-
-WARN threshold  control.size.min
-  Touch target should be >= 44px, got 30px
+design-constraint-validator v2.1.0 | https://github.com/CseperkePapp/design-constraint-validator#readme
+validate: 1 error(s), 0 warning(s)
+ERROR threshold  control.size.min @ Touch target (WCAG / Apple HIG) - control.size.min >= 44px violated: 30px
 ```
 
 **JSON:**
 ```json
 {
   "ok": false,
+  "counts": {
+    "checked": 1,
+    "violations": 1,
+    "warnings": 0
+  },
   "violations": [
     {
-      "severity": "error",
-      "kind": "monotonic",
-      "token": "typography.size.h2",
-      "message": "typography.size.h1 >= typography.size.h2 violated: 32px < 40px",
-      "source": "themes/typography.order.json"
+      "ruleId": "threshold",
+      "level": "error",
+      "message": "control.size.min >= 44px violated: 30px",
+      "nodes": ["control.size.min"],
+      "context": {
+        "where": "Touch target (WCAG / Apple HIG)"
+      }
     }
   ],
   "stats": {
-    "checked": 42,
-    "errors": 2,
-    "warnings": 1,
-    "durationMs": 123
+    "durationMs": 2,
+    "engineVersion": "2.1.0",
+    "timestamp": "2026-06-12T13:37:03.224Z"
+  },
+  "dcv": {
+    "name": "design-constraint-validator",
+    "version": "2.1.0",
+    "repository": "https://github.com/CseperkePapp/design-constraint-validator#readme"
   }
 }
 ```
@@ -223,11 +229,14 @@ digraph G {
 ```json
 {
   "nodes": [
-    { "id": "typography.size.h1", "value": "32px" },
-    { "id": "typography.size.h2", "value": "24px" }
+    "typography.size.body",
+    "typography.size.h3",
+    "typography.size.h2",
+    "typography.size.h1"
   ],
   "edges": [
-    { "from": "typography.size.h2", "to": "typography.size.h1", "constraint": "monotonic" }
+    ["typography.size.h3", "typography.size.h2"],
+    ["typography.size.h2", "typography.size.h1"]
   ]
 }
 ```

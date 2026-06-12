@@ -91,7 +91,7 @@ DCV's flattening logic looks for `$value` by default, but the ecosystem tool exa
 
 1. **Transform to DTCG format**: Use Style Dictionary's built-in formats or transforms to output tokens in DTCG/W3C format (with `$value`), then validate that output.
 2. **Pre-process in your build**: Add a simple transformation step that renames `value` → `$value` before passing to DCV.
-3. **Use DCV programmatically**: Import tokens in your Node.js code, transform them to the expected shape, and call DCV's `validate()` API directly.
+3. **Use DCV programmatically**: Import tokens in your Node.js code, transform them to the DCV token shape, and call DCV's `validate()` API directly.
 
 The internal adapter modules under `adapters/` (`json.ts`, `css.ts`, `js.ts`) focus on *output* formats (what DCV emits), not on input normalization from Style Dictionary.
 
@@ -160,6 +160,7 @@ The `adapters/decisionthemes.ts` adapter will integrate with the [DecisionThemes
 
 **Example usage (when implemented):**
 ```typescript
+import { validate } from 'design-constraint-validator';
 import { decisionthemesAdapter } from './adapters/decisionthemes.js';
 
 const { tokens, policy } = decisionthemesAdapter({
@@ -168,7 +169,10 @@ const { tokens, policy } = decisionthemesAdapter({
 });
 
 // Validate the computed tokens
-await validate(tokens, { policy });
+const result = validate({
+  tokens,
+  constraints: policy.constraints
+});
 ```
 
 **Status:** Placeholder implementation currently throws an error. Full integration coming with DecisionThemes launch.
@@ -191,7 +195,7 @@ The recommended pattern:
 
 1. Load your source format(s) in your own code.
 2. Transform them into a nested JSON object where each token has a `$value`, and references use `{path.to.token}`.
-3. Pass that object into DCV’s programmatic API (for example via `flattenTokens` + `validate`).
+3. Pass that object into DCV's programmatic API with `validate({ tokens, ... })`.
 
-By keeping input normalization in your own adapter layer, DCV’s core remains focused on constraints and relationships, and your adapter remains free to evolve with your tooling.
+By keeping input normalization in your own adapter layer, DCV's core remains focused on constraints and relationships, and your adapter remains free to evolve with your tooling.
 
