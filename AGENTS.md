@@ -1,0 +1,74 @@
+# AGENTS.md — working in this repo
+
+Onboarding for AI coding agents (Claude, Codex, etc.). Read this first; it saves
+you from rediscovering the conventions every session. Human contributors: see
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+## What DCV is
+
+`design-constraint-validator` (DCV) is a CLI + library that validates design
+tokens against **mathematical constraints** — WCAG contrast (with alpha
+compositing), monotonic type/lightness scales, thresholds, cross-axis rules. The
+engine math lives in `core/` and is verified; treat `core/color.ts` and
+`core/constraints/*` as load-bearing.
+
+## Commands
+
+```bash
+npm ci                  # install (CI uses --ignore-scripts)
+npm run build           # tsc → emits .js/.d.ts next to sources
+npm test                # vitest (excludes compiled **/*.test.js)
+npm run lint            # eslint
+npm run typecheck       # tsc --noEmit
+npm run check           # typecheck + lint + build + test (the full gate)
+npm run workflow:test   # task-ledger integrity tests
+```
+
+## Critical gotchas
+
+- **Build before tests that spawn the CLI.** Compiled `.js` is **gitignored**
+  (not committed). `test/clean-room.test.ts` and the CLI tests run
+  `node cli/index.js`, which doesn't exist until `npm run build`. `npm run check`
+  and CI build first; a bare `npm test` on a clean tree will fail those. When in
+  doubt, `npm run build` first.
+- **Don't commit build artifacts.** `cli/**`, `core/**`, `adapters/**`, `mcp/**`,
+  `test/**`, `scripts/**`, `src/**` `.js`/`.d.ts`/`.map` are ignored by design
+  (the only intentional tracked JS is `eslint.config.js` and `tokens/tokens.schema.*`).
+- **Commits need a task reference.** A `commit-msg` hook requires `TASK-NNN` in the
+  message (or an escape tag like `[no-task: …]`). Hooks live in `.githooks`
+  (`git config core.hooksPath .githooks`).
+- End commit messages with the project co-author line, e.g.
+  `Co-Authored-By: <model> <noreply@<provider>.com>`.
+
+## Workflow conventions (one branch per task)
+
+- **One branch per task**, never bundle tasks: `task/NNN-short-description`. Base
+  on latest `main`, or stack on a dependency's branch. See
+  `docs/project-management/PROJECT-WORKFLOW-OVERLAYS.md` → Branch Naming.
+- **Solo-sequential**: drive one task to merge before the next; no parallel agent
+  implementation on concurrent branches. Codex is brought in deliberately for a
+  scoped task or review — see PROJECT-WORKFLOW-OVERLAYS.md → Collaboration Model.
+- The **task ledger** is `docs/project-management/tasks/` (active + `DONE-TASK-…`
+  for completed). Update status, check acceptance boxes, and run
+  `npm run task:sync` + `npm run rename-done-tasks` on closeout. Each task gets a
+  `docs/project-management/workflows/TEST-AND-MERGE-NNN-*.md` record at merge.
+- The full workflow system lives under `docs/project-management/000-WORKFLOW-SYSTEM/`.
+
+## Releasing
+
+Tag-push only: `npm version <patch|minor|major>` → `git push --tags` triggers
+`.github/workflows/publish.yml` (build, check, publish with provenance, then
+verify on the registry). Never `npm publish` by hand. See [RELEASE.md](RELEASE.md).
+
+## MCP server
+
+DCV ships an MCP server (`dcv-mcp`, `mcp/`) exposing read-only `validate`, `why`,
+and `graph` tools over stdio. Setup is documented in
+[docs/AI-GUIDE.md](docs/AI-GUIDE.md#mcp-server-dcv-mcp).
+
+## Where to read more
+
+- [docs/AI-GUIDE.md](docs/AI-GUIDE.md) — commands, JSON schema, MCP, programmatic API
+- [docs/CLI.md](docs/CLI.md), [docs/Configuration.md](docs/Configuration.md),
+  [docs/Constraints.md](docs/Constraints.md), [docs/Adapters.md](docs/Adapters.md)
+- [docs/project-management/AI-CAPABILITY-ASSESSMENT.md](docs/project-management/AI-CAPABILITY-ASSESSMENT.md) — AI roadmap

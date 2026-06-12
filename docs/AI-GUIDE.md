@@ -175,19 +175,64 @@ Quick examples to show users:
 When user asks "can I use this in code?":
 
 ```typescript
-import { validate, flattenTokens } from 'design-constraint-validator';
+import { validate } from 'design-constraint-validator';
 
-const tokens = await flattenTokens('./tokens.json');
-const result = await validate(tokens, {
-  constraintsDir: './themes',
-  failOn: 'error'
+// Synchronous. Point at files, or pass `tokens` / `constraints` inline.
+const result = validate({
+  tokensPath: './tokens.json',
+  configPath: './dcv.config.json', // omit to auto-discover dcv.config.json in cwd
 });
 
 if (!result.ok) {
-  console.error(`Found ${result.counts.violations} violations`);
+  for (const v of result.violations) console.error(`[${v.ruleId}] ${v.message}`);
   process.exit(1);
 }
 ```
+
+## MCP Server (dcv-mcp)
+
+DCV ships a [Model Context Protocol](https://modelcontextprotocol.io) server so
+agents can validate tokens directly. It runs over **stdio** and exposes three
+**read-only** tools:
+
+| Tool | Does |
+|------|------|
+| `validate` | Validate a token set against constraints → structured `{ok, counts, violations, warnings}` |
+| `why` | Explain a token's provenance / resolution chain |
+| `graph` | Return the token dependency graph |
+
+> **Availability:** the server ships in the npm package as the `dcv-mcp` bin. The
+> package publishes at **v2.1.0** — until then, use the local-dev form below.
+
+**Claude Desktop / MCP client config** (once published):
+
+```json
+{
+  "mcpServers": {
+    "design-constraint-validator": {
+      "command": "npx",
+      "args": ["-y", "--package", "design-constraint-validator", "dcv-mcp"]
+    }
+  }
+}
+```
+
+**Local-dev form** (from a clone, after `npm run build`):
+
+```json
+{
+  "mcpServers": {
+    "dcv": {
+      "command": "node",
+      "args": ["/absolute/path/to/design-constraint-validator/mcp/index.js"]
+    }
+  }
+}
+```
+
+Registry metadata lives in `server.json` (name
+`io.github.cseperkepapp/design-constraint-validator`). The tools are read-only —
+no token files are written.
 
 ## Troubleshooting Quick Fixes
 
