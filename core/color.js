@@ -74,7 +74,7 @@ export function parseCssColor(input) {
         const C = Math.max(0, num(m[2]));
         const h = ((num(m[3]) % 360) + 360) % 360;
         const a = m[4] ? (m[4].includes("%") ? pct(m[4]) : num(m[4])) : 1;
-        const [r, g, b] = oklchToSrgb(L, C, h).map(v => clamp255(v * 255));
+        const [r, g, b] = oklchToLinearSrgb(L, C, h).map(v => linToSrgb(v));
         return { r, g, b, a: clamp01(a) };
     }
     // named "transparent"
@@ -103,8 +103,8 @@ function hslToRgb(H, S, L) {
     const m = L - C / 2;
     return { r: clamp255((r + m) * 255), g: clamp255((g + m) * 255), b: clamp255((b + m) * 255), a: 1 };
 }
-/* ---------- OKLCH → sRGB (0..1 channels) ---------- */
-function oklchToSrgb(L, C, hDeg) {
+/* ---------- OKLCH → linear sRGB (0..1 channels) ---------- */
+function oklchToLinearSrgb(L, C, hDeg) {
     const h = (hDeg * Math.PI) / 180;
     // OKLCH -> OKLab
     const a = C * Math.cos(h);
@@ -118,7 +118,7 @@ function oklchToSrgb(L, C, hDeg) {
     const R = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
     const G = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
     const B = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
-    // clamp to [0,1] (gamut clip)
+    // clamp to [0,1] (gamut clip). Callers gamma-encode to sRGB.
     return [clamp01(R), clamp01(G), clamp01(B)];
 }
 /* ---------- Alpha compositing (linear light) ---------- */
