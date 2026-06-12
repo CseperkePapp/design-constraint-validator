@@ -1,8 +1,20 @@
 name: Publish to npm
 
+# Canonical release flow (one flow, no manual publish step):
+#   1. `npm version <patch|minor|major>` bumps package.json + creates a vX.Y.Z tag
+#   2. `git push && git push --tags`
+#   3. pushing the tag triggers THIS workflow, which builds, checks, publishes,
+#      and then verifies the version is actually live on npm (fails loudly if not)
+#
+# `workflow_dispatch` is kept only as a manual fallback (e.g. re-run after a
+# transient registry error). There is no separate "create a GitHub Release"
+# step — a pushed tag is the single source of truth, so a release can never
+# silently not happen the way v2.0.2 did.
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*' # prereleases (e.g. v2.1.0-rc.0)
   workflow_dispatch:
 
 jobs:
@@ -10,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # Required for npm provenance
+      id-token: write # Required for npm provenance
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -25,6 +37,35 @@ jobs:
 
       - run: npm run check
 
+      # Guard: the tag being published must match package.json's version, so a
+      # mistagged push can't publish the wrong version.
+      - name: Verify tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
+            exit 1
+          fi
+          echo "Publishing design-constraint-validator@$PKG_VERSION"
+
       - run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Success check: poll the registry for the version we just published and
+      # fail the run if it is not visible. Releases must never silently not land.
+      - name: Verify published version is live on npm
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          for attempt in $(seq 1 10); do
+            if npm view "design-constraint-validator@${PKG_VERSION}" version >/dev/null 2>&1; then
+              echo "Verified design-constraint-validator@${PKG_VERSION} is live on npm."
+              exit 0
+            fi
+            echo "Attempt ${attempt}/10: ${PKG_VERSION} not visible yet, retrying in 15s..."
+            sleep 15
+          done
+          echo "::error::design-constraint-validator@${PKG_VERSION} was not found on npm after publish."
+          exit 1
