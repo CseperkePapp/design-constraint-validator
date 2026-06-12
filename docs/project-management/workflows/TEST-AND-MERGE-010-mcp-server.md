@@ -36,14 +36,18 @@
 - `engine.ts`/`wcag.ts`/`json-output.ts`: structured WCAG context
   (`actual`/`required`, `involvedTokens`) surfaced from engine metadata.
 
-## ⚠️ Pre-publish blocker (carry to v2.1.0 release)
+## Supply-chain note (RESOLVED)
 
-`npm audit --omit=dev` reports **1 high-severity vulnerability**: `picomatch
-<=2.3.1` (ReDoS / glob-injection), pulled in transitively by
-`@modelcontextprotocol/sdk`. **Resolve before tagging v2.1.0** (e.g. `npm audit
-fix`, an override, or an SDK bump that drops the vulnerable transitive). Codex
-intentionally did not run `npm audit fix`. Tracked in TASK-006 owner follow-ups
-and the release-plan note.
+Running `npm audit --omit=dev` during this verification surfaced **1 high-severity
+vulnerability**: `picomatch <=2.3.1` (ReDoS). **Correction:** it was **not** from
+the MCP SDK (which uses the safe `picomatch@4.x`) — it came transitively from
+**`fast-glob`**, an unused direct dependency present since the project's start
+(`fast-glob` → `micromatch` → `picomatch@2.3.1`).
+
+**Fixed** by removing the unused `fast-glob` dependency (branch
+`task/006-drop-unused-fast-glob`). Nothing imports `fast-glob`; the only glob
+usage is `scripts/validate-headers.ts` via the separate `glob` package.
+`npm audit --omit=dev` now reports **0 vulnerabilities**.
 
 ## Post-merge
 
