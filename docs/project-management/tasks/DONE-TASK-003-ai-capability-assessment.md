@@ -1,10 +1,10 @@
 # Task 003: AI Capability Assessment For DCV
 
-**Status:** planning
+**Status:** done
 **Priority:** P2
 **Created:** 2026-06-11
 **Updated:** 2026-06-11
-**Completed:** <!-- YYYY-MM-DD when done -->
+**Completed:** 2026-06-12
 **Parent:** <!-- remove if standalone -->
 **Effort:** M
 **Dependencies:** TASK-002
@@ -47,9 +47,9 @@ DCV now has baseline workflow automation, reusable skills, and assessment starte
 
 ## Acceptance Criteria
 
-- [ ] Current-state AI capability inventory is documented.
-- [ ] Gaps are ranked by impact and implementation effort.
-- [ ] A phased recommendation plan is produced.
+- [x] Current-state AI capability inventory is documented.
+- [x] Gaps are ranked by impact and implementation effort.
+- [x] A phased recommendation plan is produced.
 
 ---
 
@@ -57,7 +57,7 @@ DCV now has baseline workflow automation, reusable skills, and assessment starte
 
 ### Always review on closeout
 
-- [ ] This task file (`Status`, `Completed`, completion notes, verification)
+- [x] This task file (`Status`, `Completed`, completion notes, verification)
 - [ ] `docs/project-management/tasks/README.md`
 - [ ] Project status surface (if used)
 
