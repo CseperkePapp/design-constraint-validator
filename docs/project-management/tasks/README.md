@@ -8,8 +8,8 @@ Use this as the recommended task index shape when adopting the workflow automati
 
 | ID | Task | Priority | Status |
 | -- | ---- | -------- | ------ |
-| 001 | [Adopt AI project workflow in DCV](TASK-001-adopt-ai-project-workflow.md) | P2 | in-progress |
-| 002 | [Repository review and task sequencing](TASK-002-repo-review-and-task-sequencing.md) | P1 | todo |
+| 001 | [Adopt AI project workflow in DCV](DONE-TASK-001-adopt-ai-project-workflow.md) | P2 | done |
+| 002 | [Repository review and task sequencing](DONE-TASK-002-repo-review-and-task-sequencing.md) | P1 | done |
 | 003 | [AI capability assessment for DCV](TASK-003-ai-capability-assessment.md) | P2 | planning |
 | 004 | [DCV v2.1.0 — make the published package usable (CLAUDE)](TASK-004-CLAUDE-dcv-fix-tokens-flag-and-readme.md) | P1 | in-progress |
 | 005 | [Fix OKLCH→sRGB conversion (CODEX)](TASK-005-CODEX-dcv-oklch-contrast-bug.md) | P1 | in-progress |

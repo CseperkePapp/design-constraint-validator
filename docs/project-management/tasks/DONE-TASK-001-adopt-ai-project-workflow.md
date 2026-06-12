@@ -1,9 +1,10 @@
 # Task 001: Adopt AI Project Workflow In DCV
 
-**Status:** in-progress
+**Status:** done
 **Priority:** P2
 **Created:** 2026-06-11
 **Updated:** 2026-06-11
+**Completed:** 2026-06-12
 **Effort:** M
 **Dependencies:** none
 **Phase:** Workflow Adoption

@@ -1,10 +1,10 @@
 # Task 002: Repository Review And Task Sequencing
 
-**Status:** todo
+**Status:** done
 **Priority:** P1
 **Created:** 2026-06-11
 **Updated:** 2026-06-11
-**Completed:** <!-- YYYY-MM-DD when done -->
+**Completed:** 2026-06-12
 **Parent:** <!-- remove if standalone -->
 **Effort:** M
 **Dependencies:** TASK-001
@@ -57,7 +57,7 @@ DCV is already a working repository but has multiple draft tasks with different 
 
 ### Always review on closeout
 
-- [ ] This task file (`Status`, `Completed`, completion notes, verification)
+- [x] This task file (`Status`, `Completed`, completion notes, verification)
 - [x] `docs/project-management/tasks/README.md`
 - [ ] Project status surface (if used)
 
@@ -134,6 +134,6 @@ Why this order:
 
 ## Related
 
-- `docs/project-management/tasks/TASK-001-adopt-ai-project-workflow.md`
+- `docs/project-management/tasks/DONE-TASK-001-adopt-ai-project-workflow.md`
 - `docs/project-management/tasks/DRAFT-TASK-004-dcv-fix-tokens-flag-and-readme.md`
 - `docs/project-management/tasks/DRAFT-TASK-010-dcv-mcp-server.md`
