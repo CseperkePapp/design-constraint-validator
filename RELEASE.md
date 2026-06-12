@@ -196,3 +196,31 @@ and:
 The workflow will handle publishing automatically.
 
 **Note:** VS Code may show warnings in `publish.yml` about `secrets.NPM_TOKEN` being "unrecognized". This is a false positive from the editor's schema validator—the workflow will run correctly once the secret is configured in GitHub.
+
+### Optional: trusted publishing (OIDC) — no long-lived token
+
+`publish.yml` already requests an OIDC identity (`permissions: id-token: write`)
+and publishes with `--provenance`. You can switch from the `NPM_TOKEN` secret to
+**npm trusted publishing**, so there is no long-lived token that can silently
+expire (a candidate cause of the v2.0.2 miss).
+
+**Order matters — configure npm first, or the publish will fail for lack of auth:**
+
+1. On npmjs.com → the `design-constraint-validator` package → **Settings →
+   Trusted Publishers** → add a **GitHub Actions** publisher:
+   - Repository: `CseperkePapp/design-constraint-validator`
+   - Workflow: `publish.yml`
+2. Then, in `.github/workflows/publish.yml`, drop the token env from the publish
+   step (npm ≥ 11.5 picks up the OIDC credential automatically):
+
+   ```yaml
+   - run: npm publish --access public --provenance
+     # remove:
+     #   env:
+     #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+   ```
+
+3. The `NPM_TOKEN` secret can then be deleted.
+
+Left as the token flow by default so the first release works with only the secret
+configured; switch to OIDC when you're ready.
