@@ -437,6 +437,12 @@ dcv set typography.size.h1=36px --dry-run
 }
 ```
 
+> **Semantics (audited TASK-009):** `set <id>=<value>` writes the literal value at
+> **that token id**. If the id currently holds an alias (`"$value": "{other.token}"`),
+> `set` **replaces the alias with the literal** on that token — it de-aliases the
+> named token and does **not** write through to the alias source. The source token
+> is left untouched.
+
 ---
 
 ### `dcv patch`
@@ -496,6 +502,12 @@ dcv patch:apply patches/md-patch.json --output tokens-md.json
 # Preview changes
 dcv patch:apply patches/md-patch.json --dry-run
 ```
+
+> **Semantics (audited TASK-009):** `patch:apply` is a **pure transform** — it
+> applies the patch and writes the result **without validating it**. Applying a
+> patch can therefore produce a token file that violates constraints, and the
+> command still exits `0`. Always run `dcv validate` on the output as a separate
+> step. (A base-tokens hash mismatch is warned about but not fatal.)
 
 ---
 

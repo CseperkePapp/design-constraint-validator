@@ -16,7 +16,7 @@ Use this as the recommended task index shape when adopting the workflow automati
 | 006 | [Diagnose & fix silent release pipeline (CODEX)](TASK-006-CODEX-dcv-publish-pipeline.md) | P1 | in-progress |
 | 007 | [Repo hygiene — de-commit build artifacts (CODEX)](DONE-TASK-007-CODEX-dcv-repo-hygiene.md) | P2 | done |
 | 008 | [DTCG 2025.10 stable-spec compliance (CLAUDE)](DONE-TASK-008-CLAUDE-dcv-dtcg-stable-compliance.md) | P2 | done |
-| 009 | [Audit adapters, poset, receipts (CLAUDE)](TASK-009-CLAUDE-dcv-adapters-poset-audit.md) | P3 | todo |
+| 009 | [Audit adapters, poset, receipts (CLAUDE)](DONE-TASK-009-CLAUDE-dcv-adapters-poset-audit.md) | P3 | done |
 | 010 | [dcv-mcp MCP server (CODEX)](TASK-010-CODEX-dcv-mcp-server.md) | P2 | todo |
 
 ## Completed Tasks
