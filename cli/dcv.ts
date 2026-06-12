@@ -2,28 +2,14 @@
 // Clean minimal DCV CLI entrypoint
 import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
-import { spawnSync } from 'node:child_process';
-import { createRequire } from 'module';
-import path from 'node:path';
 import { type SetOptions, type BuildOptions, type ValidateOptions, type GraphOptions, type WhyOptions, type PatchOptions, type PatchApplyOptions } from './types.js';
 import { setCommand, buildCommand, validateCommand, graphCommand, whyCommand, patchCommand, patchApplyCommand } from './commands/index.js';
-
-// Early intercept: experimental graph diff helper
-(() => {
-  const args = process.argv.slice(2);
-  if (args[0] === 'graph' && args[1] === 'diff') {
-    const pass = args.slice(2);
-    const require = createRequire(import.meta.url);
-    const tsx = (() => { try { return require.resolve('tsx/dist/cli.mjs'); } catch { return path.resolve('node_modules/tsx/dist/cli.mjs'); }})();
-    const r = spawnSync(process.execPath, [tsx, path.resolve('scripts/graph-diff.ts'), ...pass], { stdio: 'inherit', env: process.env });
-    process.exit(r.status ?? 0);
-  }
-})();
 
 const cli = yargs(hideBin(process.argv))
   .scriptName('dcv')
   .parserConfiguration({ 'camel-case-expansion': false })
-  .option('quiet', { type: 'boolean' });
+  .option('quiet', { type: 'boolean' })
+  .option('config', { type: 'string', describe: 'Path to JSON config file' });
 
 cli.command<SetOptions>('set <expressions..>', 'Set token values', y => y
   .positional('expressions', { type: 'string', array: true })

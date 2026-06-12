@@ -209,7 +209,8 @@ These documents keep the method openly implementable and prevent patent lock-up.
 DCV generates CycloneDX-compliant SBOMs for supply chain transparency:
 
 - **CI Builds:** SBOM artifacts on every CI run (90-day retention)
-- **Releases:** SBOM files (JSON + XML) attached to GitHub releases
+- **Version tags:** SBOM artifacts for release tags
+- **GitHub Releases:** SBOM files (JSON + XML) attached when a GitHub Release is created
 - **Manual:** Run `npx @cyclonedx/cyclonedx-npm` in project root
 
 **Download:**

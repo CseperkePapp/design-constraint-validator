@@ -7,10 +7,9 @@ Complete guide to configuring Design Constraint Validator.
 DCV searches for configuration files in this order:
 
 1. `dcv.config.json`
-2. `dcv.config.js` (ESM module)
-3. `.dcvrc.json`
-4. `package.json` (under `"dcv"` key)
-5. Command-line arguments (highest priority)
+2. `.dcvrc.json`
+3. `package.json` (under `"dcv"` key)
+4. Command-line arguments (highest priority)
 
 **Recommendation:** Use `dcv.config.json` for simplicity.
 
@@ -375,24 +374,9 @@ You can define constraints directly in the config file:
 
 ## JavaScript Config
 
-For dynamic configuration, use a `.js` file:
-
-**dcv.config.js:**
-```javascript
-export default {
-  tokens: process.env.CI ? 'tokens.prod.json' : 'tokens.dev.json',
-  themes: 'themes',
-  
-  validation: {
-    failOn: process.env.CI ? 'warn' : 'error',
-    strict: process.env.CI === 'true'
-  },
-  
-  output: {
-    css: `dist/${process.env.NODE_ENV || 'dev'}/tokens.css`
-  }
-};
-```
+JavaScript config files are not supported by the current synchronous CLI and
+`validate()` API. Use `dcv.config.json`, `.dcvrc.json`, `package.json` under the
+`"dcv"` key, or pass a JSON file with `--config`.
 
 ---
 

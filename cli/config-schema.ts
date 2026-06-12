@@ -4,7 +4,8 @@ export const WcagRuleSchema = z.object({
   foreground: z.string(),
   background: z.string(),
   ratio: z.number().positive().optional(),
-  description: z.string().optional()
+  description: z.string().optional(),
+  backdrop: z.string().optional()
 });
 
 export const ConstraintsSchema = z.object({

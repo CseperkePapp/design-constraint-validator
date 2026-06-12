@@ -102,11 +102,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
-
+      # Build BEFORE test: build artifacts (cli/index.js) are no longer committed
+      # (TASK-007), and test/clean-room.test.ts spawns the compiled CLI. Testing
+      # before building would fail on a clean checkout.
       - name: Build
         run: npm run build
+
+      - name: Test
+        run: npm test
 
       - name: Validate example tokens (demo - expects violations)
         run: node cli/index.js validate --fail-on off

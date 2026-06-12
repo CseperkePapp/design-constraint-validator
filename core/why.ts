@@ -3,7 +3,7 @@ import type { FlatToken } from "./flatten.js";
 export type WhyReport = {
   id: string;
   value: string | number | undefined;
-  raw?: string | number;
+  raw?: unknown;
   refs?: string[];
   provenance: "base" | "theme" | "override" | "unknown";
   dependsOn: string[];     // immediate refs (parents)

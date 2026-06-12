@@ -2,7 +2,7 @@
 
 Use this as the recommended task index shape when adopting the workflow automation kit.
 
-**Next task:** 011
+**Next task:** 012
 
 ## Active Tasks
 
@@ -18,6 +18,7 @@ Use this as the recommended task index shape when adopting the workflow automati
 | 008 | [DTCG 2025.10 stable-spec compliance (CLAUDE)](DONE-TASK-008-CLAUDE-dcv-dtcg-stable-compliance.md) | P2 | done |
 | 009 | [Audit adapters, poset, receipts (CLAUDE)](DONE-TASK-009-CLAUDE-dcv-adapters-poset-audit.md) | P3 | done |
 | 010 | [dcv-mcp MCP server (CODEX)](TASK-010-CODEX-dcv-mcp-server.md) | P2 | todo |
+| 011 | [DCV system code review remediation](DONE-TASK-011-CODEX-dcv-system-code-review-remediation.md) | P1 | done |
 
 ## Completed Tasks
 
@@ -26,7 +27,7 @@ Use this as the recommended task index shape when adopting the workflow automati
 
 ## Creating A New Task
 
-1. Get the next task number (currently: **011**)
+1. Get the next task number (currently: **012**)
 1. Copy the canonical task template into `docs/project-management/tasks/`
 1. Add the task to the Active Tasks table
 1. Run `npm run workflow:test` after task/index edits
