@@ -72,8 +72,8 @@ export function flattenTokens(root: TokenNode): FlattenResult {
   // Second pass: resolve references iteratively
   let changed = true;
   let iterations = 0;
-  const maxIterations = Object.keys(flat).length * 2; // Safety limit
-  
+  const maxIterations = Object.keys(flat).length * 2 + 1; // Safety limit (never 0)
+
   while (changed && iterations < maxIterations) {
     changed = false;
     iterations++;
@@ -108,8 +108,20 @@ export function flattenTokens(root: TokenNode): FlattenResult {
     }
   }
   
-  if (iterations >= maxIterations) {
-    throw new Error('Token resolution exceeded maximum iterations - possible circular reference');
+  // A token still carrying an unresolved "{ref}" placeholder after the fixpoint
+  // means a genuine cycle (a -> b -> a) or a self-reference. An empty or
+  // fully-literal token set resolves cleanly and must never trip this guard —
+  // the old `iterations >= maxIterations` check threw a bogus "circular
+  // reference" error whenever no tokens were found (maxIterations === 0).
+  const unresolved = Object.values(flat).filter(
+    (t) => typeof t.value === 'string' && t.value.includes('{'),
+  );
+  if (unresolved.length > 0) {
+    throw new Error(
+      `Token resolution exceeded maximum iterations - possible circular reference (unresolved: ${unresolved
+        .map((t) => t.id)
+        .join(', ')})`,
+    );
   }
 
   return { flat, edges };

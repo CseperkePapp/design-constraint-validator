@@ -21,7 +21,8 @@ export type DcvConfigParsed = z.infer<typeof DcvConfigSchema>;
 export function validateConfig(raw: unknown): { value?: DcvConfigParsed; errors?: string[] } {
   const res = DcvConfigSchema.safeParse(raw);
   if (!res.success) {
-    return { errors: res.error.errors.map(e => `${e.path.join('.')||'<root>'}: ${e.message}`) };
+    // zod v4 renamed ZodError.errors -> .issues (the .errors getter was removed).
+    return { errors: res.error.issues.map((e) => `${e.path.join('.') || '<root>'}: ${e.message}`) };
   }
   return { value: res.data };
 }

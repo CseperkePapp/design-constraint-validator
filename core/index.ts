@@ -8,3 +8,9 @@
 export type { TokenId, TokenValue } from "./flatten.js";
 export type { ConstraintIssue, ConstraintPlugin, Graph } from "./engine.js";
 export { Engine } from "./engine.js";
+
+// Programmatic convenience API (validate tokens against constraints in one call).
+// Implemented in the CLI layer atop the shared registry; surfaced here as the
+// package's public entry point.
+export { validate } from "../cli/validate-api.js";
+export type { ValidateInput, ValidateResult } from "../cli/validate-api.js";

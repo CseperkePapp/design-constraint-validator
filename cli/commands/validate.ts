@@ -7,7 +7,7 @@ import type { ValidateOptions } from '../types.js';
 import { createValidationResult, createValidationReceipt, writeJsonOutput } from '../json-output.js';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { setupConstraints } from '../constraint-registry.js';
+import { setupConstraints, collectReferencedIds } from '../constraint-registry.js';
 import { printVersionBanner } from '../version-banner.js';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
@@ -19,6 +19,19 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     const crossAxisDebug = process.argv.includes('--cross-axis-debug');
     const plan: (Breakpoint | undefined)[] = bps.length ? bps : [undefined];
     let anyErrors = false; let totalErrors = 0; let totalWarnings = 0;
+    // Coverage tracking for the no-match note (never silently "pass" a file whose
+    // tokens are referenced by no active constraint).
+    let anyConstraintMatched = false; let coverageKnownAll = true; let tokenCount = 0;
+
+    // Reconcile the tokens path: the positional `[tokens-path]` is an alias for
+    // --tokens. The flag wins; warn on a genuine mismatch. undefined => loader default.
+    const flagTokens = _options.tokens;
+    const posTokens = _options['tokens-path'];
+    if (flagTokens && posTokens && flagTokens !== posTokens) {
+      console.error(`warning: both --tokens (${flagTokens}) and positional tokens path (${posTokens}) provided; using --tokens`);
+    }
+    const tokensPath = flagTokens ?? posTokens;
+    const constraintsDir = _options['constraints-dir'] ?? 'themes';
     const argv = process.argv.slice(2);
     const failOnIdx = argv.indexOf('--fail-on');
     type FailOn = 'off' | 'warn' | 'error';
@@ -56,7 +69,7 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     const tStartTotal = globalThis.performance.now();
     for (const bp of plan) {
       const tStart = globalThis.performance.now();
-      let tokens: TokenNode = loadTokensWithBreakpoint(bp);
+      let tokens: TokenNode = loadTokensWithBreakpoint(bp, tokensPath);
       // Optional theme overlay (tokens/themes/<name>.json), mirroring build behavior
       if (_options.theme) {
         const themePath = join('tokens/themes', `${_options.theme}.json`);
@@ -79,11 +92,21 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       const knownIds = new Set(Object.keys(init));
 
       // Discover and attach all constraints via centralized registry
-      setupConstraints(
+      const sources = setupConstraints(
         engine,
-        { config, bp, constraintsDir: 'themes' },
+        { config, bp, constraintsDir },
         { knownIds, crossAxisDebug },
       );
+
+      // Track whether any active constraint actually references a token in this file.
+      const coverage = collectReferencedIds(sources);
+      if (!coverage.coverageKnown) coverageKnownAll = false;
+      tokenCount = Math.max(tokenCount, knownIds.size);
+      if (!anyConstraintMatched) {
+        for (const id of coverage.ids) {
+          if (knownIds.has(id)) { anyConstraintMatched = true; break; }
+        }
+      }
 
       const allIds = new Set(Object.keys(init));
       const issues = engine.evaluate(allIds);
@@ -107,6 +130,13 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       }
     }
     const totalMs = globalThis.performance.now() - tStartTotal;
+    // No-match note: tokens were validated but no active constraint referenced any
+    // of them. Surfaced loudly (stderr + JSON `note`) so a foreign file can never
+    // silently report "0 errors" when nothing was actually checked.
+    const noMatchNote = (tokenCount > 0 && coverageKnownAll && !anyConstraintMatched)
+      ? `No active constraint references any of the ${tokenCount} validated token(s) — nothing was checked. Define constraints in dcv.config.json (constraints.wcag / constraints.thresholds) or point --constraints-dir at your order/cross-axis files.`
+      : undefined;
+    if (noMatchNote) console.error(`note: ${noMatchNote}`);
     // Append aggregate total row if multiple scopes and not already added
     if (rows.length > 1) {
       const agg = rows.reduce((a,b)=>({ rules:a.rules+b.rules, warnings:a.warnings+b.warnings, errors:a.errors+b.errors }), { rules:0,warnings:0,errors:0 });
@@ -125,12 +155,11 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     
     // Handle JSON output mode
     if (outputFormat === 'json') {
-      const result = createValidationResult(allErrors, allWarnings, totalMs, engineVersion);
-      
+      const result = createValidationResult(allErrors, allWarnings, totalMs, engineVersion, noMatchNote);
+
       // If receipt requested, generate full receipt
       if (_options.receipt) {
-        const tokensFile = _options.tokens ?? 'tokens/tokens.example.json';
-        const constraintsDir = 'themes';
+        const tokensFile = tokensPath ?? 'tokens/tokens.example.json';
         const receipt = createValidationReceipt(result, tokensFile, constraintsDir, bps[0], failOn);
         writeJsonOutput(receipt, _options.receipt);
       } else {
