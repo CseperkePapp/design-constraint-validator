@@ -81,7 +81,7 @@ into the credentials follow-up.)
    place, so no long-lived token can expire silently).
 2. Optionally prove end-to-end with a `v2.1.0-rc.0` tag to a `next` dist-tag and
    watch the Actions run before tagging the real `v2.1.0`.
-3. **Resolve the high-severity `picomatch <=2.3.1` (ReDoS) advisory** introduced
-   transitively by `@modelcontextprotocol/sdk` (TASK-010). `npm audit fix`, an
-   `overrides` pin, or an SDK bump — confirm `npm audit --omit=dev` is clean
-   before tagging `v2.1.0`. (See `workflows/TEST-AND-MERGE-010-mcp-server.md`.)
+3. ~~Resolve the high-severity `picomatch <=2.3.1` (ReDoS) advisory.~~
+   **DONE (2026-06-12):** the advisory came from the **unused `fast-glob`**
+   dependency (not the MCP SDK), removed in `task/006-drop-unused-fast-glob`.
+   `npm audit --omit=dev` now reports 0 vulnerabilities.
