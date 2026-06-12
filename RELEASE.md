@@ -175,11 +175,23 @@ and:
    - Value: paste your npm token
    - Click "Add secret"
 
-3. Push a tag to trigger the workflow:
+3. Tag the release commit to trigger the workflow:
+
    ```bash
-   npm version patch  # or minor/major
-   git push --tags
+   # Case A — package.json is NOT yet at the target version: bump it (this also
+   # creates the matching tag):
+   npm version minor   # or patch / major
+
+   # Case B — package.json is ALREADY at the target version (do NOT run
+   # `npm version`, or you'll over-bump). Just create the matching tag:
+   git tag vX.Y.Z
+
+   # Either case, push commits + tag:
+   git push && git push --tags
    ```
+
+   `publish.yml` fails the run if the tag does not match `package.json`'s version,
+   so a mismatched tag can't publish the wrong version.
 
 The workflow will handle publishing automatically.
 
