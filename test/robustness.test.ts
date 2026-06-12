@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseCssColor } from '../core/color.js';
 import { flattenTokens } from '../core/flatten.js';
+import { validate } from '../core/index.js';
 import { ThresholdPlugin } from '../core/constraints/threshold.js';
 import { Engine } from '../core/engine.js';
 
@@ -51,11 +52,27 @@ describe('flatten: circular & garbage handling', () => {
   it('throws on an unresolvable reference', () => {
     expect(() => flattenTokens({ a: { $value: '{nonexistent}' } })).toThrow(/resolve/i);
   });
-  it('KNOWN WEAKNESS: array/null roots silently flatten to empty (no error)', () => {
-    // Documented gap from the audit — a non-object token root is silently treated
-    // as empty (validates ok). Pinned here as current behavior; candidate for a
-    // future "reject malformed roots" task.
-    expect(flattenTokens([] as never).flat).toEqual({});
-    expect(flattenTokens(null as never).flat).toEqual({});
+  it('rejects non-object token roots (TASK-017 hardening — fail closed)', () => {
+    // Previously these silently flattened to an empty, passing set. Now they
+    // throw a descriptive error instead of validating garbage as ok.
+    expect(() => flattenTokens([] as never)).toThrow(/must be a JSON object/);
+    expect(() => flattenTokens(null as never)).toThrow(/must be a JSON object/);
+    expect(() => flattenTokens('scalar' as never)).toThrow(/must be a JSON object/);
+    expect(() => flattenTokens(42 as never)).toThrow(/must be a JSON object/);
+    // An empty object is still valid — it just has no tokens.
+    expect(flattenTokens({}).flat).toEqual({});
+  });
+});
+
+describe('validate(): non-object token roots reject (TASK-017)', () => {
+  it('throws on null / array / scalar inline tokens', () => {
+    expect(() => validate({ tokens: null as never })).toThrow(/must be a JSON object/);
+    expect(() => validate({ tokens: [] as never })).toThrow(/must be a JSON object/);
+    expect(() => validate({ tokens: 'x' as never })).toThrow(/must be a JSON object/);
+  });
+  it('still accepts an empty object (ok, no tokens)', () => {
+    const r = validate({ tokens: {} });
+    expect(r.ok).toBe(true);
+    expect(r.counts.checked).toBe(0);
   });
 });

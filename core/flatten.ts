@@ -29,6 +29,15 @@ const REF_RE = /\{([a-z0-9_.-]+)\}/gi;
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function flattenTokens(root: TokenNode): FlattenResult {
+  // Fail closed on a malformed token root (TASK-017). A non-object root — null,
+  // an array, or a scalar — previously walked to a silently-empty set that
+  // "validated" with ok:true; that hid garbage input. The token root must be a
+  // JSON object. (An empty object `{}` is still valid — it just has no tokens.)
+  if (root === null || typeof root !== 'object' || Array.isArray(root)) {
+    const got = root === null ? 'null' : Array.isArray(root) ? 'array' : typeof root;
+    throw new Error(`Token root must be a JSON object (got ${got}).`);
+  }
+
   const flat: Record<TokenId, FlatToken> = {};
   const edges: Array<[TokenId, TokenId]> = [];
 

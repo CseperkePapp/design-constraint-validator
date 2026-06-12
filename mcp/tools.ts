@@ -138,7 +138,10 @@ function asJsonObject(value: unknown, label: string): JsonObject {
 
 function resolveTokens(input: TokenInput): TokenNode {
   if (input.tokens !== undefined) {
-    return input.tokens as unknown as TokenNode;
+    // TASK-017: validate inline tokens at the handler boundary. A direct caller
+    // (not going through the MCP SDK's schema check) could otherwise pass an
+    // array/null/scalar that silently flattened to an empty, passing set.
+    return asJsonObject(input.tokens, 'tokens') as unknown as TokenNode;
   }
 
   if (input.tokensPath !== undefined) {
@@ -149,7 +152,9 @@ function resolveTokens(input: TokenInput): TokenNode {
 }
 
 function constraints(input: TokenInput): DcvConfig['constraints'] | undefined {
-  return input.constraints as DcvConfig['constraints'] | undefined;
+  if (input.constraints === undefined) return undefined;
+  // TASK-017: reject malformed inline constraints at the boundary.
+  return asJsonObject(input.constraints, 'constraints') as unknown as DcvConfig['constraints'];
 }
 
 export async function validateTool(input: ValidateToolInput): Promise<ToolResponse<ValidateResult>> {
@@ -159,7 +164,7 @@ export async function validateTool(input: ValidateToolInput): Promise<ToolRespon
     }
 
     return validate({
-      ...(input.tokens !== undefined ? { tokens: input.tokens as unknown as TokenNode } : {}),
+      ...(input.tokens !== undefined ? { tokens: asJsonObject(input.tokens, 'tokens') as unknown as TokenNode } : {}),
       ...(input.tokens === undefined && input.tokensPath !== undefined ? { tokensPath: input.tokensPath } : {}),
       ...(input.constraints !== undefined ? { constraints: constraints(input) } : {}),
       ...(input.configPath !== undefined ? { configPath: input.configPath } : {}),
