@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [2.1.0] - 2026-06-12
 
+> **Note on 2.0.2:** `v2.0.2` was tagged and committed but **never published to npm**
+> — the publish workflow triggered on `release: published`, while the release
+> scripts only pushed a tag and never created a GitHub Release, so nothing ran.
+> npm `latest` stayed at 2.0.1. The 2.0.2 changes (supply-chain CI hardening) ship
+> here in 2.1.0; 2.0.2 will not be published as its own version.
+
+### Release process
+
+- Publishing is now **tag-push driven**: pushing a `vX.Y.Z` tag runs
+  `.github/workflows/publish.yml`, which builds, runs checks, publishes with
+  provenance, and then **polls the npm registry to confirm the version is live**
+  (failing the run if not). This removes the silent-failure gap that stranded
+  2.0.2 and replaces the manual "now run npm publish" step.
+
 ### Fixed
 
 - `--tokens` / the positional tokens path is now honored. Previously it was parsed

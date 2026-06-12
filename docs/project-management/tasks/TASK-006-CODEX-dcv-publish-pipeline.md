@@ -1,8 +1,9 @@
 # Task 006 CODEX: DCV — diagnose and fix the silent release pipeline
 
-**Status:** todo
+**Status:** in-progress
 **Priority:** P1
 **Created:** 2026-06-11
+**Updated:** 2026-06-12
 **Effort:** S
 **Dependencies:** none
 **Phase:** DCV v2.1.0
@@ -44,8 +45,39 @@ The actual 2.1.0 release content (fix task), provenance/SLSA attestations beyond
 
 ## Acceptance criteria
 
-- [ ] Root cause for the missing 2.0.2 publish identified and written down (one paragraph in the task notes or CHANGELOG).
-- [ ] Exactly one release flow exists; the other is deleted, not dormant.
-- [ ] Credentials story verified working (or migrated to trusted publishing/OIDC).
-- [ ] Registry-verification step in the workflow proves future releases land or fail loudly.
-- [ ] Dry-run or test release demonstrates the flow end-to-end (a `2.1.0-rc.0` to a dist-tag is an acceptable proof if you don't want to burn a version number).
+- [x] Root cause for the missing 2.0.2 publish identified and written down (in CHANGELOG 2.1.0 note + Resolution below).
+- [x] Exactly one release flow exists; the other is deleted, not dormant. (`publish.yml` now triggers on tag push only; the `release: published` trigger is gone, and the `release:*` scripts no longer tell you to `npm publish` manually.)
+- [ ] Credentials story verified working (or migrated to trusted publishing/OIDC). *(Cannot verify from this environment — no `gh`/registry access. Needs an owner to confirm the `NPM_TOKEN` secret exists and is unexpired, or migrate to npm trusted publishing/OIDC — recommended, since the existing token already silently expiring is a candidate root cause. See Resolution.)*
+- [x] Registry-verification step in the workflow proves future releases land or fail loudly. (Polls `npm view …@<version>` for 10×15s after publish; `::error` + exit 1 if absent.)
+- [ ] Dry-run or test release demonstrates the flow end-to-end. *(`npm publish --dry-run` verified locally — packs 2.1.0, 191 files. A live CI proof (`v2.1.0-rc.0` tag → Actions run) is intentionally deferred: we are not publishing yet.)*
+
+---
+
+## Resolution (2026-06-12, Claude)
+
+**Root cause.** `publish.yml` triggered only on `release: published`, but the
+`release:*` npm scripts ran `npm version … && git push && git push --tags` and
+printed "Now run: npm publish" — they pushed a **tag** but never created a GitHub
+**Release**, so the `release: published` event never fired. Two half-flows
+(automated-on-release vs manual-npm-publish) both existed and neither completed,
+so `v2.0.2` was tagged, committed, and never published. (A secondary possibility
+— an expired/missing `NPM_TOKEN` — cannot be ruled out from here and is folded
+into the credentials follow-up.)
+
+**Fix (this task).**
+
+- `publish.yml` now triggers on **`push` of a `vX.Y.Z` tag** (plus `workflow_dispatch`
+  as a manual fallback). One flow, no "create a Release" gap.
+- Added a **tag↔package.json version guard** and a **registry-verification step**
+  that fails the run loudly if the version is not live on npm after publish.
+- `release:*` scripts updated: pushing the tag is the whole release; CI publishes
+  and verifies. The misleading manual-publish echo is gone.
+- CHANGELOG records that 2.0.2 was tagged-but-never-published and ships in 2.1.0.
+
+**Owner follow-up before the first real release (we are not publishing yet):**
+
+1. Confirm `NPM_TOKEN` exists and is valid, **or** migrate to npm trusted
+   publishing/OIDC (preferred — `id-token: write` + `--provenance` are already in
+   place, so no long-lived token can expire silently).
+2. Optionally prove end-to-end with a `v2.1.0-rc.0` tag to a `next` dist-tag and
+   watch the Actions run before tagging the real `v2.1.0`.

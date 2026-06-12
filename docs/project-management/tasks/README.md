@@ -13,7 +13,7 @@ Use this as the recommended task index shape when adopting the workflow automati
 | 003 | [AI capability assessment for DCV](TASK-003-ai-capability-assessment.md) | P2 | planning |
 | 004 | [DCV v2.1.0 — make the published package usable (CLAUDE)](TASK-004-CLAUDE-dcv-fix-tokens-flag-and-readme.md) | P1 | in-progress |
 | 005 | [Fix OKLCH→sRGB conversion (CODEX)](TASK-005-CODEX-dcv-oklch-contrast-bug.md) | P1 | in-progress |
-| 006 | [Diagnose & fix silent release pipeline (CODEX)](TASK-006-CODEX-dcv-publish-pipeline.md) | P1 | todo |
+| 006 | [Diagnose & fix silent release pipeline (CODEX)](TASK-006-CODEX-dcv-publish-pipeline.md) | P1 | in-progress |
 | 007 | [Repo hygiene — de-commit build artifacts (CODEX)](DONE-TASK-007-CODEX-dcv-repo-hygiene.md) | P2 | done |
 | 008 | [DTCG 2025.10 stable-spec compliance (CLAUDE)](TASK-008-CLAUDE-dcv-dtcg-stable-compliance.md) | P2 | todo |
 | 009 | [Audit adapters, poset, receipts (CLAUDE)](TASK-009-CLAUDE-dcv-adapters-poset-audit.md) | P3 | todo |
