@@ -26,9 +26,11 @@ This is **not** a schema linter; it's a **reasoning validator** for values and r
 # Local (recommended)
 npm i -D design-constraint-validator
 
-# One-off run
-npx dcv --help
+# One-off run, no install (the bin name `dcv` belongs to an unrelated package)
+npx design-constraint-validator --help
 ```
+
+After a local install, the shorter `dcv` bin is available (e.g. `npx dcv --help`).
 
 **Requirements:** Node.js ≥ 18.x (ESM)
 
@@ -63,14 +65,18 @@ cat > dcv.config.json <<'JSON'
 JSON
 
 # 3. Validate (positional path or --tokens; exits non-zero on violations)
-npx dcv validate tokens.json --summary table
+npx design-constraint-validator validate tokens.json --summary table
 
 # Explain one token (the tokenId is required)
-npx dcv why color.text --tokens tokens.json --format table
+npx design-constraint-validator why color.text --tokens tokens.json --format table
 
 # Export the dependency graph
-npx dcv graph --tokens tokens.json --format mermaid > graph.mmd
+npx design-constraint-validator graph --tokens tokens.json --format mermaid > graph.mmd
 ```
+
+> These one-offs use the full package name because the bare `dcv` bin name on npm
+> belongs to an unrelated package. After `npm i -D design-constraint-validator`,
+> use the shorter `npx dcv …`.
 
 **Example output** (`validate`):
 

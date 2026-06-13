@@ -94,7 +94,7 @@ dcv validate --budget-total-ms 5000
 
 **Table (default):**
 ```
-design-constraint-validator v2.1.0 | https://github.com/CseperkePapp/design-constraint-validator#readme
+design-constraint-validator vX.Y.Z | https://github.com/CseperkePapp/design-constraint-validator#readme
 validate: 1 error(s), 0 warning(s)
 ERROR threshold  control.size.min @ Touch target (WCAG / Apple HIG) - control.size.min >= 44px violated: 30px
 ```
@@ -121,12 +121,12 @@ ERROR threshold  control.size.min @ Touch target (WCAG / Apple HIG) - control.si
   ],
   "stats": {
     "durationMs": 2,
-    "engineVersion": "2.1.0",
+    "engineVersion": "X.Y.Z",
     "timestamp": "2026-06-12T13:37:03.224Z"
   },
   "dcv": {
     "name": "design-constraint-validator",
-    "version": "2.1.0",
+    "version": "X.Y.Z",
     "repository": "https://github.com/CseperkePapp/design-constraint-validator#readme"
   }
 }
@@ -350,8 +350,6 @@ dcv build [options]
 
 --output <path>       # Output file path
 
---watch              # Watch mode (rebuild on change)
-
 --theme <name>       # Apply named theme
 
 --mapper <path>      # CSS variable mapping manifest
@@ -359,6 +357,8 @@ dcv build [options]
 --dry-run            # Print output without writing
 
 --all-formats        # Generate all formats
+
+--tokens <path>      # Tokens file (default: tokens/tokens.example.json)
 ```
 
 **Examples:**
@@ -376,14 +376,8 @@ dcv build --format json --output tokens.json
 # Build all formats
 dcv build --all-formats
 
-# Watch mode
-dcv build --format css --output tokens.css --watch
-
-# Dry run (preview)
+# Dry run (preview — prints to stdout, writes nothing)
 dcv build --format css --dry-run
-
-# Apply breakpoint
-dcv build --format css --output tokens-md.css --breakpoint md
 ```
 
 **Output Examples:**

@@ -5,7 +5,8 @@ DCV uses **partial orders (posets)** for token relationships — not total order
 ## Transitive Closure
 Monotonic chains imply transitivity: h1 ≥ h2 ≥ h3 → engine checks h1 ≥ h3 automatically via DAG.
 
-Example Policy (`policies/poset.json`):
+Example order file (`themes/typography.order.json` — discovered by axis name in
+the constraints dir):
 ```json
 {
   "order": [
@@ -13,8 +14,10 @@ Example Policy (`policies/poset.json`):
     ["typography.size.h2", ">=", "typography.size.h3"]
   ]
 }
-```` 
-npx dcv validate tokens.json --policy poset.json → Flags if h1 < h3.
+```
+Order files are auto-discovered from the constraints dir (default `themes/`; use
+`--constraints-dir <dir>` for another). With the file above present,
+`npx dcv validate tokens.json` flags `h1 < h3` (transitive).
 
 ## Anti-Chains
 Incomparable elements (e.g., colors in a palette): Use Hasse export to visualize.
@@ -26,7 +29,7 @@ Example: when: { size: "<16px", weight: "<400" }, require: { contrast: ">=7:1" }
 
 ## 3D Spaces (Size × Weight × Contrast)
 Cross-axis handles incomparables: Some combos valid, others not.
-Policy:
+Cross-axis rules (`themes/cross-axis.rules.json`, discovered from the constraints dir):
 ```json
 {
   "rules": [
@@ -45,9 +48,9 @@ Policy:
 
 ** CLI Demo:** Add to Quick Start:
 ```bash
-# Poset Check
-npx dcv validate ./examples/poset-fail.tokens.json --policy poset.json
-npx dcv why typography --format table  # Shows transitive violation
+# Poset Check (order files auto-discovered from the constraints dir; --constraints-dir for a custom one)
+npx dcv validate ./examples/poset-fail.tokens.json --constraints-dir ./themes
+npx dcv why typography.size.h1 --format table  # Shows transitive violation
 ````
 
 Why: Proves rigor — basic examples → poset power.

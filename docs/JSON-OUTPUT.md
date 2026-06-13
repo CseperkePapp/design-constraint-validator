@@ -106,12 +106,12 @@ Field notes:
   ],
   "stats": {
     "durationMs": 2,
-    "engineVersion": "2.1.0",
+    "engineVersion": "X.Y.Z",
     "timestamp": "2026-06-12T13:37:03.224Z"
   },
   "dcv": {
     "name": "design-constraint-validator",
-    "version": "2.1.0",
+    "version": "X.Y.Z",
     "repository": "https://github.com/CseperkePapp/design-constraint-validator#readme"
   }
 }

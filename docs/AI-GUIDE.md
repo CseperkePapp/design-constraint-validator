@@ -3,19 +3,20 @@
 Quick reference for AI assistants helping users with
 `design-constraint-validator`.
 
-## Repository Workflow Skills
+## Repository Agents
 
-DCV includes reusable workflow skills under `.github/skills/` for disciplined
-task execution:
+DCV ships two repo-specific agent playbooks under `.github/agents/` (tracked):
 
-- `.github/skills/workflow-investigation/SKILL.md` for risky or cross-cutting
-  changes before editing.
-- `.github/skills/workflow-qa-evidence/SKILL.md` for acceptance-criteria-based
-  verification and evidence capture.
-- `.github/skills/workflow-docs-sync/SKILL.md` when documentation and task
-  surfaces must stay synchronized.
+- `.github/agents/constraint-author.md` — scaffold a new constraint plugin
+  end-to-end (never touches verified color math; additive + tests required).
+- `.github/agents/release-captain.md` — drive an npm release via the tag-push
+  flow (tag-push only; never `npm publish` by hand; stop at any failed gate).
 
-These are workflow skills, not DCV runtime/domain logic.
+These orchestrate existing commands and guardrails — not DCV runtime/domain logic.
+
+> The maintainer also keeps process **skills** under `.github/skills/`
+> (investigation, qa-evidence, docs-sync), but those are local-only (gitignored)
+> and are not present in public clones.
 
 ## Core Commands
 

@@ -63,8 +63,12 @@ npx dcv validate ./examples/minimal/tokens.example.json
 
 npx dcv validate ./examples/failing/contrast-fail.tokens.json
 
-npx dcv validate ./examples/style-dictionary/output.tokens.json --policy ./themes/policies/aa.json
+npx dcv validate ./examples/style-dictionary/output.tokens.json
 ```
+
+Constraints come from a `dcv.config.json` in the cwd (or `--config <file>`) plus
+order/cross-axis files in the constraints dir (`--constraints-dir`, default
+`themes/`). There is no `--policy` flag.
 
 Refer to each example’s `README.md` for the exact commands and context.
 

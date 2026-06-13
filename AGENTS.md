@@ -46,17 +46,21 @@ npm run check           # typecheck + lint + build + test (the full gate)
 
 ## Workflow conventions (one branch per task)
 
+> The task ledger and workflow system under `docs/project-management/` are the
+> maintainer's **local-only** tooling (gitignored — not present in public clones),
+> as are the `src/__tests__` integrity tests. External contributors can ignore the
+> ledger mechanics below; the load-bearing rules are one-branch-per-task and the
+> public gate (`npm run check`).
+
 - **One branch per task**, never bundle tasks: `task/NNN-short-description`. Base
-  on latest `main`, or stack on a dependency's branch. See
-  `docs/project-management/PROJECT-WORKFLOW-OVERLAYS.md` → Branch Naming.
+  on latest `main`, or stack on a dependency's branch.
 - **Solo-sequential**: drive one task to merge before the next; no parallel agent
   implementation on concurrent branches. Codex is brought in deliberately for a
-  scoped task or review — see PROJECT-WORKFLOW-OVERLAYS.md → Collaboration Model.
+  scoped task or review.
 - The **task ledger** is `docs/project-management/tasks/` (active + `DONE-TASK-…`
-  for completed). Update status, check acceptance boxes, and run
-  `npm run task:sync` + `npm run rename-done-tasks` on closeout. Each task gets a
-  `docs/project-management/workflows/TEST-AND-MERGE-NNN-*.md` record at merge.
-- The full workflow system lives under `docs/project-management/000-WORKFLOW-SYSTEM/`.
+  for completed): update status and check acceptance boxes on closeout. Ledger
+  maintenance and integrity checks are part of the local-only workflow system
+  (there is no public `npm run` script for them).
 
 ## Releasing
 
