@@ -137,12 +137,15 @@ function findOrderOp(descriptors: ConstraintDescriptor[], kind: 'order' | 'light
   return undefined;
 }
 
-// mirrors the px-default parser in core/constraints/threshold.ts
+// Mirrors the px-default parser in core/constraints/threshold.ts (incl. `em` and
+// the real-number guard) so `explain` agrees with the validator (TASK-034).
 function parseThresholdPx(v: string): number | null {
-  const m = v.trim().match(/^([0-9.]+)\s*(px|rem)?$/i);
+  const m = v.trim().match(/^(\d*\.?\d+)\s*(px|rem|em)?$/i);
   if (!m) return null;
   const n = parseFloat(m[1]);
-  return (m[2] || 'px').toLowerCase() === 'rem' ? n * 16 : n;
+  if (!Number.isFinite(n)) return null;
+  const unit = (m[2] || 'px').toLowerCase();
+  return unit === 'rem' || unit === 'em' ? n * 16 : n;
 }
 
 function round2(n: number): number {

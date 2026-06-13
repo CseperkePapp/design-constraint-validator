@@ -138,13 +138,22 @@ export function discoverConstraints(opts: DiscoveryOptions): ConstraintSource[] 
     sources.push({ type: 'custom-threshold', rules });
   }
 
+  // A breakpoint uses its own `<axis>.<bp>.order.json` when present, but MUST fall
+  // back to the global `<axis>.order.json` otherwise — without this, any axis
+  // lacking a per-bp file (e.g. spacing) contributed ZERO constraints under
+  // --breakpoint/--all-breakpoints, a silent false-pass (TASK-034).
+  const orderPathFor = (base: string): string | undefined => {
+    const bpPath = bp ? join(basePath, constraintsDir, `${base}.${bp}.order.json`) : undefined;
+    if (bpPath && existsSync(bpPath)) return bpPath;
+    const globalPath = join(basePath, constraintsDir, `${base}.order.json`);
+    return existsSync(globalPath) ? globalPath : undefined;
+  };
+
   // 5. Order files (monotonic constraints)
   const axes = ['typography', 'spacing', 'layout'] as const;
   for (const axis of axes) {
-    const suffix = bp ? `.${bp}` : '';
-    const orderPath = join(basePath, constraintsDir, `${axis}${suffix}.order.json`);
-
-    if (existsSync(orderPath)) {
+    const orderPath = orderPathFor(axis);
+    if (orderPath) {
       try {
         const data = JSON.parse(readFileSync(orderPath, 'utf8'));
         const orders: OrderRule[] = data.order || [];
@@ -157,11 +166,9 @@ export function discoverConstraints(opts: DiscoveryOptions): ConstraintSource[] 
     }
   }
 
-  // 6. Color lightness order files
-  const suffix = bp ? `.${bp}` : '';
-  const colorOrderPath = join(basePath, constraintsDir, `color${suffix}.order.json`);
-
-  if (existsSync(colorOrderPath)) {
+  // 6. Color lightness order files (same bp → global fallback)
+  const colorOrderPath = orderPathFor('color');
+  if (colorOrderPath) {
     try {
       const data = JSON.parse(readFileSync(colorOrderPath, 'utf8'));
       const orders: OrderRule[] = data.order || [];

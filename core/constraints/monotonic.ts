@@ -49,11 +49,14 @@ export function MonotonicPlugin(
 // silently skipping the rule). `rem`/`em` are 16px-relative. Returns null only for
 // genuinely unparseable operands (e.g. "50%", "10vw") — callers warn, not skip.
 export const parseSize = (v: unknown): number | null => {
-  if (typeof v === "number") return v; // bare number == px
+  if (typeof v === "number") return Number.isFinite(v) ? v : null; // bare number == px
   if (typeof v !== "string") return null;
-  const m = v.trim().match(/^([0-9.]+)\s*(px|rem|em)?$/i);
+  // Real number only: rejects ".", "5.", "1.2.3px" (which previously slipped
+  // through `[0-9.]+` + parseFloat as NaN/garbage and became spurious errors).
+  const m = v.trim().match(/^(\d*\.?\d+)\s*(px|rem|em)?$/i);
   if (!m) return null;
   const num = parseFloat(m[1]);
+  if (!Number.isFinite(num)) return null;
   const unit = (m[2] || "px").toLowerCase();
   return unit === "rem" || unit === "em" ? num * 16 : num; // px and unitless as-is
 };

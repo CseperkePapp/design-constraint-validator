@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { Engine } from '../core/engine.js';
 import { MonotonicPlugin, parseSize } from '../core/constraints/monotonic.js';
 import { ThresholdPlugin } from '../core/constraints/threshold.js';
+import { collectReferencedIds } from '../cli/constraint-registry.js';
 import { validate } from '../core/index.js';
 
 /**
@@ -16,7 +19,17 @@ describe('TASK-031: size value coercion', () => {
     expect(parseSize('16px')).toBe(16);
     expect(parseSize('1rem')).toBe(16);
     expect(parseSize('1em')).toBe(16);
+    expect(parseSize('.5px')).toBe(0.5);
     expect(parseSize('50%')).toBeNull(); // genuinely unparseable
+  });
+
+  it('parseSize rejects degenerate/garbage numerics (TASK-034: no NaN/partial parses)', () => {
+    expect(parseSize('.')).toBeNull();
+    expect(parseSize('..')).toBeNull();
+    expect(parseSize('5.')).toBeNull();
+    expect(parseSize('1.2.3px')).toBeNull(); // was partially parsed to 1.2
+    expect(parseSize(NaN)).toBeNull();
+    expect(parseSize(Infinity)).toBeNull();
   });
 
   it('monotonic catches an out-of-order violation with NUMERIC values', () => {
@@ -38,6 +51,38 @@ describe('TASK-031: size value coercion', () => {
     const issues = MonotonicPlugin([['a', '>=', 'b']], parseSize).evaluate(engine, new Set(['a', 'b']));
     expect(issues).toHaveLength(1);
     expect(issues[0].level).toBe('warn');
+  });
+});
+
+describe('TASK-034: breakpoint falls back to the global order file', () => {
+  it('catches a global-order violation under --breakpoint when no per-bp file exists', () => {
+    const dir = join('dist', 'test-bp-fallback');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'spacing.order.json'), JSON.stringify({ order: [['s.b', '>=', 's.a']] }));
+    try {
+      const cfg = { enableBuiltInWcagDefaults: false, enableBuiltInThreshold: false };
+      const tokens = { s: { a: { $value: '4px' }, b: { $value: '2px' } } }; // b(2) >= a(4) violated
+      const global = validate({ tokens, constraints: cfg, constraintsDir: dir });
+      const bp = validate({ tokens, constraints: cfg, constraintsDir: dir, breakpoint: 'sm' });
+      expect(global.ok).toBe(false);
+      expect(bp.ok).toBe(false); // was a false PASS before the fallback
+      expect(bp.violations.some((v) => v.ruleId === 'monotonic')).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('TASK-034: cross-axis enumeration tolerates a non-array rules field', () => {
+  it('does not throw when rules is not an array', () => {
+    const dir = join('dist', 'test-ca-nonarray');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'cross-axis.rules.json'), JSON.stringify({ rules: { notAnArray: true } }));
+    try {
+      expect(() => collectReferencedIds([{ type: 'cross-axis-file', path: join(dir, 'cross-axis.rules.json') }])).not.toThrow();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

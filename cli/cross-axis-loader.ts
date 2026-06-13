@@ -77,8 +77,10 @@ export function loadCrossAxisRulesFromFile(path: string): RawCrossAxisRule[] | u
   }
 
   try {
-    const data = JSON.parse(readFileSync(path, 'utf8')) as { rules: RawCrossAxisRule[] };
-    return data.rules || [];
+    const data = JSON.parse(readFileSync(path, 'utf8')) as { rules?: unknown };
+    // Guard non-array `rules` (e.g. {"rules":{...}}) — otherwise downstream
+    // `for...of` throws "rules is not iterable" and aborts validate (TASK-034).
+    return Array.isArray(data?.rules) ? (data.rules as RawCrossAxisRule[]) : [];
   } catch {
     // Return undefined on parse errors (consistent with silent failure behavior)
     return undefined;
