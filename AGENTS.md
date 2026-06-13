@@ -62,8 +62,10 @@ verify on the registry). Never `npm publish` by hand. See [RELEASE.md](RELEASE.m
 
 ## MCP server
 
-DCV ships an MCP server (`dcv-mcp`, `mcp/`) exposing read-only `validate`, `why`,
-and `graph` tools over stdio. Setup is documented in
+DCV ships an MCP server (`dcv-mcp`, `mcp/`) exposing six read-only tools over
+stdio: `validate`, `why`, `graph`, and the derivation tools `list-constraints`,
+`explain`, and `suggest-fix` (violations → verified suggestions, no writes).
+Setup and the agent loop are documented in
 [docs/AI-GUIDE.md](docs/AI-GUIDE.md#mcp-server-dcv-mcp).
 
 ## Where to read more
