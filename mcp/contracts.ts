@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ConstraintsSchema } from '../cli/config-schema.js';
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 
@@ -20,7 +22,7 @@ export const tokenInputShape = {
     .optional()
     .describe('Inline DTCG-style token tree. Takes precedence over tokensPath.'),
   tokensPath: z.string().optional().describe('Path to a token JSON file on the server filesystem.'),
-  constraints: jsonObjectSchema
+  constraints: ConstraintsSchema
     .optional()
     .describe('Inline constraints block from dcv.config.json. Takes precedence over configPath.'),
   configPath: z.string().optional().describe('Path to a JSON DCV config file.'),

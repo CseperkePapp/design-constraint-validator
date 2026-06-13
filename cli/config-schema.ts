@@ -8,8 +8,19 @@ export const WcagRuleSchema = z.object({
   backdrop: z.string().optional()
 });
 
+export const ThresholdRuleSchema = z.object({
+  id: z.string(),
+  op: z.enum(['<=', '>=']),
+  valuePx: z.number(),
+  where: z.string().optional(),
+  level: z.enum(['error', 'warn']).optional()
+});
+
 export const ConstraintsSchema = z.object({
-  wcag: z.array(WcagRuleSchema).optional()
+  enableBuiltInWcagDefaults: z.boolean().optional(),
+  enableBuiltInThreshold: z.boolean().optional(),
+  wcag: z.array(WcagRuleSchema).optional(),
+  thresholds: z.array(ThresholdRuleSchema).optional()
 }).passthrough();
 
 export const DcvConfigSchema = z.object({

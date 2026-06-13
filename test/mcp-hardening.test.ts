@@ -11,6 +11,10 @@ function errMessage(r: unknown): string | undefined {
   return (r as { error?: { message?: string } })?.error?.message;
 }
 
+function errIssues(r: unknown): string[] {
+  return ((r as { error?: { details?: { issues?: string[] } } })?.error?.details?.issues) ?? [];
+}
+
 describe('MCP hardening: garbage inline tokens are rejected (fail closed)', () => {
   for (const bad of [null, [1, 2], 'a-string', 42, true]) {
     it(`validate rejects tokens=${JSON.stringify(bad)} with a structured error`, async () => {
@@ -41,6 +45,34 @@ describe('MCP hardening: garbage inline tokens are rejected (fail closed)', () =
     expect(r.ok).toBe(false);
     expect(errMessage(r)).toMatch(/must be a JSON object/);
   });
+
+  for (const [label, constraints, path] of [
+    ['wcag is not an array', { wcag: 'bad' }, 'constraints.wcag'],
+    [
+      'wcag ratio is not numeric',
+      { wcag: [{ foreground: 'color.a', background: 'color.b', ratio: '4.5' }] },
+      'constraints.wcag.0.ratio',
+    ],
+    ['thresholds is not an array', { thresholds: 'bad' }, 'constraints.thresholds'],
+    [
+      'threshold op is invalid',
+      { thresholds: [{ id: 'control.size.min', op: '~=', valuePx: 44 }] },
+      'constraints.thresholds.0.op',
+    ],
+    ['built-in WCAG toggle is not boolean', { enableBuiltInWcagDefaults: 'false' }, 'constraints.enableBuiltInWcagDefaults'],
+    ['built-in threshold toggle is not boolean', { enableBuiltInThreshold: 'false' }, 'constraints.enableBuiltInThreshold'],
+  ] as const) {
+    it(`rejects malformed inline constraints object: ${label}`, async () => {
+      const r = await validateTool({
+        tokens: { color: { a: { $value: '#000000' }, b: { $value: '#ffffff' } } },
+        constraints: constraints as never,
+      });
+      expect(r.ok).toBe(false);
+      expect(errMessage(r)).toMatch(/constraint config schema/);
+      expect(errIssues(r).join('\n')).toContain(path);
+      expect(r).not.toHaveProperty('counts');
+    });
+  }
 });
 
 describe('MCP hardening: well-formed requests still work', () => {

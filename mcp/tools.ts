@@ -6,6 +6,7 @@ import type { z } from 'zod';
 import { suggestIds } from '../core/cli-format.js';
 import { flattenTokens, type TokenNode } from '../core/flatten.js';
 import { explain, type WhyReport } from '../core/why.js';
+import { ConstraintsSchema } from '../cli/config-schema.js';
 import { validate, type ValidateResult } from '../cli/validate-api.js';
 import type { DcvConfig } from '../cli/types.js';
 import type { Breakpoint } from '../core/breakpoints.js';
@@ -52,7 +53,7 @@ export type WhyToolResult = { ok: true } & WhyReport;
 interface TokenInput {
   tokens?: JsonObject;
   tokensPath?: string;
-  constraints?: JsonObject;
+  constraints?: unknown;
   configPath?: string;
   constraintsDir?: string;
   breakpoint?: Breakpoint;
@@ -136,6 +137,13 @@ function asJsonObject(value: unknown, label: string): JsonObject {
   throw new ToolExecutionError('invalid_input', `${label} must be a JSON object.`);
 }
 
+function zodIssueMessages(error: z.ZodError): string[] {
+  return error.issues.map((issue) => {
+    const path = issue.path.length > 0 ? `.${issue.path.join('.')}` : '';
+    return `constraints${path}: ${issue.message}`;
+  });
+}
+
 function resolveTokens(input: TokenInput): TokenNode {
   if (input.tokens !== undefined) {
     // TASK-017: validate inline tokens at the handler boundary. A direct caller
@@ -154,7 +162,14 @@ function resolveTokens(input: TokenInput): TokenNode {
 function constraints(input: TokenInput): DcvConfig['constraints'] | undefined {
   if (input.constraints === undefined) return undefined;
   // TASK-017: reject malformed inline constraints at the boundary.
-  return asJsonObject(input.constraints, 'constraints') as unknown as DcvConfig['constraints'];
+  const object = asJsonObject(input.constraints, 'constraints');
+  const parsed = ConstraintsSchema.safeParse(object);
+  if (!parsed.success) {
+    throw new ToolExecutionError('invalid_input', 'constraints must match DCV constraint config schema.', {
+      issues: zodIssueMessages(parsed.error),
+    });
+  }
+  return parsed.data;
 }
 
 export async function validateTool(input: ValidateToolInput): Promise<ToolResponse<ValidateResult>> {
