@@ -61,13 +61,13 @@ export async function buildCommand(options: BuildOptions & { [k: string]: any })
     writeFileSync(outPath, css, 'utf8');
     console.log(`CSS tokens written to ${outPath}${manifest ? ' (manifest mapper applied)' : ''}`);
   } else if (format === 'json') {
+    if (dryRun) { console.log(emitJSON(allValues, manifest)); return; }
     const outPath = options.output || defaultOutput; const dir = dirname(outPath); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  if (dryRun) { console.log(emitJSON(allValues, manifest)); return; }
     writeFileSync(outPath, emitJSON(allValues, manifest), 'utf8');
     console.log(`JSON tokens written to ${outPath}${manifest ? ' (manifest mapper applied)' : ''}`);
   } else if (format === 'js') {
+    if (dryRun) { console.log(emitJS(allValues, manifest)); return; }
     const outPath = options.output || defaultOutput; const dir = dirname(outPath); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  if (dryRun) { console.log(emitJS(allValues, manifest)); return; }
     writeFileSync(outPath, emitJS(allValues, manifest), 'utf8');
     console.log(`JS tokens written to ${outPath}${manifest ? ' (manifest mapper applied)' : ''}`);
   }

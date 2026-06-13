@@ -62,4 +62,17 @@ describe('TASK-024: --dry-run writes nothing', () => {
     expect(existsSync(path.join(dir, 'out.json'))).toBe(false);
     expect(r.stdout).toContain('color');
   });
+
+  it('set --write --dry-run does not persist the override file', () => {
+    const r = runCli(dir, 'set color.a=#222222 --write --dry-run --tokens tokens.json');
+    expect(r.status).toBe(0);
+    expect(existsSync(path.join(dir, 'tokens', 'overrides', 'local.json'))).toBe(false);
+  });
+
+  it('build --format json --dry-run creates no output directory', () => {
+    const r = runCli(dir, 'build --format json --dry-run --tokens tokens.json');
+    expect(r.status).toBe(0);
+    // dry-run is a pure read: not even the dist/ dir should be created.
+    expect(existsSync(path.join(dir, 'dist'))).toBe(false);
+  });
 }, 30000);

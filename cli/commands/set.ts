@@ -209,9 +209,16 @@ export async function setCommand(options: SetOptions): Promise<void> {
     }
     Object.assign(finalResult, result.patch);
   }
+  const dryRun = !!(options['dry-run'] ?? options.dryRun);
   const format = options.format || 'json';
   outputResult(finalResult, format, options.output);
   if (options.write || (options.unset && options.unset.length)) {
+    // --dry-run must not touch the filesystem (it previously persisted the
+    // override file on the positional path; the batch path already guarded it).
+    if (dryRun) {
+      console.log('Dry-run: changes not written');
+      return;
+    }
     const fs = await import('node:fs');
     const path = 'tokens/overrides/local.json';
     let local: OverridesTree = {} as OverridesTree;
