@@ -1,13 +1,24 @@
 #!/bin/sh
 set -e
 
-echo "[pre-push] workflow automation typecheck…"
-npx tsc -p tsconfig.workflow-automation.json --noEmit
+# The task/workflow-automation system (src/, scripts/, tsconfig.workflow-automation.json)
+# is the maintainer's local-only tooling and is gitignored. This hook is tracked,
+# so each step runs ONLY when its files are present — a fresh clone with hooks
+# enabled skips them gracefully instead of failing on missing files.
 
-echo "[pre-push] header validation…"
-npx tsx scripts/validate-headers.ts
+if [ -f tsconfig.workflow-automation.json ]; then
+  echo "[pre-push] workflow automation typecheck…"
+  npx tsc -p tsconfig.workflow-automation.json --noEmit
+fi
 
-echo "[pre-push] workflow integrity tests…"
-npx vitest run src/__tests__/task-workflow-integrity.test.ts src/__tests__/sync-task-index.test.ts
+if [ -f scripts/validate-headers.ts ]; then
+  echo "[pre-push] header validation…"
+  npx tsx scripts/validate-headers.ts
+fi
+
+if [ -d src/__tests__ ]; then
+  echo "[pre-push] workflow integrity tests…"
+  npx vitest run src/__tests__/task-workflow-integrity.test.ts src/__tests__/sync-task-index.test.ts
+fi
 
 echo "[pre-push] fast workflow gate passed"

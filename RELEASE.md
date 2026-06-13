@@ -101,8 +101,10 @@ Follow [Semantic Versioning](https://semver.org/):
 Only files listed in `package.json` `files` array (verify with `npm pack --dry-run`):
 - `cli/`
 - `core/`
+- `mcp/` — the `dcv-mcp` MCP server
 - `adapters/`
 - `themes/`
+- `server.json` — MCP registry manifest
 - `LICENSE`
 - `README.md`
 

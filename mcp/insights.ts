@@ -339,6 +339,48 @@ function pushToContrast(color: RGBA, otherLum: number, min: number): RGBA | null
   return best;
 }
 
+/**
+ * Find the smallest change to an (opaque) background that clears `min` against
+ * `fg`. Unlike a foreground tweak, changing the background also changes the
+ * EFFECTIVE foreground when `fg` is semi-transparent (it composites over the new
+ * background), so the ratio is recomputed through the full pipeline for every
+ * candidate — never against a stale precomputed foreground. Returns a verified
+ * opaque RGBA, or null when no candidate reaches `min`.
+ */
+function pushBackgroundToContrast(fg: RGBA, bgStart: RGBA, min: number): RGBA | null {
+  const white: RGBA = { r: 255, g: 255, b: 255, a: 1 };
+  const black: RGBA = { r: 0, g: 0, b: 0, a: 1 };
+  const STEPS = 256;
+  const blendSnap = (target: RGBA, t: number): RGBA => ({
+    r: Math.round(bgStart.r + (target.r - bgStart.r) * t),
+    g: Math.round(bgStart.g + (target.g - bgStart.g) * t),
+    b: Math.round(bgStart.b + (target.b - bgStart.b) * t),
+    a: 1,
+  });
+  const trueRatio = (bgCand: RGBA): number => {
+    const effFg = fg.a < 1 ? compositeOver(fg, bgCand) : fg;
+    return contrastRatio(relativeLuminance(effFg), relativeLuminance(bgCand));
+  };
+  const dist = (c: RGBA) => (c.r - bgStart.r) ** 2 + (c.g - bgStart.g) ** 2 + (c.b - bgStart.b) ** 2;
+
+  let best: RGBA | null = null;
+  let bestDist = Infinity;
+  for (const target of [white, black]) {
+    for (let i = 1; i <= STEPS; i++) {
+      const cand = blendSnap(target, i / STEPS);
+      if (trueRatio(cand) >= min) {
+        const d = dist(cand);
+        if (d < bestDist) {
+          bestDist = d;
+          best = cand;
+        }
+        break;
+      }
+    }
+  }
+  return best;
+}
+
 export function suggestFix(req: SuggestRequest): SuggestResult {
   const kind = classifyRule(req.ruleId);
   const { getValue, descriptors, context } = req;
@@ -385,9 +427,13 @@ export function suggestFix(req: SuggestRequest): SuggestResult {
           }
         }
       } else {
-        const adj = pushToContrast(effBg, relativeLuminance(effFg), min);
+        // Recompute the effective foreground over the candidate background: when
+        // the foreground has alpha, changing the background changes the composited
+        // foreground too, so a fixed precomputed effFg would over-report contrast.
+        const adj = pushBackgroundToContrast(fgColor, effBg, min);
         if (adj) {
-          const ratio = contrastRatio(relativeLuminance(effFg), relativeLuminance(adj));
+          const effFgOverAdj = fgColor.a < 1 ? compositeOver(fgColor, adj) : fgColor;
+          const ratio = contrastRatio(relativeLuminance(effFgOverAdj), relativeLuminance(adj));
           if (ratio >= min) {
             suggestions.push({
               tokenId: bg,
@@ -396,7 +442,7 @@ export function suggestFix(req: SuggestRequest): SuggestResult {
               suggestedValue: toHex(adj),
               resultingValue: round2(ratio),
               satisfies: `wcag-contrast >= ${min}:1`,
-              why: 'Background lightness adjusted (opaque) until contrast clears the ratio; verified with WCAG contrast math.',
+              why: 'Background lightness adjusted (opaque) until contrast clears the ratio; verified against the recomposited foreground.',
             });
           }
         }
@@ -449,25 +495,31 @@ export function suggestFix(req: SuggestRequest): SuggestResult {
   if (na === null || nb === null) {
     throw new InsightError('invalid_input', `Cannot compute a numeric boundary: ${a}="${aVal}" or ${b}="${bVal}" is not a parseable size.`);
   }
-  // For `a >= b`: raise a to b's value, or lower b to a's value. Mirror for `<=`.
+  // The order holds at equality regardless of `op`, so the boundary is the same
+  // either way: move `a` to b's value, or move `b` to a's value. (The earlier
+  // op-conditional made the `<=` case suggest each token's own value — a no-op.)
+  // Role reflects the real direction of the move for the reported value.
+  const aTarget = round2(nb);
+  const bTarget = round2(na);
+  const direction = (from: number, to: number): string => (to > from ? 'raise' : to < from ? 'lower' : 'keep');
   const suggestions: Suggestion[] = [
     {
       tokenId: a,
-      role: 'raise',
+      role: direction(na, aTarget),
       currentValue: aVal,
-      suggestedValue: `${round2(op === '>=' ? nb : na)}px`,
-      resultingValue: round2(op === '>=' ? nb : na),
+      suggestedValue: `${aTarget}px`,
+      resultingValue: aTarget,
       satisfies: `${a} ${op} ${b}`,
-      why: `Move ${a} to ${b}'s value so the order holds at equality.`,
+      why: `Set ${a} to ${b}'s value (${aTarget}px) so the order holds at equality.`,
     },
     {
       tokenId: b,
-      role: 'lower',
+      role: direction(nb, bTarget),
       currentValue: bVal,
-      suggestedValue: `${round2(op === '>=' ? na : nb)}px`,
-      resultingValue: round2(op === '>=' ? na : nb),
+      suggestedValue: `${bTarget}px`,
+      resultingValue: bTarget,
       satisfies: `${a} ${op} ${b}`,
-      why: `Move ${b} to ${a}'s value so the order holds at equality.`,
+      why: `Set ${b} to ${a}'s value (${bTarget}px) so the order holds at equality.`,
     },
   ];
   return { ok: true, ruleId: req.ruleId, kind, nodes: [a, b], suggestions };

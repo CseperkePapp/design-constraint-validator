@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   graphTool,
@@ -9,6 +11,7 @@ import {
   suggestFixTool,
   type ToolFailure,
 } from '../mcp/tools.js';
+import { parseCssColor, compositeOver, relativeLuminance, contrastRatio } from '../core/color.js';
 
 const TOKENS = {
   color: {
@@ -220,5 +223,48 @@ describe('MCP insight tools (list-constraints / explain / suggest-fix)', () => {
     const result = await suggestFixTool({ tokens: TOKENS, constraintsDir: '__none__', ruleId: 'monotonic-lightness', nodes: ['color.text|color.bg'] });
     if (!isFailure(result)) throw new Error('Expected refusal for lightness ordering');
     expect(result.error.code).toBe('unsupported_rule');
+  });
+
+  it('suggest-fix never returns a false-verified WCAG background fix when the foreground has alpha', async () => {
+    // rgba(0,0,0,0.25) over any opaque bg composites toward the bg, so contrast
+    // stays low — the tool must not claim a passing background fix it cannot back up.
+    const result = await suggestFixTool({
+      tokens: { c: { fg: { $value: 'rgba(0,0,0,0.25)' }, bg: { $value: '#111111' } } },
+      constraints: { enableBuiltInWcagDefaults: false, enableBuiltInThreshold: false, wcag: [{ foreground: 'c.fg', background: 'c.bg', ratio: 4.5, description: 'x' }] },
+      constraintsDir: '__none__',
+      ruleId: 'wcag-contrast',
+      nodes: ['c.fg', 'c.bg'],
+      target: 'background',
+    });
+    if (isFailure(result)) throw new Error(result.error.message);
+    const fg = parseCssColor('rgba(0,0,0,0.25)')!;
+    for (const s of result.suggestions) {
+      const bgc = parseCssColor(s.suggestedValue)!;
+      const trueRatio = contrastRatio(relativeLuminance(compositeOver(fg, bgc)), relativeLuminance(bgc));
+      // Every returned candidate must clear the ratio under the real alpha pipeline,
+      // and the reported value must match that true ratio (no over-reporting).
+      expect(trueRatio).toBeGreaterThanOrEqual(4.5);
+      expect(s.resultingValue).toBeCloseTo(trueRatio, 1);
+    }
+  });
+
+  it('suggest-fix returns real boundaries (not no-ops) for a <= monotonic violation', async () => {
+    const dir = join('dist', 'test-le-policy');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'spacing.order.json'), JSON.stringify({ order: [['spacing.x', '<=', 'spacing.y']] }));
+    try {
+      const cfg = { enableBuiltInWcagDefaults: false, enableBuiltInThreshold: false };
+      const tokens = { spacing: { x: { $value: '32px' }, y: { $value: '16px' } } };
+      const result = await suggestFixTool({ tokens, constraints: cfg, constraintsDir: dir, ruleId: 'monotonic', nodes: ['spacing.x|spacing.y'] });
+      if (isFailure(result)) throw new Error(result.error.message);
+      const byId = Object.fromEntries(result.suggestions.map((s) => [s.tokenId, s]));
+      // x (32) <= y (16) is violated; the only real fixes move a token to the other's value.
+      expect(byId['spacing.x'].suggestedValue).toBe('16px'); // lower x to y
+      expect(byId['spacing.y'].suggestedValue).toBe('32px'); // raise y to x
+      expect(byId['spacing.x'].suggestedValue).not.toBe(byId['spacing.x'].currentValue); // not a no-op
+      expect(result.suggestions.map((s) => s.role).sort()).toEqual(['lower', 'raise']);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

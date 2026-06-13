@@ -14,9 +14,14 @@ export type EdgeLabels = Map<string, string>; // key = "a|b" (raw ids)
 const escMermaid = (s: string) => s.replace(/"/g, '\\"').replace(/\n/g, "\\n");
 const escDot = (s: string) => s.replace(/"/g, '\\"').replace(/\n/g, "\\n");
 
-/** Safe ID for Mermaid/DOT node identifiers */
+/**
+ * Safe, INJECTIVE node identifier for Mermaid/DOT. Each non-alphanumeric byte
+ * (including `_`) is encoded as `_<charCode>_`, so distinct token ids can never
+ * collapse to the same node id (e.g. `a.b` -> `a_46_b`, `a_b` -> `a_95_b`).
+ * A naive `[^a-zA-Z0-9_] -> _` replacement merged those, corrupting graphs.
+ */
 export function sanitizeId(id: string): string {
-  return id.replace(/[^a-zA-Z0-9_]/g, "_");
+  return id.replace(/[^a-zA-Z0-9]/g, (c) => `_${c.charCodeAt(0)}_`);
 }
 
 export type Highlight = {

@@ -3,10 +3,12 @@ import {
   buildPoset,
   transitiveReduction,
   toMermaidHasse,
+  toMermaidHasseStyled,
   filterByPrefix,
   filterExcludePrefix,
   khopSubgraph,
   pickSeedsByPattern,
+  sanitizeId,
   type Order,
 } from '../core/poset.js';
 
@@ -42,6 +44,21 @@ describe('toMermaidHasse', () => {
     expect(mmd).toContain('flowchart TD');
     expect(mmd).toContain('%% T');
     expect(mmd).toContain('"a" --> "b"');
+  });
+});
+
+describe('sanitizeId (TASK-027: injective node ids)', () => {
+  it('does not collapse distinct ids that differ only in punctuation', () => {
+    // The old `[^a-zA-Z0-9_] -> _` rule mapped both of these to "a_b".
+    expect(sanitizeId('a.b')).not.toBe(sanitizeId('a_b'));
+  });
+
+  it('gives styled Hasse output distinct nodes for a.b vs a_b', () => {
+    const g = buildPoset([['a.b', '>=', 'a_b']] as Order[]);
+    const mmd = toMermaidHasseStyled(g, { title: 'T' });
+    // Two distinct node declarations, not one shared node.
+    expect(mmd).toContain(`${sanitizeId('a.b')}["a.b"]`);
+    expect(mmd).toContain(`${sanitizeId('a_b')}["a_b"]`);
   });
 });
 

@@ -21,8 +21,12 @@ npm test                # vitest (excludes compiled **/*.test.js)
 npm run lint            # eslint
 npm run typecheck       # tsc --noEmit
 npm run check           # typecheck + lint + build + test (the full gate)
-npm run workflow:test   # task-ledger integrity tests
 ```
+
+> Task-ledger integrity checks live in the maintainer's local-only
+> workflow-automation system (`src/`, `scripts/` — gitignored) and are not part
+> of the public gate. The tracked `.githooks/pre-push` runs them only when those
+> files are present, so external clones are unaffected.
 
 ## Critical gotchas
 

@@ -25,6 +25,8 @@ jobs:
       id-token: write # Required for npm provenance
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-tags: true # needed to validate that a dispatch run is tag-backed
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
@@ -37,16 +39,24 @@ jobs:
 
       - run: npm run check
 
-      # Guard: the tag being published must match package.json's version, so a
-      # mistagged push can't publish the wrong version.
-      - name: Verify tag matches package.json version
-        if: startsWith(github.ref, 'refs/tags/v')
+      # Guard (runs for EVERY trigger): a publish must be backed by a vX.Y.Z tag
+      # that matches package.json. On a tag push the ref is the tag; on a manual
+      # workflow_dispatch (branch ref) we require a matching tag at HEAD, so a
+      # dispatch can never publish untagged branch state. Tag is the source of truth.
+      - name: Verify publish is tag-backed and matches package.json version
         run: |
           PKG_VERSION="$(node -p "require('./package.json').version")"
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
-            exit 1
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+              echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
+              exit 1
+            fi
+          else
+            if ! git tag --points-at HEAD | grep -qx "v${PKG_VERSION}"; then
+              echo "::error::Refusing to publish: HEAD is not tagged v${PKG_VERSION}. Push the version tag instead of dispatching from an untagged commit."
+              exit 1
+            fi
           fi
           echo "Publishing design-constraint-validator@$PKG_VERSION"
 

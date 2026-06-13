@@ -15,8 +15,11 @@ function generateDependencyGraph(edges: Array<[string, string]>, format: string)
       dot += '\n'; edges.forEach(([f,t]) => { dot += `  "${f}" -> "${t}";\n`; });
       return dot + '}\n'; }
     case 'mermaid': {
+      // Injective id encoding so distinct token ids (e.g. a.b vs a_b) never
+      // collapse to the same Mermaid node (TASK-027).
+      const safe = (s: string) => s.replace(/[^a-zA-Z0-9]/g, (c) => `_${c.charCodeAt(0)}_`);
       let mermaid = 'graph LR\n'; const mermaidNodes = new Set<string>();
-      edges.forEach(([from,to]) => { const fromId = from.replace(/[^a-zA-Z0-9]/g,'_'); const toId = to.replace(/[^a-zA-Z0-9]/g,'_');
+      edges.forEach(([from,to]) => { const fromId = safe(from); const toId = safe(to);
         if (!mermaidNodes.has(fromId)) { mermaid += `  ${fromId}["${from}"]\n`; mermaidNodes.add(fromId); }
         if (!mermaidNodes.has(toId)) { mermaid += `  ${toId}["${to}"]\n`; mermaidNodes.add(toId); }
         mermaid += `  ${fromId} --> ${toId}\n`; });
