@@ -22,12 +22,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
   where an untrusted MCP caller could get a false `ok: true` from garbage input.
   The same root-cause fix applies to the programmatic `validate()` and
   `flattenTokens()` paths.
+- **Public `validate({ constraints })` now schema-validates inline constraints**
+  through the same Zod config schema used by the CLI and MCP. Malformed inline
+  constraints (e.g. an invalid threshold operator like `op: "~="`) previously
+  slipped through the public API and could silently change validation semantics;
+  they now throw a descriptive error.
 
 ### Fixed
 
+- **WCAG backdrop token ids resolve correctly.** Transparent-background contrast
+  compositing treated any id beginning with a CSS color prefix (`rgb`, `hsl`, …)
+  as a color literal, so a valid token id like `rgb.backdrop` produced an
+  unparseable-color warning instead of resolving. Literal detection now requires
+  real CSS color syntax (`rgb(`, `hsl(`, `oklch(`, `#…`, exact `transparent`).
 - Stabilized a flaky CLI test that could intermittently fail the release gate
   (`npm run check`) on cold `tsx` startup under parallel load. Test-only — no
   product behavior changed.
+- `server.json` (MCP registry manifest) is pinned to the package version by a
+  regression test, so the manifest can no longer drift from `package.json`.
 
 ## [2.1.0] - 2026-06-12
 
