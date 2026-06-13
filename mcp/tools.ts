@@ -4,16 +4,44 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { z } from 'zod';
 
 import { suggestIds } from '../core/cli-format.js';
-import { flattenTokens, type TokenNode } from '../core/flatten.js';
-import { explain, type WhyReport } from '../core/why.js';
+import { flattenTokens, type TokenNode, type FlatToken } from '../core/flatten.js';
+import { explain as explainWhy, type WhyReport } from '../core/why.js';
+import { Engine } from '../core/engine.js';
 import { ConstraintsSchema } from '../cli/config-schema.js';
+import { loadConfig } from '../cli/config.js';
+import { discoverConstraints } from '../cli/constraint-registry.js';
 import { validate, type ValidateResult } from '../cli/validate-api.js';
 import type { DcvConfig } from '../cli/types.js';
 import type { Breakpoint } from '../core/breakpoints.js';
-import type { JsonObject, ValidateToolInput, WhyToolInput, GraphToolInput } from './contracts.js';
-import { graphInputShape, validateInputShape, whyInputShape } from './contracts.js';
+import {
+  describeConstraints,
+  explain as explainInsight,
+  suggestFix as suggestFixInsight,
+  InsightError,
+  type ConstraintDescriptor,
+  type ExplainResult,
+  type SuggestResult,
+  type ValueResolver,
+} from './insights.js';
+import type {
+  JsonObject,
+  ValidateToolInput,
+  WhyToolInput,
+  GraphToolInput,
+  ListConstraintsToolInput,
+  ExplainToolInput,
+  SuggestFixToolInput,
+} from './contracts.js';
+import {
+  graphInputShape,
+  validateInputShape,
+  whyInputShape,
+  listConstraintsInputShape,
+  explainInputShape,
+  suggestFixInputShape,
+} from './contracts.js';
 
-export type DcvMcpToolName = 'validate' | 'why' | 'graph';
+export type DcvMcpToolName = 'validate' | 'why' | 'graph' | 'list-constraints' | 'explain' | 'suggest-fix';
 
 export interface ToolFailure {
   ok: false;
@@ -79,6 +107,18 @@ function toFailure(tool: DcvMcpToolName, error: unknown): ToolFailure {
         code: error.code,
         message: error.message,
         ...(error.details ? { details: error.details } : {}),
+      },
+    };
+  }
+
+  // Pure derivation errors (bad input, unsupported rule) carry their own code.
+  if (error instanceof InsightError) {
+    return {
+      ok: false,
+      tool,
+      error: {
+        code: error.code,
+        message: error.message,
       },
     };
   }
@@ -201,7 +241,7 @@ export async function whyTool(input: WhyToolInput): Promise<ToolResponse<WhyTool
 
     return {
       ok: true as const,
-      ...explain(input.tokenId, flat, edges),
+      ...explainWhy(input.tokenId, flat, edges),
     };
   });
 }
@@ -223,10 +263,109 @@ export async function graphTool(input: GraphToolInput): Promise<ToolResponse<Gra
   });
 }
 
+export interface ListConstraintsResult {
+  ok: true;
+  constraints: ConstraintDescriptor[];
+  meta: { count: number };
+}
+
+/** Resolve the constraint config the same way validate() does: inline → configPath
+ *  → discovered cwd config. */
+function resolveConstraintsConfig(input: TokenInput): DcvConfig {
+  if (input.constraints !== undefined) {
+    return { constraints: constraints(input) };
+  }
+  const res = loadConfig(input.configPath);
+  if (!res.ok) {
+    throw new ToolExecutionError('invalid_config', res.error);
+  }
+  return res.value;
+}
+
+interface DerivedContext {
+  descriptors: ConstraintDescriptor[];
+  getValue: ValueResolver;
+}
+
+/** Flatten tokens, build an engine for value resolution, and discover the active
+ *  constraint sources — the shared substrate for the read-only insight tools. */
+function deriveContext(input: TokenInput): DerivedContext {
+  const tokens = resolveTokens(input);
+  const config = resolveConstraintsConfig(input);
+
+  const { flat, edges } = flattenTokens(tokens);
+  const init: Record<string, string | number> = {};
+  for (const t of Object.values(flat)) {
+    init[(t as FlatToken).id] = (t as FlatToken).value;
+  }
+  const engine = new Engine(init, edges);
+  const knownIds = new Set(Object.keys(init));
+
+  const sources = discoverConstraints({
+    config,
+    bp: input.breakpoint,
+    constraintsDir: input.constraintsDir ?? 'themes',
+  });
+
+  return {
+    descriptors: describeConstraints(sources),
+    // Token ids resolve to their value; anything else (a literal backdrop color)
+    // passes through, mirroring the WCAG plugin's resolveColor.
+    getValue: (idOrLiteral) => (knownIds.has(idOrLiteral) ? String(engine.get(idOrLiteral)) : idOrLiteral),
+  };
+}
+
+/** explain / suggest-fix accept a full violation OR loose ruleId + nodes. */
+function resolveInsightTarget(
+  input: ExplainToolInput | SuggestFixToolInput,
+): { ruleId: string; nodes: string[]; context?: Record<string, unknown> } {
+  if (input.violation) {
+    return {
+      ruleId: input.violation.ruleId,
+      nodes: input.violation.nodes ?? [],
+      context: input.violation.context as Record<string, unknown> | undefined,
+    };
+  }
+  if (input.ruleId) {
+    return {
+      ruleId: input.ruleId,
+      nodes: input.nodes ?? [],
+      context: input.context as Record<string, unknown> | undefined,
+    };
+  }
+  throw new ToolExecutionError('invalid_input', 'Provide either a violation object or ruleId (with nodes).');
+}
+
+export async function listConstraintsTool(input: ListConstraintsToolInput): Promise<ToolResponse<ListConstraintsResult>> {
+  return executeTool('list-constraints', () => {
+    const { descriptors } = deriveContext(input);
+    return { ok: true as const, constraints: descriptors, meta: { count: descriptors.length } };
+  });
+}
+
+export async function explainTool(input: ExplainToolInput): Promise<ToolResponse<ExplainResult>> {
+  return executeTool('explain', () => {
+    const { descriptors, getValue } = deriveContext(input);
+    const target = resolveInsightTarget(input);
+    return explainInsight({ ...target, getValue, descriptors });
+  });
+}
+
+export async function suggestFixTool(input: SuggestFixToolInput): Promise<ToolResponse<SuggestResult>> {
+  return executeTool('suggest-fix', () => {
+    const { descriptors, getValue } = deriveContext(input);
+    const target = resolveInsightTarget(input);
+    return suggestFixInsight({ ...target, getValue, descriptors, target: input.target });
+  });
+}
+
 export const dcvMcpTools: Array<
   | ToolDefinition<ValidateToolInput, ValidateResult>
   | ToolDefinition<WhyToolInput, WhyToolResult>
   | ToolDefinition<GraphToolInput, GraphToolResult>
+  | ToolDefinition<ListConstraintsToolInput, ListConstraintsResult>
+  | ToolDefinition<ExplainToolInput, ExplainResult>
+  | ToolDefinition<SuggestFixToolInput, SuggestResult>
 > = [
   {
     name: 'validate',
@@ -245,6 +384,24 @@ export const dcvMcpTools: Array<
     description: 'Return the token dependency graph as nodes and directed edges.',
     inputSchema: graphInputShape,
     handler: graphTool,
+  },
+  {
+    name: 'list-constraints',
+    description: 'List the active constraints (WCAG pairs, thresholds, order/lightness scales, cross-axis) for a token set/config. Read-only.',
+    inputSchema: listConstraintsInputShape,
+    handler: listConstraintsTool,
+  },
+  {
+    name: 'explain',
+    description: 'Explain a validation violation (WCAG, threshold, monotonic) in plain English plus machine-readable facts. Read-only.',
+    inputSchema: explainInputShape,
+    handler: explainTool,
+  },
+  {
+    name: 'suggest-fix',
+    description: 'Compute a verified satisfying value for a violation without writing it (WCAG color, threshold/monotonic boundary). Read-only.',
+    inputSchema: suggestFixInputShape,
+    handler: suggestFixTool,
   },
 ];
 

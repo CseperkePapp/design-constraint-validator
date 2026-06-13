@@ -50,10 +50,17 @@ function structured(result: Awaited<ReturnType<Client['callTool']>>): Record<str
 }
 
 describe('dcv-mcp stdio server', () => {
-  it('lists exactly the validate, why, and graph tools', async () => {
+  it('lists the validate/why/graph + list-constraints/explain/suggest-fix tools', async () => {
     await withClient(async (client) => {
       const result = await client.listTools();
-      expect(result.tools.map((tool) => tool.name).sort()).toEqual(['graph', 'validate', 'why']);
+      expect(result.tools.map((tool) => tool.name).sort()).toEqual([
+        'explain',
+        'graph',
+        'list-constraints',
+        'suggest-fix',
+        'validate',
+        'why',
+      ]);
     });
   });
 
@@ -73,6 +80,29 @@ describe('dcv-mcp stdio server', () => {
       expect(content.tool).toBe('validate');
       expect(content.ok).toBe(false);
       expect((content.counts as { violations: number }).violations).toBe(1);
+    });
+  });
+
+  it('calls suggest-fix over stdio and returns a verified candidate', async () => {
+    await withClient(async (client) => {
+      const result = await client.callTool({
+        name: 'suggest-fix',
+        arguments: {
+          tokens: TOKENS,
+          constraints: CONSTRAINTS,
+          constraintsDir: '__none__',
+          ruleId: 'wcag-contrast',
+          nodes: ['color.text', 'color.bg'],
+        },
+      });
+      const content = structured(result);
+
+      expect(result.isError).toBeUndefined();
+      expect(content.tool).toBe('suggest-fix');
+      expect(content.ok).toBe(true);
+      const suggestions = content.suggestions as Array<{ resultingValue: number }>;
+      expect(suggestions.length).toBeGreaterThan(0);
+      expect(suggestions[0].resultingValue).toBeGreaterThanOrEqual(4.5);
     });
   });
 

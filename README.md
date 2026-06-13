@@ -124,11 +124,16 @@ DCV ships a second binary, `dcv-mcp`, that exposes the validator over MCP stdio 
 }
 ```
 
-The server exposes exactly three JSON-returning tools:
+The server exposes six read-only, JSON-returning tools:
 
 - `validate` - validate inline `tokens` or a `tokensPath` against inline `constraints` or a config file.
 - `why` - explain provenance, aliases, dependencies, dependents, and alias chain for one token id.
 - `graph` - return token dependency `nodes` and `edges`.
+- `list-constraints` - enumerate the active constraints (WCAG pairs, thresholds, order/lightness scales, cross-axis) for the given input.
+- `explain` - turn a violation into plain-English text plus machine-readable facts.
+- `suggest-fix` - compute a verified satisfying value for a violation (WCAG color, threshold/monotonic boundary) without writing anything.
+
+The three derivation tools (`list-constraints`, `explain`, `suggest-fix`) stay read-only — they return suggestions; applying them is up to you (`dcv set` / `dcv patch`). See **[AI Guide](docs/AI-GUIDE.md)** for the full agent loop.
 
 Tool failures are returned as structured JSON: `{ "ok": false, "error": { "code": "...", "message": "..." } }`.
 

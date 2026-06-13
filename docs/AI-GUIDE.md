@@ -262,14 +262,49 @@ const result = validate({
 
 ## MCP Server
 
-DCV ships a Model Context Protocol server over stdio. It exposes read-only
-tools:
+DCV ships a Model Context Protocol server over stdio. Every tool is
+**read-only** — none write tokens, config, or patch files. They take the same
+token/config inputs (`tokens` or `tokensPath`, `constraints` or `configPath`,
+`constraintsDir`, `breakpoint`).
 
 | Tool | Purpose |
 |------|---------|
 | `validate` | Validate a token set and return structured issues |
 | `why` | Explain token provenance and references |
 | `graph` | Return the token dependency graph |
+| `list-constraints` | Enumerate the active constraints (WCAG pairs, thresholds, order/lightness scales, cross-axis) for the given input |
+| `explain` | Turn a violation into plain-English text plus machine-readable facts |
+| `suggest-fix` | Compute a **verified** satisfying value for a violation — without writing it |
+
+### From violation to fix
+
+The three derivation tools are the "validator → assistant" layer. A typical
+agent loop:
+
+1. `validate` → get structured `violations`.
+2. `explain` → pass a violation back in (`{ violation }`, or loose
+   `{ ruleId, nodes }`) to get a human explanation and facts like
+   `actualRatio` / `requiredRatio`.
+3. `suggest-fix` → get a candidate value the agent can choose to apply via the
+   CLI (`dcv set` / `dcv patch`). Nothing is written by the tool.
+
+`suggest-fix` semantics, by rule:
+
+- **WCAG contrast** — returns `foreground` and/or `background` color candidates
+  (use `target` to pin one side). Each candidate's lightness is adjusted only as
+  far as needed and **re-checked against the same contrast math** before it is
+  returned; unparseable colors are refused with `invalid_input`, and if no sRGB
+  color reaches the ratio the tool returns no suggestion with an explanatory
+  `note`.
+- **Threshold** — returns the boundary value (`44px` for `>= 44px`).
+- **Monotonic (size)** — returns the two boundary options (raise the small token
+  or lower the large token to restore order).
+- **Lightness ordering** is explained but not auto-fixed (it refuses with
+  `unsupported_rule` rather than fabricate a color).
+
+`explain` / `suggest-fix` support `wcag-contrast`, `threshold` /
+`custom-threshold`, and `monotonic` violations (plus `monotonic-lightness` for
+`explain`). Unsupported rules return a structured `unsupported_rule` error.
 
 Published package config:
 

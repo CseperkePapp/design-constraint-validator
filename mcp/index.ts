@@ -16,6 +16,13 @@ export {
   validateInputShape,
   whyInputSchema,
   whyInputShape,
+  listConstraintsInputSchema,
+  listConstraintsInputShape,
+  explainInputSchema,
+  explainInputShape,
+  suggestFixInputSchema,
+  suggestFixInputShape,
+  violationInputSchema,
 } from './contracts.js';
 export type {
   GraphToolInput,
@@ -24,6 +31,10 @@ export type {
   JsonValue,
   ValidateToolInput,
   WhyToolInput,
+  ListConstraintsToolInput,
+  ExplainToolInput,
+  SuggestFixToolInput,
+  ViolationInput,
 } from './contracts.js';
 export {
   dcvMcpTools,
@@ -32,6 +43,9 @@ export {
   ToolExecutionError,
   validateTool,
   whyTool,
+  listConstraintsTool,
+  explainTool,
+  suggestFixTool,
 } from './tools.js';
 export type {
   DcvMcpToolName,
@@ -39,7 +53,18 @@ export type {
   ToolFailure,
   ToolResponse,
   WhyToolResult,
+  ListConstraintsResult,
 } from './tools.js';
+export {
+  describeConstraints,
+  InsightError,
+} from './insights.js';
+export type {
+  ConstraintDescriptor,
+  ExplainResult,
+  SuggestResult,
+  Suggestion,
+} from './insights.js';
 
 export function createDcvMcpServer(): McpServer {
   const version = getVersionInfo().version;
