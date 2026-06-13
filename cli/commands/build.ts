@@ -31,18 +31,29 @@ export async function buildCommand(options: BuildOptions & { [k: string]: any })
       process.exit(1);
     }
   }
-  const allFormats = options.allFormats ?? options['all-formats'];
+  // Read both the kebab key (CLI, camel-case-expansion is off) and the camelCase
+  // key (programmatic callers, e.g. tests). Reading only one form silently no-ops
+  // for the other caller — that was the TASK-024 bug class.
+  const allFormats = options['all-formats'] ?? options.allFormats;
+  const dryRun = options['dry-run'] ?? options.dryRun;
   if (allFormats) {
-    const dir = 'dist'; if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     const css = valuesToCss(allValues, { manifest });
+    const json = emitJSON(allValues, manifest);
+    const js = emitJS(allValues, manifest);
+    if (dryRun) {
+      // Dry run: print every format, write nothing.
+      console.log(css);
+      console.log(json);
+      console.log(js);
+      return;
+    }
+    const dir = 'dist'; if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync('dist/tokens.css', css, 'utf8');
-    if (options.dryRun) console.log(css);
-    writeFileSync('dist/tokens.json', emitJSON(allValues, manifest), 'utf8');
-    writeFileSync('dist/tokens.js', emitJS(allValues, manifest), 'utf8');
+    writeFileSync('dist/tokens.json', json, 'utf8');
+    writeFileSync('dist/tokens.js', js, 'utf8');
     console.log(`Tokens written (all formats) to dist/ (css/json/js)${manifest ? ' with mapper' : ''}`);
     return;
   }
-  const dryRun = options.dryRun ?? options['dry-run'];
   if (format === 'css') {
     const css = valuesToCss(allValues, { manifest });
   if (dryRun) { console.log(css); return; }

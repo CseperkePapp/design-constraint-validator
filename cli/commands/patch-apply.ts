@@ -66,7 +66,10 @@ export async function patchApplyCommand(opts: PatchApplyOptions): Promise<void> 
     applyChange(tokens, c.id, c.to, c.type);
   }
 
-  if (opts.dryRun) {
+  // Read both forms: kebab from the CLI (camel-case-expansion off) and camelCase
+  // from programmatic callers. Reading only opts.dryRun was dead for the CLI, so
+  // `--dry-run --output` silently wrote the file (TASK-024).
+  if (opts['dry-run'] ?? opts.dryRun) {
     outputResult(tokens, 'json');
     return;
   }

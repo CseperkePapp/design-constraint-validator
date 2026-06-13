@@ -25,6 +25,10 @@ export interface SetOptions extends GlobalOptions {
   write?: boolean;
   json?: string;
   unset?: string[];
+  // CLI delivers the kebab key (camel-case-expansion off); programmatic callers
+  // pass camelCase. Commands read both (TASK-024).
+  dryRun?: boolean;
+  'dry-run'?: boolean;
 }
 export interface BuildOptions extends GlobalOptions {
   output?: string;
@@ -33,7 +37,9 @@ export interface BuildOptions extends GlobalOptions {
   theme?: string;
   mapper?: string;
   dryRun?: boolean;
+  'dry-run'?: boolean;
   allFormats?: boolean;
+  'all-formats'?: boolean;
 }
 export interface ValidateOptions extends GlobalOptions {
   strict?: boolean;
@@ -42,11 +48,14 @@ export interface ValidateOptions extends GlobalOptions {
   'constraints-dir'?: string;
   perf?: boolean;
   budgetTotalMs?: number;
+  'budget-total-ms'?: number;
   budgetPerBpMs?: number;
+  'budget-per-bp-ms'?: number;
   format?: 'text' | 'json';
   output?: string;
   receipt?: string;
   failOn?: 'off' | 'warn' | 'error';
+  'fail-on'?: 'off' | 'warn' | 'error';
   summary?: 'none' | 'table' | 'json';
 }
 export interface GraphOptions extends GlobalOptions {
@@ -84,6 +93,7 @@ export interface PatchApplyOptions extends GlobalOptions {
   patch: string; // path or inline patch JSON
   output?: string; // where to write updated tokens (if omitted, prints result)
   tokens?: string; // source tokens file (baseline)
-  dryRun?: boolean; // if true do not write
+  dryRun?: boolean; // if true do not write (programmatic callers)
+  'dry-run'?: boolean; // CLI key (camel-case-expansion off)
 }
 export type { Breakpoint };

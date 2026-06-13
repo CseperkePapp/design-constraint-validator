@@ -7,6 +7,11 @@ import { setCommand, buildCommand, validateCommand, graphCommand, whyCommand, pa
 
 const cli = yargs(hideBin(process.argv))
   .scriptName('dcv')
+  // camel-case-expansion is intentionally OFF, so the CLI delivers flags only
+  // under their kebab key (e.g. argv['dry-run'], never argv.dryRun). Commands
+  // read BOTH forms — `options['dry-run'] ?? options.dryRun` — so the same handler
+  // works whether invoked by the CLI (kebab) or programmatically/tests (camelCase).
+  // Reading only one form silently no-ops for the other caller (TASK-024).
   .parserConfiguration({ 'camel-case-expansion': false })
   .option('quiet', { type: 'boolean' })
   .option('config', { type: 'string', describe: 'Path to JSON config file' });

@@ -32,13 +32,13 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     }
     const tokensPath = flagTokens ?? posTokens;
     const constraintsDir = _options['constraints-dir'] ?? 'themes';
-    const argv = process.argv.slice(2);
-    const failOnIdx = argv.indexOf('--fail-on');
+    // Read both the kebab key (CLI; camel-case-expansion is off, and yargs sets the
+    // default there) and the camelCase key (programmatic callers). The old argv-scan
+    // workaround is no longer needed.
     type FailOn = 'off' | 'warn' | 'error';
-    const failOn: FailOn = _options.failOn ?? (failOnIdx >= 0 ? (argv[failOnIdx + 1] as FailOn) : 'error');
-    const sumIdx = argv.indexOf('--summary');
+    const failOn: FailOn = ((_options['fail-on'] ?? _options.failOn) as FailOn) ?? 'error';
     type SummaryFmt = 'table' | 'json' | 'none';
-    const summaryFmt: SummaryFmt = _options.summary ?? (sumIdx >= 0 ? (argv[sumIdx + 1] as SummaryFmt) : 'none');
+    const summaryFmt: SummaryFmt = (_options.summary as SummaryFmt) ?? 'none';
     const outputFormat = _options.format ?? 'text';
     
     // Collect all issues for JSON output
@@ -175,8 +175,8 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
     }
     let code = anyErrors ? 1 : 0;
     // Budget checks (do not override fail-on semantics unless budgets add failures)
-    const budgetTotal = (_options as any)['budget-total-ms'] ?? _options.budgetTotalMs;
-    const budgetPerBp = (_options as any)['budget-per-bp-ms'] ?? _options.budgetPerBpMs;
+    const budgetTotal = _options['budget-total-ms'] ?? _options.budgetTotalMs;
+    const budgetPerBp = _options['budget-per-bp-ms'] ?? _options.budgetPerBpMs;
     let budgetFailed = false;
     if (budgetTotal != null && totalMs > budgetTotal) {
       console.error(`[perf] total time ${totalMs.toFixed(2)}ms exceeded budget ${budgetTotal}ms`);

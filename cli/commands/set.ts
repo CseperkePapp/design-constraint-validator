@@ -174,7 +174,7 @@ export async function setCommand(options: SetOptions): Promise<void> {
     for (const ent of entries) ensureKnownOrSuggest(ent.id);
     const debug = process.argv.includes('--debug-set') || process.env.DCV_DEBUG_SET === '1';
     if (debug) { console.log('[set:batch] parsed entries:'); for (const e of entries) console.log(' ', e); }
-    const dryRun = process.argv.includes('--dry-run');
+    const dryRun = !!(options['dry-run'] ?? options.dryRun);
     for (const { id, value, unset } of entries) {
       if (unset) { if (!options.quiet) console.log(`preview: unset ${id}`); }
       else {
