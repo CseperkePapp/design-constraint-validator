@@ -37,8 +37,10 @@ describe('ThresholdPlugin: size-parsing boundaries', () => {
     expect(check('44', '>=', 44)).toHaveLength(0);
     expect(check('43', '>=', 44)).toHaveLength(1);
   });
-  it('unparseable size is skipped — no crash, no false violation', () => {
-    expect(check('auto', '>=', 44)).toHaveLength(0);
+  it('unparseable size emits a warning — surfaced, not silently skipped, not a false violation (TASK-031)', () => {
+    const issues = check('auto', '>=', 44);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].level).toBe('warn');
   });
 });
 

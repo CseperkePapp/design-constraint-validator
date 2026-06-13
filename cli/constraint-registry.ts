@@ -21,7 +21,7 @@ import { MonotonicLightness } from '../core/constraints/monotonic-lightness.js';
 import { WcagContrastPlugin } from '../core/constraints/wcag.js';
 import { ThresholdPlugin } from '../core/constraints/threshold.js';
 import { CrossAxisPlugin } from '../core/constraints/cross-axis.js';
-import { loadCrossAxisRules } from './cross-axis-loader.js';
+import { loadCrossAxisRules, loadCrossAxisRulesFromFile } from './cross-axis-loader.js';
 
 // ============================================================================
 // Types
@@ -330,9 +330,25 @@ export function collectReferencedIds(sources: ConstraintSource[]): { ids: Set<st
       case 'lightness-file':
         addOrders(source.orders);
         break;
-      case 'cross-axis-file':
-        coverageKnown = false;
+      case 'cross-axis-file': {
+        // TASK-031: enumerate the cross-axis rules' referenced ids so coverage
+        // stays KNOWN. Previously this blanket-set coverageKnown=false, which
+        // suppressed the "nothing was checked" note whenever a cross-axis file
+        // existed — masking the silent-pass the note exists to catch.
+        const rules = loadCrossAxisRulesFromFile(source.path);
+        if (!rules) {
+          coverageKnown = false; // unreadable/unparseable → stay conservative
+          break;
+        }
+        for (const r of rules) {
+          if (r.when?.id) ids.add(r.when.id);
+          if (r.require?.id) ids.add(r.require.id);
+          if (r.require?.ref) ids.add(r.require.ref);
+          if (r.compare?.a) ids.add(r.compare.a);
+          if (r.compare?.b) ids.add(r.compare.b);
+        }
         break;
+      }
     }
   }
 
