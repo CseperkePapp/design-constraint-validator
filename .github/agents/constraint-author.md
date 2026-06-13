@@ -53,7 +53,11 @@ monotonic-lightness, threshold, cross-axis) — mirror the closest one.
    (so the "nothing was checked" note stays accurate). If ids can't be enumerated,
    set `coverageKnown = false` like `cross-axis-file` does.
 6. **Config schema (if config-driven).** Extend `ConstraintsSchema` in
-   `cli/config-schema.ts` with strict Zod validation; reject unknown/typo fields.
+   `cli/config-schema.ts`. Make your new rule's object(s) `.strict()` so typos in
+   *its* fields are rejected. Note the `ConstraintsSchema` root is currently
+   `.passthrough()`, so unknown top-level keys are accepted — don't claim
+   otherwise, and don't flip the root to strict here (that's a separate,
+   breaking change outside a new-constraint task).
 7. **Fixture + test.** Add `test/<name>.test.ts` mirroring an existing constraint
    test (e.g. `test/cross-axis.test.ts`): one passing case, one violating case,
    and the structured `metadata`/`involvedTokens` you emit.

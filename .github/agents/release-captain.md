@@ -49,9 +49,16 @@ publish step**. See `RELEASE.md` for the canonical flow.
    `mcp/` + `server.json` are included.
 8. **Maintainer gate.** Present the version, changelog, gate, and pack results.
    **Wait for explicit approval.**
-9. **Tag.** With approval, `npm version <patch|minor|major>` then
-   `git push && git push --tags` (or the matching `release:*` script). This is the
-   only trigger — do not `npm publish`.
+9. **Tag.** With approval, create the matching `vX.Y.Z` tag — the only trigger.
+   Do not `npm publish`. Two cases (see `RELEASE.md`):
+   - **package.json NOT yet at the target version** → `npm version <patch|minor|major>`
+     (bumps and tags), or the matching `release:*` script, then
+     `git push && git push --tags`.
+   - **package.json ALREADY at the target version** (e.g. it was bumped in a prior
+     release-prep commit) → do **not** run `npm version` (it would over-bump);
+     just `git tag vX.Y.Z && git push && git push --tags`.
+   Confirm which case applies before tagging — `package.json` is the source of
+   truth for the version, the tag must match it.
 10. **Watch + verify.** Watch the `publish.yml` run; confirm its "Verify published
     version is live on npm" step passes (it polls the registry). If it fails,
     surface the logs — do not retry blindly.
