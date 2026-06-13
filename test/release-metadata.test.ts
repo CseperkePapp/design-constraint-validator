@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { createDcvMcpServer } from '../mcp/index.js';
+
 function readJson(relPath: string): any {
   return JSON.parse(readFileSync(path.join(process.cwd(), relPath), 'utf8'));
 }
@@ -16,5 +18,12 @@ describe('release metadata', () => {
     expect(server.packages).toHaveLength(1);
     expect(server.packages[0].identifier).toBe(pkg.name);
     expect(server.packages[0].version).toBe(pkg.version);
+  });
+
+  it('reports the package version in the MCP server handshake metadata', () => {
+    const pkg = readJson('package.json');
+    const mcpServer = createDcvMcpServer() as unknown as { server: { _serverInfo: { version: string } } };
+
+    expect(mcpServer.server._serverInfo.version).toBe(pkg.version);
   });
 });

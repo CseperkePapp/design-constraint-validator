@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
+import { getVersionInfo } from '../cli/version-banner.js';
 import { registerDcvMcpTools } from './tools.js';
 
 export {
@@ -41,9 +42,10 @@ export type {
 } from './tools.js';
 
 export function createDcvMcpServer(): McpServer {
+  const version = getVersionInfo().version;
   const server = new McpServer({
     name: 'dcv-mcp',
-    version: '2.1.0',
+    version,
   });
 
   registerDcvMcpTools(server);

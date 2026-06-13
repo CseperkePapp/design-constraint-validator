@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../config.js';
 import { Engine } from '../../core/engine.js';
 import { flattenTokens, type FlatToken } from '../../core/flatten.js';
+import { mergeTokens } from '../../core/breakpoints.js';
 import type { OverridesTree, SetOptions, ValuesPatch } from '../types.js';
 import { loadTokens, outputResult } from './utils.js';
 import { setupConstraints } from '../constraint-registry.js';
@@ -76,7 +77,17 @@ export async function setCommand(options: SetOptions): Promise<void> {
   const cfgRes = loadConfig(options.config);
   if (!cfgRes.ok) { console.error(cfgRes.error); process.exit(2); }
   const config = cfgRes.value;
-  const tokens = loadTokens(tokensPath);
+  let tokens = loadTokens(tokensPath);
+
+  if (options.theme) {
+    const themePath = join('tokens/themes', `${options.theme}.json`);
+    if (existsSync(themePath)) {
+      const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
+      tokens = mergeTokens(tokens, themeTokens);
+    } else {
+      console.warn(`Theme file not found: ${themePath}`);
+    }
+  }
 
   // Create engine with flattened tokens
   const { flat, edges } = flattenTokens(tokens);
@@ -102,18 +113,6 @@ export async function setCommand(options: SetOptions): Promise<void> {
         suggestions.forEach(s => console.error(`  - ${s.id} (d=${s.d})`));
       }
       process.exit(1);
-    }
-  }
-
-  if (options.theme) {
-    const themePath = join('tokens/themes', `${options.theme}.json`);
-    if (existsSync(themePath)) {
-      const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
-      for (const [id, value] of Object.entries(themeTokens)) {
-        engine.commit(id, value as string | number);
-      }
-    } else {
-      console.warn(`Theme file not found: ${themePath}`);
     }
   }
 
