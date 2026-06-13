@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-06-13
+
+> **Security/behavior fix.** The validator now **fails closed** on malformed
+> input instead of silently passing it. If you relied on the previous lenient
+> handling of non-object token roots, this is a behavior change — a repo and
+> examples search found no legitimate callers depending on it.
+
+### Security
+
+- **MCP server and library reject malformed validator input.** Inline `tokens`
+  with a non-object root (`null`, arrays, strings, numbers, booleans) and
+  malformed `constraints` payloads now return a clear structured error instead of
+  being coerced into an empty token set that passed validation. This closes a gap
+  where an untrusted MCP caller could get a false `ok: true` from garbage input.
+  The same root-cause fix applies to the programmatic `validate()` and
+  `flattenTokens()` paths.
+
+### Fixed
+
+- Stabilized a flaky CLI test that could intermittently fail the release gate
+  (`npm run check`) on cold `tsx` startup under parallel load. Test-only — no
+  product behavior changed.
+
 ## [2.1.0] - 2026-06-12
 
 > **Note on 2.0.2:** `v2.0.2` was tagged and committed but **never published to npm**
