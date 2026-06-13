@@ -33,16 +33,21 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
   if (options.hasse) {
     const name = options.hasse;
   const bundle = (options as any).bundle;
+  const constraintsDir = options['constraints-dir'] ?? 'themes';
   const fmt = (options.format === 'json' ? 'mermaid' : options.format) as 'mermaid' | 'dot' | 'svg' | 'png';
-    const imageFrom = options.imageFrom || 'mermaid';
-    const filterPrefixes = options.filterPrefix ? options.filterPrefix.split(',').map(s=>s.trim()).filter(Boolean) : [];
-    const excludePrefixes = options.excludePrefix ? options.excludePrefix.split(',').map(s=>s.trim()).filter(Boolean) : [];
-    const onlyViolations = options.onlyViolations || false;
-    const highlightViolations = options.highlightViolations || false;
-    const violationColor = options.violationColor || '#ff2d55';
-    const labelViolations = options.labelViolations || false;
-    const labelTruncate = Math.max(0, options.labelTruncate || 0);
-    const minSeverity = options.minSeverity || 'warn';
+    const imageFrom = options['image-from'] || 'mermaid';
+    // The CLI runs with camel-case-expansion off, so kebab flags arrive only under
+    // their kebab keys. Read those (camelCase reads here silently no-op'd before).
+    const filterPrefix = options['filter-prefix'];
+    const excludePrefix = options['exclude-prefix'];
+    const filterPrefixes = filterPrefix ? filterPrefix.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    const excludePrefixes = excludePrefix ? excludePrefix.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    const onlyViolations = options['only-violations'] || false;
+    const highlightViolations = options['highlight-violations'] || false;
+    const violationColor = options['violation-color'] || '#ff2d55';
+    const labelViolations = options['label-violations'] || false;
+    const labelTruncate = Math.max(0, options['label-truncate'] || 0);
+    const minSeverity = options['min-severity'] || 'warn';
     const focus = options.focus; const radius = Math.max(0, options.radius || 1);
     for (const breakpoint of plan) {
       const suffixParts: string[] = [];
@@ -57,7 +62,7 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
       const ext = baseFmt === 'mermaid' ? 'mmd' : 'dot';
       const outDir = 'dist/graphs'; const baseFile = `${outDir}/${name}${suffix}-hasse.${ext}`;
       try {
-        const src = `themes/${name}.order.json`;
+        const src = `${constraintsDir}/${name}.order.json`;
         if (!existsSync(src)) { console.error(`❌ Order constraint file not found: ${src}`); process.exit(1); }
         const { order } = JSON.parse(readFileSync(src, 'utf8'));
         const { buildPoset, transitiveReduction, toMermaidHasseStyled, toDotHasseStyled, filterByPrefix, filterExcludePrefix, khopSubgraph, pickSeedsByPattern } = await import('../../core/poset.js');
@@ -93,12 +98,17 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
             issues = MonotonicPlugin(numericOrders, parseSize, 'monotonic').evaluate(engine, allIdsInHasse);
           }
 
-          // Attach threshold (and any other runtime constraints) respecting config flags
-          const cfgRes = loadConfig(undefined);
-          if (cfgRes.ok) {
+          // Attach threshold (and any other runtime constraints) respecting config flags.
+          // Honor the global --config and --constraints-dir, matching `validate`.
+          const cfgRes = loadConfig(options.config);
+          if (!cfgRes.ok) {
+            // An explicitly requested config that fails is a hard error (parity with
+            // validate); otherwise proceed with order-file violations only.
+            if (options.config) { console.error(cfgRes.error); process.exit(2); }
+          } else {
             const config = cfgRes.value;
             const knownIds = new Set(Object.keys(flat as Record<string, FlatToken>));
-            setupConstraints(engine, { config, bp: breakpoint }, { knownIds });
+            setupConstraints(engine, { config, bp: breakpoint, constraintsDir }, { knownIds });
             const runtimeIssues = engine.evaluate(allIdsInHasse);
             issues.push(...runtimeIssues);
           }

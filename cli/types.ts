@@ -51,24 +51,27 @@ export interface ValidateOptions extends GlobalOptions {
 }
 export interface GraphOptions extends GlobalOptions {
   output?: string;
+  'constraints-dir'?: string;
   format?: 'dot' | 'mermaid' | 'json' | 'svg' | 'png';
-  imageFrom?: 'mermaid' | 'dot';
   filter?: string;
   hasse?: string;
-  filterPrefix?: string;
-  excludePrefix?: string;
-  onlyViolations?: boolean;
-  highlightViolations?: boolean;
-  violationColor?: string;
-  labelViolations?: boolean;
-  labelTruncate?: number;
-  minSeverity?: 'warn' | 'error';
+  // Kebab keys: the CLI parser runs with camel-case-expansion off.
+  'image-from'?: 'mermaid' | 'dot';
+  'filter-prefix'?: string;
+  'exclude-prefix'?: string;
+  'only-violations'?: boolean;
+  'highlight-violations'?: boolean;
+  'violation-color'?: string;
+  'label-violations'?: boolean;
+  'label-truncate'?: number;
+  'min-severity'?: 'warn' | 'error';
   focus?: string;
   radius?: number;
   tokens?: string;
 }
 export interface WhyOptions extends GlobalOptions {
   tokenId: string;
+  'constraints-dir'?: string;
   format?: 'json' | 'table';
 }
 export interface PatchOptions extends GlobalOptions {

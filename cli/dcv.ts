@@ -57,6 +57,7 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
   .option('format', { type: 'string', choices: ['json','mermaid','dot','svg','png'], default: 'json' })
   .option('bundle', { type: 'boolean', describe: 'When used with --hasse export mermaid+dot (+image if svg/png requested)' })
   .option('hasse', { type: 'string' })
+  .option('constraints-dir', { type: 'string', describe: 'Directory holding order / cross-axis constraint files (default: themes). Used with --hasse.' })
   .option('filter-prefix', { type: 'string' })
   .option('exclude-prefix', { type: 'string' })
   .option('only-violations', { type: 'boolean' })
@@ -64,6 +65,8 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
   .option('label-violations', { type: 'boolean' })
   .option('label-truncate', { type: 'number', default: 0 })
   .option('min-severity', { type: 'string', choices: ['warn','error'], default: 'warn' })
+  .option('violation-color', { type: 'string', describe: 'Hex color for highlighted violations (default: #ff2d55)' })
+  .option('image-from', { type: 'string', choices: ['mermaid','dot'], describe: 'Source format for svg/png export (default: mermaid)' })
   .option('focus', { type: 'string' })
   .option('radius', { type: 'number', default: 1 })
   .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' }),
@@ -73,6 +76,7 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
 cli.command<WhyOptions>('why <tokenId>', 'Explain token provenance', y => y
   .positional('tokenId', { type: 'string', demandOption: true })
   .option('format', { type: 'string', choices: ['json','table'], default: 'json' })
+  .option('constraints-dir', { type: 'string', describe: 'Directory holding order / cross-axis constraint files for the constraint summary (default: themes)' })
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
   a => whyCommand(a)
 );

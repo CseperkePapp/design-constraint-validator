@@ -42,12 +42,14 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
     }
   }
 
+  // Local overrides (written by `dcv set --write`) inform provenance labelling.
+  // The legacy `themes/theme.json` hint was dropped: `themes/` now holds constraint
+  // policy files, not visual themes (the overlay convention is tokens/themes/<name>.json),
+  // so reading it as a theme layer was a wrong-convention silent fallback.
   const overrides = safeLoad('tokens/overrides/local.json');
-  const theme = safeLoad('themes/theme.json');
 
   const baseReport = explain(target, flat, edges, {
     overrides: (overrides as any)?.overrides ?? overrides,
-    theme,
   });
 
   // Best-effort constraint summary: which rules currently implicate this token
@@ -60,9 +62,17 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
       }[]
     | undefined;
 
-  try {
-    const cfgRes = loadConfig(options.config);
-    if (cfgRes.ok) {
+  // An explicitly requested --config that fails to load is a hard error (parity
+  // with validate); a config discovered from the cwd just enables the best-effort
+  // constraint summary when present.
+  const cfgRes = loadConfig(options.config);
+  if (!cfgRes.ok) {
+    if (options.config) {
+      console.error(cfgRes.error);
+      process.exit(2);
+    }
+  } else {
+    try {
       const config = cfgRes.value;
 
       // Create engine with flattened tokens
@@ -73,10 +83,11 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
       const engine = new Engine(init, edges);
       const knownIds = new Set(Object.keys(init));
 
-      // Discover and attach all constraints via centralized registry
+      // Discover and attach all constraints via centralized registry.
+      // Honor --constraints-dir, matching `validate` (default: themes).
       setupConstraints(
         engine,
-        { config, constraintsDir: 'themes' },
+        { config, constraintsDir: options['constraints-dir'] ?? 'themes' },
         { knownIds },
       );
 
@@ -96,9 +107,9 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
           }));
         }
       }
+    } catch {
+      // If constraint analysis fails, fall back to provenance-only report.
     }
-  } catch {
-    // If constraint analysis fails, fall back to provenance-only report.
   }
 
   const report: any = constraintsSummary ? { ...baseReport, constraints: constraintsSummary } : baseReport;

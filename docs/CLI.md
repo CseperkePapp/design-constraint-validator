@@ -174,7 +174,22 @@ dcv graph [options]
 --radius <n>               # Depth of neighbors to include (default: 1)
 
 --image-from <tool>        # Image generation tool (mermaid|dot)
+
+--tokens <path>            # Tokens file (default: tokens/tokens.example.json)
+
+--config <path>            # Config file for --hasse violation overlays
+                           # (global option; an explicit invalid path errors)
+
+--constraints-dir <dir>    # Order/cross-axis dir for --hasse (default: themes)
 ```
+
+> **Loading parity:** `--tokens`, `--config`, and `--constraints-dir` mirror
+> `validate`. `--config` and `--constraints-dir` only affect the `--hasse`
+> violation overlays (`--highlight-violations` / `--only-violations` /
+> `--label-violations`); a plain dependency graph needs only tokens. An
+> explicitly-passed `--config` or `--hasse` order file that is missing or invalid
+> fails with a clear error rather than silently using defaults. Theme overlays
+> are not applied by `graph` (use `validate --theme` for theme-aware checks).
 
 **Examples:**
 
@@ -254,8 +269,24 @@ dcv why <tokenId> [options]
 **Options:**
 
 ```bash
---format <fmt>    # Output format: json (default) | table
+--format <fmt>             # Output format: json (default) | table
+
+--tokens <path>           # Tokens file (default: tokens/tokens.example.json)
+
+--config <path>           # Config file for the constraint summary
+                          # (global option; an explicit invalid path errors)
+
+--constraints-dir <dir>   # Order/cross-axis dir for the constraint summary
+                          # (default: themes)
 ```
+
+> **Loading parity:** `--tokens`, `--config`, and `--constraints-dir` mirror
+> `validate`. The constraint summary (which rules implicate this token) is
+> best-effort: it appears when a config is present and a constraint references
+> the token. An explicitly-passed `--tokens` or `--config` that is missing or
+> invalid fails with a clear error. `why` reports base/override provenance only;
+> it does not apply visual theme overlays or breakpoint variants (use `validate`
+> for theme/breakpoint-aware checks).
 
 **Examples:**
 
