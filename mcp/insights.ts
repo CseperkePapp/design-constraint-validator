@@ -117,11 +117,14 @@ function classifyRule(ruleId: string): RuleKind {
 /** A monotonic issue id is `a|b`; a caller may also pass [a, b] directly. */
 function orderPair(nodes: string[]): [string, string] {
   if (nodes.length === 1 && nodes[0].includes('|')) {
-    const [a, b] = nodes[0].split('|');
-    return [a, b];
+    const parts = nodes[0].split('|');
+    if (parts.length !== 2) {
+      throw new InsightError('invalid_input', `A monotonic node id must be "a|b" (got ${parts.length} segments in "${nodes[0]}").`);
+    }
+    return [parts[0], parts[1]];
   }
-  if (nodes.length >= 2) return [nodes[0], nodes[1]];
-  throw new InsightError('invalid_input', 'A monotonic violation needs two token ids (nodes: [a, b] or ["a|b"]).');
+  if (nodes.length === 2) return [nodes[0], nodes[1]];
+  throw new InsightError('invalid_input', 'A monotonic violation needs exactly two token ids (nodes: [a, b] or ["a|b"]).');
 }
 
 function findOrderOp(descriptors: ConstraintDescriptor[], kind: 'order' | 'lightness', a: string, b: string): '<=' | '>=' | undefined {
@@ -256,6 +259,10 @@ export function explain(req: InsightRequest): ExplainResult {
   const na = parse(aVal);
   const nb = parse(bVal);
   const unit = isLightness ? 'luminance' : 'px';
+  // Actually compare — explain accepts a loose {ruleId, nodes} pair, so the order
+  // may hold; don't unconditionally claim a violation (TASK-032).
+  const comparable = na !== null && nb !== null;
+  const satisfied = comparable ? (op === '>=' ? na >= nb : na <= nb) : null;
   const facts = {
     left: a,
     right: b,
@@ -265,8 +272,13 @@ export function explain(req: InsightRequest): ExplainResult {
     unit,
     leftMeasure: na,
     rightMeasure: nb,
+    satisfied,
   };
-  const explanation = `${a} (${aVal}) must be ${op} ${b} (${bVal}) by ${unit}, but the order is violated — the scale is out of order.`;
+  const explanation = !comparable
+    ? `${a} (${aVal}) ${op} ${b} (${bVal}) can't be evaluated — one or both values aren't parseable as ${unit}.`
+    : satisfied
+      ? `${a} (${aVal}) ${op} ${b} (${bVal}) by ${unit} — the order holds.`
+      : `${a} (${aVal}) must be ${op} ${b} (${bVal}) by ${unit}, but the order is violated — the scale is out of order.`;
   return { ok: true, ruleId: req.ruleId, kind, nodes: [a, b], facts, explanation };
 }
 

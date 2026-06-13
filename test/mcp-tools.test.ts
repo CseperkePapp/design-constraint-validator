@@ -267,4 +267,27 @@ describe('MCP insight tools (list-constraints / explain / suggest-fix)', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('explain reports the true state for monotonic — does not claim a violation when the order holds', async () => {
+    const dir = join('dist', 'test-explain-order');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'spacing.order.json'), JSON.stringify({ order: [['spacing.x', '<=', 'spacing.y']] }));
+    try {
+      const cfg = { enableBuiltInWcagDefaults: false, enableBuiltInThreshold: false };
+      const tokens = { spacing: { x: { $value: '16px' }, y: { $value: '32px' } } }; // 16 <= 32 HOLDS
+      const r = await explainTool({ tokens, constraints: cfg, constraintsDir: dir, ruleId: 'monotonic', nodes: ['spacing.x|spacing.y'] });
+      if (isFailure(r)) throw new Error(r.error.message);
+      expect(r.facts.satisfied).toBe(true);
+      expect(r.explanation).toContain('the order holds');
+      expect(r.explanation).not.toContain('out of order');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('explain rejects a malformed multi-segment monotonic node id', async () => {
+    const r = await explainTool({ tokens: TOKENS, constraintsDir: '__none__', ruleId: 'monotonic', nodes: ['a|b|c'] });
+    if (!isFailure(r)) throw new Error('Expected invalid_input for a|b|c');
+    expect(r.error.code).toBe('invalid_input');
+  });
 });

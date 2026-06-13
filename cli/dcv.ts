@@ -16,7 +16,10 @@ const cli = yargs(hideBin(process.argv))
   .option('quiet', { type: 'boolean' })
   .option('config', { type: 'string', describe: 'Path to JSON config file' });
 
-cli.command<SetOptions>('set <expressions..>', 'Set token values', y => y
+// `[expressions..]` is OPTIONAL: batch mode (--json / `-` stdin) and unset-only
+// mode (--unset) take no positional, and a mandatory positional made yargs abort
+// before the handler (TASK-032).
+cli.command<SetOptions>('set [expressions..]', 'Set token values', y => y
   .positional('expressions', { type: 'string', array: true })
   .option('dry-run', { type: 'boolean', default: false })
   .option('write', { type: 'boolean' })
@@ -25,6 +28,7 @@ cli.command<SetOptions>('set <expressions..>', 'Set token values', y => y
   .option('format', { type: 'string', choices: ['json','css','js'], default: 'json' })
   .option('output', { type: 'string' })
   .option('theme', { type: 'string' })
+  .option('debug-set', { type: 'boolean', hidden: true }) // hidden debug aid (also DCV_DEBUG_SET=1)
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
   a => setCommand(a)
 );
@@ -52,6 +56,7 @@ cli.command<ValidateOptions>('validate [tokens-path]', 'Validate constraints', y
   .option('theme', { type: 'string', describe: 'Apply named theme tokens before validation' })
   .option('breakpoint', { type: 'string' })
   .option('all-breakpoints', { type: 'boolean' })
+  .option('cross-axis-debug', { type: 'boolean', hidden: true }) // hidden debug aid
   .option('perf', { type: 'boolean', describe: 'Print timing info' })
   .option('budget-total-ms', { type: 'number', describe: 'Fail if total validation exceeds this (ms)' })
   .option('budget-per-bp-ms', { type: 'number', describe: 'Fail if any single breakpoint exceeds this (ms)' }),
@@ -63,6 +68,9 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
   .option('bundle', { type: 'boolean', describe: 'When used with --hasse export mermaid+dot (+image if svg/png requested)' })
   .option('hasse', { type: 'string' })
   .option('constraints-dir', { type: 'string', describe: 'Directory holding order / cross-axis constraint files (default: themes). Used with --hasse.' })
+  .option('filter', { type: 'string', describe: 'Filter dependency-graph edges by regex (matches either endpoint)' })
+  .option('breakpoint', { type: 'string', choices: ['sm','md','lg'] })
+  .option('all-breakpoints', { type: 'boolean' })
   .option('filter-prefix', { type: 'string' })
   .option('exclude-prefix', { type: 'string' })
   .option('only-violations', { type: 'boolean' })
