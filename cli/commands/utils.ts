@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { valuesToCss } from '../../adapters/css.js';
 import type { TokenNode, TokenValue } from '../../core/flatten.js';
 
@@ -14,6 +14,28 @@ export function loadTokens(tokensPath: string): TokenNode {
   if (typeof data !== 'object' || data === null) {
     throw new Error(`Invalid token file: expected object, got ${typeof data}`);
   }
+  return data as TokenNode;
+}
+
+export function loadThemeTokens(theme: string): TokenNode {
+  const themePath = join('tokens/themes', `${theme}.json`);
+  if (!existsSync(themePath)) {
+    throw new Error(`Theme file not found: ${themePath}`);
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(readFileSync(themePath, 'utf8'));
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    throw new Error(`Theme file is not valid JSON: ${themePath} (${detail})`);
+  }
+
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    const got = data === null ? 'null' : Array.isArray(data) ? 'array' : typeof data;
+    throw new Error(`Theme file must contain a JSON object: ${themePath} (got ${got})`);
+  }
+
   return data as TokenNode;
 }
 

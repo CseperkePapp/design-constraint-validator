@@ -1,4 +1,4 @@
-import { join, dirname, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import { mergeTokens } from '../../core/breakpoints.js';
@@ -6,16 +6,13 @@ import { valuesToCss, type ManifestRow } from '../../adapters/css.js';
 import { emitJSON } from '../../adapters/json.js';
 import { emitJS } from '../../adapters/js.js';
 import type { BuildOptions } from '../types.js';
+import { loadThemeTokens } from './utils.js';
 
 export async function buildCommand(options: BuildOptions & { [k: string]: any }): Promise<void> {
   const { loadTokensWithBreakpoint } = await import('../../core/breakpoints.js');
   let tokens = loadTokensWithBreakpoint(undefined, options.tokens);
   if (options.theme) {
-    const themePath = join('tokens/themes', `${options.theme}.json`);
-    if (existsSync(themePath)) {
-      const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
-      tokens = mergeTokens(tokens, themeTokens);
-    }
+    tokens = mergeTokens(tokens, loadThemeTokens(options.theme));
   }
   const { flat } = flattenTokens(tokens);
   const allValues = Object.fromEntries(Object.values(flat).map(t => [t.id, (t as FlatToken).value]));

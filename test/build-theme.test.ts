@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -81,6 +82,13 @@ function setupThemeFixture(): string {
   return dir;
 }
 
+function runCli(dir: string, args: string[]) {
+  return spawnSync(process.execPath, [path.join(originalCwd, 'cli/index.js'), ...args], {
+    cwd: dir,
+    encoding: 'utf8',
+  });
+}
+
 describe('build command theme overlays', () => {
   afterEach(() => {
     process.chdir(originalCwd);
@@ -143,6 +151,31 @@ describe('build command theme overlays', () => {
     } finally {
       logs.restore();
       process.chdir(originalCwd);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed when validate is asked to use a missing theme', () => {
+    const dir = setupThemeFixture();
+    try {
+      const result = runCli(dir, ['validate', '--tokens', 'tokens.json', '--theme', 'missing', '--format', 'json']);
+
+      expect(result.status).not.toBe(0);
+      expect(`${result.stderr}${result.stdout}`).toContain('Theme file not found');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed when validate is asked to use an invalid theme file', () => {
+    const dir = setupThemeFixture();
+    try {
+      writeFileSync(path.join(dir, 'tokens', 'themes', 'bad.json'), '{');
+      const result = runCli(dir, ['validate', '--tokens', 'tokens.json', '--theme', 'bad', '--format', 'json']);
+
+      expect(result.status).not.toBe(0);
+      expect(`${result.stderr}${result.stdout}`).toContain('Theme file is not valid JSON');
+    } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   });

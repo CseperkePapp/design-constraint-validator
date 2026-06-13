@@ -1,11 +1,9 @@
-import { join } from 'node:path';
-import { readFileSync, existsSync } from 'node:fs';
 import { loadConfig } from '../config.js';
 import { Engine } from '../../core/engine.js';
 import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import { mergeTokens } from '../../core/breakpoints.js';
 import type { OverridesTree, SetOptions, ValuesPatch } from '../types.js';
-import { loadTokens, outputResult } from './utils.js';
+import { loadThemeTokens, loadTokens, outputResult } from './utils.js';
 import { setupConstraints } from '../constraint-registry.js';
 
 // Lightweight suggestion helpers (kept local – why command uses core formatter instead)
@@ -80,13 +78,7 @@ export async function setCommand(options: SetOptions): Promise<void> {
   let tokens = loadTokens(tokensPath);
 
   if (options.theme) {
-    const themePath = join('tokens/themes', `${options.theme}.json`);
-    if (existsSync(themePath)) {
-      const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
-      tokens = mergeTokens(tokens, themeTokens);
-    } else {
-      console.warn(`Theme file not found: ${themePath}`);
-    }
+    tokens = mergeTokens(tokens, loadThemeTokens(options.theme));
   }
 
   // Create engine with flattened tokens

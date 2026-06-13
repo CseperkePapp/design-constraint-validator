@@ -5,10 +5,10 @@ import { parseBreakpoints, loadTokensWithBreakpoint, mergeTokens, type Breakpoin
 import type { ConstraintIssue } from '../../core/engine.js';
 import type { ValidateOptions } from '../types.js';
 import { createValidationResult, createValidationReceipt, writeJsonOutput } from '../json-output.js';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { setupConstraints, collectReferencedIds } from '../constraint-registry.js';
 import { printVersionBanner } from '../version-banner.js';
+import { loadThemeTokens } from './utils.js';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
   // Show version banner (subtle, dimmed)
@@ -72,15 +72,7 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       let tokens: TokenNode = loadTokensWithBreakpoint(bp, tokensPath);
       // Optional theme overlay (tokens/themes/<name>.json), mirroring build behavior
       if (_options.theme) {
-        const themePath = join('tokens/themes', `${_options.theme}.json`);
-        if (existsSync(themePath)) {
-          try {
-            const themeTokens = JSON.parse(readFileSync(themePath, 'utf8'));
-            tokens = mergeTokens(tokens, themeTokens);
-          } catch {
-            // If theme file is invalid JSON, ignore and proceed with base tokens
-          }
-        }
+        tokens = mergeTokens(tokens, loadThemeTokens(_options.theme));
       }
       // Create engine with flattened tokens
       const { flat, edges } = flattenTokens(tokens);
