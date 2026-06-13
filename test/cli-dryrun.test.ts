@@ -69,6 +69,16 @@ describe('TASK-024: --dry-run writes nothing', () => {
     expect(existsSync(path.join(dir, 'tokens', 'overrides', 'local.json'))).toBe(false);
   });
 
+  it('set --dry-run --output writes no file and prints the patch to stdout', () => {
+    // Output name must not collide with the beforeAll fixtures (tokens.json/patch.json).
+    // (The batch --json path shares the identical dry-run guard; not exercised here
+    // because embedding JSON on the command line isn't portable across test shells.)
+    const r = runCli(dir, 'set color.a=#222222 --dry-run --output set-out.json --tokens tokens.json');
+    expect(r.status).toBe(0);
+    expect(existsSync(path.join(dir, 'set-out.json'))).toBe(false);
+    expect(r.stdout).toContain('color.a');
+  });
+
   it('build --format json --dry-run creates no output directory', () => {
     const r = runCli(dir, 'build --format json --dry-run --tokens tokens.json');
     expect(r.status).toBe(0);

@@ -38,28 +38,32 @@ publish step**. See `RELEASE.md` for the canonical flow.
    contains (the commits since the last tag).
 2. **Choose the version.** Patch = fixes only; minor = new features/CLI options/MCP
    tools (backwards compatible); major = breaking. Bug/security hardening → patch.
-3. **Gate.** Run `npm run check` (typecheck + lint + build + test) — must be green.
-4. **Audit.** `npm audit --omit=dev` — clean, or every finding explicitly triaged.
-5. **Version alignment.** Confirm `package.json`, `package-lock.json`, and
+3. **Bring `package.json` to the target version — LOCAL only, do not push.** This
+   must happen *before* alignment/preview so they reflect the artifact that will
+   actually ship (`package.json` is the source of truth for the version):
+   - **NOT yet at target** → `npm version <patch|minor|major>` (bumps
+     package.json + lock and creates the local `vX.Y.Z` tag) and update the
+     changelog. Nothing is pushed yet.
+   - **ALREADY at target** (e.g. bumped in a prior release-prep commit, like a
+     staged 2.1.1) → do **not** run `npm version` (it would over-bump). The tag is
+     created at the push step.
+4. **Gate.** Run `npm run check` (typecheck + lint + build + test) — must be green.
+5. **Audit.** `npm audit --omit=dev` — clean, or every finding explicitly triaged.
+6. **Version alignment.** Confirm `package.json`, `package-lock.json`, and
    `server.json` all read the target version, and the `dcv-mcp` runtime version
    matches (`createDcvMcpServer()` derives it from `package.json`).
-6. **Credentials check.** Confirm `NPM_TOKEN` (or OIDC trusted publishing) is
+7. **Credentials check.** Confirm `NPM_TOKEN` (or OIDC trusted publishing) is
    configured and the workflow has `id-token: write`. If missing → **stop**.
-7. **Pack preview.** `npm pack --dry-run --json` — confirm `name@version` and that
-   `mcp/` + `server.json` are included.
-8. **Maintainer gate.** Present the version, changelog, gate, and pack results.
-   **Wait for explicit approval.**
-9. **Tag.** With approval, create the matching `vX.Y.Z` tag — the only trigger.
-   Do not `npm publish`. Two cases (see `RELEASE.md`):
-   - **package.json NOT yet at the target version** → `npm version <patch|minor|major>`
-     (bumps and tags), or the matching `release:*` script, then
-     `git push && git push --tags`.
-   - **package.json ALREADY at the target version** (e.g. it was bumped in a prior
-     release-prep commit) → do **not** run `npm version` (it would over-bump);
-     just `git tag vX.Y.Z && git push && git push --tags`.
-   Confirm which case applies before tagging — `package.json` is the source of
-   truth for the version, the tag must match it.
-10. **Watch + verify.** Watch the `publish.yml` run; confirm its "Verify published
+8. **Pack preview.** `npm pack --dry-run --json` — confirm `name@<target>` and that
+   `mcp/` + `server.json` are included. (Reflects the real artifact because the
+   version is already set in step 3.)
+9. **Maintainer gate.** Present the version, changelog, gate, audit, and pack
+   results. **Wait for explicit approval.**
+10. **Push the tag (the only trigger).** With approval, do **not** `npm publish`:
+    - If step 3 ran `npm version`: `git push && git push --tags`.
+    - If the version was already at target: `git tag vX.Y.Z && git push && git push --tags`.
+    `publish.yml` fails the run if the tag doesn't match `package.json`.
+11. **Watch + verify.** Watch the `publish.yml` run; confirm its "Verify published
     version is live on npm" step passes (it polls the registry). If it fails,
     surface the logs — do not retry blindly.
 

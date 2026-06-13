@@ -59,16 +59,18 @@ For full details, see the individual `README.md` files in each example directory
 From the repo root, you can run any example directly with the CLI. For example:
 
 ```bash
-npx dcv validate ./examples/minimal/tokens.example.json
+# Passing example — validates clean against its config
+npx dcv validate ./examples/minimal/tokens.json --config ./examples/minimal/dcv.config.json
 
-npx dcv validate ./examples/failing/contrast-fail.tokens.json
-
-npx dcv validate ./examples/style-dictionary/output.tokens.json
+# Failing example — the DTCG sample violates its constraints (exits non-zero)
+npx dcv validate ./examples/dtcg/figma-export.tokens.json --config ./examples/dtcg/dcv.config.json --summary table
 ```
 
-Constraints come from a `dcv.config.json` in the cwd (or `--config <file>`) plus
+Constraints come from a `dcv.config.json` (in the cwd, or `--config <file>`) plus
 order/cross-axis files in the constraints dir (`--constraints-dir`, default
-`themes/`). There is no `--policy` flag.
+`themes/`). There is no `--policy` flag. A tokens file with no matching
+constraint validates clean with a "nothing was checked" note — pair tokens with a
+config, as above.
 
 Refer to each example’s `README.md` for the exact commands and context.
 

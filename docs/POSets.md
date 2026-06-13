@@ -46,11 +46,12 @@ Cross-axis rules (`themes/cross-axis.rules.json`, discovered from the constraint
 ````
 
 
-** CLI Demo:** Add to Quick Start:
+**CLI demo:** order files are auto-discovered from the constraints dir (default
+`themes/`; `--constraints-dir` for a custom one). Point validate at your own
+tokens; a file whose typography scale is out of order is flagged transitively:
 ```bash
-# Poset Check (order files auto-discovered from the constraints dir; --constraints-dir for a custom one)
-npx dcv validate ./examples/poset-fail.tokens.json --constraints-dir ./themes
-npx dcv why typography.size.h1 --format table  # Shows transitive violation
-````
+npx dcv validate <your-tokens.json> --constraints-dir themes
+npx dcv why typography.size.h1 --format table   # explains the implicated order
+```
 
 Why: Proves rigor — basic examples → poset power.
