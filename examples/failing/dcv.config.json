@@ -1,0 +1,14 @@
+{
+  "constraints": {
+    "enableBuiltInWcagDefaults": false,
+    "enableBuiltInThreshold": false,
+    "wcag": [
+      {
+        "foreground": "color.text.primary",
+        "background": "color.bg.body",
+        "ratio": 4.5,
+        "description": "Body text on page background (WCAG AA)"
+      }
+    ]
+  }
+}

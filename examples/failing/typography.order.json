@@ -1,0 +1,8 @@
+{
+  "$description": "Heading scale must be non-increasing: h1 >= h2 >= h3 >= body. monotonicity-fail violates h2 >= h3 (21px < 22px).",
+  "order": [
+    ["typography.scale.h1", ">=", "typography.scale.h2"],
+    ["typography.scale.h2", ">=", "typography.scale.h3"],
+    ["typography.scale.h3", ">=", "typography.scale.body"]
+  ]
+}

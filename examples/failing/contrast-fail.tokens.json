@@ -1,9 +1,9 @@
 {
   "color": {
-    "text": { "primary": { "value": "#666666" } },
-    "bg":   { "body":    { "value": "#F2F2F2" } }
+    "text": { "primary": { "$value": "#949494" } },
+    "bg":   { "body":    { "$value": "#f2f2f2" } }
   },
   "typography": {
-    "body": { "size": { "value": 16 } }
+    "body": { "size": { "$value": "16px" } }
   }
 }
