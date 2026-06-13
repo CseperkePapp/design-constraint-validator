@@ -123,6 +123,9 @@ describe('CLI basic commands', () => {
     // Removed token should have no $value -> flatten later would exclude it; here raw tree has brand.700 object but without $value
     expect(appliedTokens.color.palette.brand['700']?.$value).toBeUndefined();
     expect(appliedTokens.color.palette.brand['600']?.$value).toBe('#ffffff');
-  }, 10000); // Increase timeout for this test (npx tsx can be slow)
-});
+  });
+  // Each case spawns `npx tsx`, which pays a cold CLI compile. Under the full
+  // parallel `vitest run` on Windows that can exceed the 5s default, so give the
+  // whole suite generous headroom — a genuine hang still trips it.
+}, { timeout: 30000 });
 
