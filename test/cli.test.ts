@@ -6,7 +6,7 @@ function run(cmd: string) {
   return execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
 }
 
-describe('CLI basic commands', () => {
+describe('CLI basic commands', { timeout: 30000 }, () => {
   it('build (json dry-run) outputs JSON', () => {
     const out = run('npx tsx ./cli/dcv.ts build --format json --dry-run');
     const parsed = JSON.parse(out);
@@ -127,5 +127,5 @@ describe('CLI basic commands', () => {
   // Each case spawns `npx tsx`, which pays a cold CLI compile. Under the full
   // parallel `vitest run` on Windows that can exceed the 5s default, so give the
   // whole suite generous headroom — a genuine hang still trips it.
-}, { timeout: 30000 });
+});
 
