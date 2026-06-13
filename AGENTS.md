@@ -72,6 +72,19 @@ stdio: `validate`, `why`, `graph`, and the derivation tools `list-constraints`,
 Setup and the agent loop are documented in
 [docs/AI-GUIDE.md](docs/AI-GUIDE.md#mcp-server-dcv-mcp).
 
+## Specialized agents
+
+Two recurring expert flows are codified as agent playbooks in
+[.github/agents/](.github/agents/) (plain Markdown + `name`/`description`
+frontmatter, mirroring `.github/skills/`):
+
+- **[constraint-author](.github/agents/constraint-author.md)** — scaffold a new
+  constraint plugin end-to-end (core plugin → registry → schema → fixture → test).
+  Guardrail: never touches `core/color.ts`/verified math; additive only.
+- **[release-captain](.github/agents/release-captain.md)** — drive an npm release
+  via the tag-push flow. Guardrail: tag-push only, never `npm publish` by hand,
+  never tag without maintainer approval, stop at any failed gate.
+
 ## Where to read more
 
 - [docs/AI-GUIDE.md](docs/AI-GUIDE.md) — commands, JSON schema, MCP, programmatic API
