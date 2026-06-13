@@ -14,7 +14,7 @@ export type ContrastPair = {
 function resolveColor(engineGet: (id: TokenId)=>unknown, x: TokenId | string): string | undefined {
   if (typeof x !== "string") return undefined;
   // If it's a CSS color literal, return as is; else treat as token id.
-  const isLiteral = /^#|^rgb|^hsl|^oklch|^oklab|^transparent/i.test(x);
+  const isLiteral = /^(#|rgba?\(|hsla?\(|oklch\(|oklab\(|transparent$)/i.test(x);
   return isLiteral ? x : String(engineGet(x) ?? "");
 }
 

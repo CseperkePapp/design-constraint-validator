@@ -177,4 +177,31 @@ describe('clean-room: programmatic validate() wrapper', () => {
   it('missing tokens path throws a clear error', () => {
     expect(() => validate({ tokensPath: 'does-not-exist.json' })).toThrow(/Tokens file not found/);
   });
+
+  it('rejects malformed inline constraints instead of silently changing validation semantics', () => {
+    expect(() =>
+      validate({
+        tokens: { control: { size: { custom: { $value: '30px' } } } },
+        constraints: {
+          enableBuiltInThreshold: false,
+          enableBuiltInWcagDefaults: false,
+          thresholds: [{ id: 'control.size.custom', op: '~=', valuePx: 44 }],
+        } as never,
+        constraintsDir: '__none__',
+      })
+    ).toThrow(/Inline constraints validation failed[\s\S]*constraints\.thresholds\.0\.op/);
+  });
+
+  it('rejects string built-in toggles in inline constraints', () => {
+    expect(() =>
+      validate({
+        tokens: TOKENS,
+        constraints: {
+          enableBuiltInThreshold: 'false',
+          enableBuiltInWcagDefaults: false,
+        } as never,
+        constraintsDir: '__none__',
+      })
+    ).toThrow(/Inline constraints validation failed[\s\S]*constraints\.enableBuiltInThreshold/);
+  });
 });

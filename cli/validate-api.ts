@@ -14,6 +14,7 @@ import { flattenTokens, type TokenNode, type FlatToken } from '../core/flatten.j
 import { Engine, type ConstraintIssue } from '../core/engine.js';
 import type { Breakpoint } from '../core/breakpoints.js';
 import { loadConfig } from './config.js';
+import { validateConfig } from './config-schema.js';
 import { setupConstraints, collectReferencedIds } from './constraint-registry.js';
 import { formatViolation, type ConstraintViolation } from './json-output.js';
 import type { DcvConfig } from './types.js';
@@ -57,7 +58,11 @@ function readTokensFile(p: string): TokenNode {
 
 function resolveConfig(input: ValidateInput): DcvConfig {
   if (input.constraints !== undefined) {
-    return { constraints: input.constraints };
+    const { value, errors } = validateConfig({ constraints: input.constraints });
+    if (errors) {
+      throw new Error(`Inline constraints validation failed:\n  - ${errors.join('\n  - ')}`);
+    }
+    return value!;
   }
   const res = loadConfig(input.configPath);
   if (!res.ok) {

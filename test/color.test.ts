@@ -59,4 +59,21 @@ describe('WCAG validator color input formats', () => {
 
     expect(issues).toEqual([]);
   });
+
+  it('resolves backdrop token ids that start with CSS color function names', () => {
+    const engine = new Engine(
+      {
+        'color.text': '#000000',
+        'color.bg': 'rgba(255, 255, 255, 0.5)',
+        'rgb.backdrop': '#ffffff',
+      },
+      []
+    ).use(
+      WcagContrastPlugin([
+        { fg: 'color.text', bg: 'color.bg', backdrop: 'rgb.backdrop', min: 4.5, where: 'prefixed token id' },
+      ])
+    );
+
+    expect(engine.evaluate(new Set(engine.getAllIds()))).toEqual([]);
+  });
 });
