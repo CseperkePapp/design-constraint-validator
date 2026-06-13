@@ -35,6 +35,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
   as a color literal, so a valid token id like `rgb.backdrop` produced an
   unparseable-color warning instead of resolving. Literal detection now requires
   real CSS color syntax (`rgb(`, `hsl(`, `oklch(`, `#…`, exact `transparent`).
+- **`--theme` overlays merge correctly.** `dcv build --theme <name>` (and the
+  same path in `dcv set --theme`) flattened tokens *before* applying the nested
+  theme overlay, emitting base values plus invalid CSS like
+  `--color: [object Object];`. Theme overlays are now merged onto the token tree
+  before flattening, matching breakpoint-overlay behavior.
+- **Theme-aware commands fail closed on a bad theme.** `validate`, `build`, and
+  `set` shared no theme loader and silently ignored a missing
+  `tokens/themes/<name>.json`, swallowed invalid JSON, or accepted a non-object
+  theme file — validating base tokens as if the requested theme applied. They now
+  use one shared loader that errors clearly on a missing, malformed, or
+  non-object theme file.
+- The `dcv-mcp` server's runtime handshake reported a hardcoded `2.1.0`; it now
+  derives its version from `package.json`, so it can't drift from the release.
 - Stabilized a flaky CLI test that could intermittently fail the release gate
   (`npm run check`) on cold `tsx` startup under parallel load. Test-only — no
   product behavior changed.
