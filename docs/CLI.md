@@ -4,17 +4,19 @@ Complete reference for all `dcv` commands and options.
 
 ## Global Options
 
-These options work with all commands:
+These work with every command:
 
 ```bash
---tokens <path>        # Path to tokens file (default: tokens/tokens.example.json)
---config <path>        # Path to config file (default: dcv.config.json)
---quiet               # Minimal output
---breakpoint <bp>     # Validate specific breakpoint (sm|md|lg)
---all-breakpoints     # Validate all breakpoints
---help, -h            # Show help
---version             # Show version
+--config <path>        # Path to config file (default: discovered dcv.config.json)
+--quiet                # Minimal output
+--help, -h             # Show help
+--version              # Show version
 ```
+
+Per-command (not global): `--tokens` is accepted by `validate`/`why`/`graph`/
+`build`/`set`/`patch`; `--breakpoint <sm|md|lg>` and `--all-breakpoints` are on
+`validate` and `graph` only. See each command's section below — passing an option
+a command doesn't register is rejected (`Unknown argument`).
 
 ---
 
@@ -291,12 +293,14 @@ dcv why <tokenId> [options]
 **Examples:**
 
 ```bash
-# Explain typography.size.h1
-dcv why typography.size.h1
+# Explain a token (use a token id that exists in your tokens file)
+dcv why typography.size.body
+
+# Against a specific tokens file
+dcv why typography.size.h1 --tokens path/to/tokens.json
 
 # JSON output
-dcv why typography.size.h1 --format json
-
+dcv why typography.size.body --format json
 ```
 
 **Output:**

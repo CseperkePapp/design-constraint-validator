@@ -19,9 +19,9 @@ dcv validate --format json --receipt validation.receipt.json
 interface ValidationResult {
   ok: boolean;
   counts: {
-    checked: number;
-    violations: number;
-    warnings: number;
+    checked: number;    // number of ISSUES produced (errors + warnings), not constraints evaluated
+    violations: number; // error-level issues
+    warnings: number;   // warn-level issues
   };
   violations: ConstraintViolation[];
   warnings?: ConstraintViolation[];
@@ -195,7 +195,7 @@ import fs from 'node:fs';
 
 const result = JSON.parse(fs.readFileSync('validation.json', 'utf8'));
 
-console.log(`Checked ${result.counts.checked} constraints`);
+console.log(`Issues: ${result.counts.checked}`); // errors + warnings
 console.log(`Found ${result.counts.violations} violations`);
 console.log(`Found ${result.counts.warnings} warnings`);
 

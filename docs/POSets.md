@@ -29,21 +29,21 @@ Example: when: { size: "<16px", weight: "<400" }, require: { contrast: ">=7:1" }
 
 ## 3D Spaces (Size × Weight × Contrast)
 Cross-axis handles incomparables: Some combos valid, others not.
-Cross-axis rules (`themes/cross-axis.rules.json`, discovered from the constraints dir):
+Cross-axis rules (`themes/cross-axis.rules.json`, discovered from the constraints
+dir). Each rule has a single `when` guard and a single `require` (matching the
+loader and `docs/Constraints.md`):
 ```json
 {
   "rules": [
     {
-      "id": "readable-text",
-      "when": [
-        { "id": "typography.size.body", "test": "v < 16" },
-        { "id": "typography.weight.body", "test": "v <= 400" }
-      ],
-      "require": { "id": "contrast.body-on-bg", "test": "v >= 7" }
+      "id": "body-weight-vs-size",
+      "where": "Body legibility",
+      "when": { "id": "typography.weight.body", "op": "<=", "value": 400 },
+      "require": { "id": "typography.size.body", "op": ">=", "fallback": "16px" }
     }
   ]
 }
-````
+```
 
 
 **CLI demo:** order files are auto-discovered from the constraints dir (default

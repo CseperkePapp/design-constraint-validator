@@ -45,7 +45,7 @@ interface ValidateInput {
 interface ValidateResult {
   ok: boolean;
   counts: {
-    checked: number;
+    checked: number;    // ISSUES produced (errors + warnings), not constraints evaluated
     violations: number;
     warnings: number;
   };

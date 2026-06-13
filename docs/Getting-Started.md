@@ -9,10 +9,11 @@ constraints.
 npm install -D design-constraint-validator
 ```
 
-One-off use is also available:
+One-off use without installing is also available (use the full package name —
+the bare `dcv` bin on npm is an unrelated package):
 
 ```bash
-npx dcv --help
+npx design-constraint-validator --help
 ```
 
 ## Prerequisites

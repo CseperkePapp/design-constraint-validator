@@ -269,19 +269,21 @@ cd design-constraint-validator
 # Install
 npm install
 
-# Create example files above in:
-# - examples/advanced/tokens.json
-# - examples/advanced/themes/cross-axis.rules.json
-# - examples/advanced/themes/cross-axis.sm.rules.json
+# This is a build-it-yourself walkthrough — no fixtures ship in this folder.
+# Create the JSON shown above wherever you like, e.g. a `demo/` directory:
+#   demo/tokens.json
+#   demo/cross-axis.rules.json        (+ cross-axis.sm.rules.json for the bp variant)
+# Order/cross-axis files are discovered by name in the constraints dir, so point
+# --constraints-dir at the folder that holds them.
 
 # Validate base rules
-npx dcv validate --tokens examples/advanced/tokens.json
+npx dcv validate --tokens demo/tokens.json --constraints-dir demo
 
 # Validate mobile-specific rules
-npx dcv validate --tokens examples/advanced/tokens.json --breakpoint sm
+npx dcv validate --tokens demo/tokens.json --constraints-dir demo --breakpoint sm
 
 # See violations in table format
-npx dcv validate --tokens examples/advanced/tokens.json --all-breakpoints --summary table
+npx dcv validate --tokens demo/tokens.json --constraints-dir demo --all-breakpoints --summary table
 ```
 
 ## Integration with CI/CD
