@@ -47,10 +47,16 @@ npx dcv validate --format json --receipt audit.json
 # Explain why a token has its value
 npx dcv why color.primary
 
+# Explain it under a theme / breakpoint (resolves the merged value + provenance)
+npx dcv why color.primary --theme dark --breakpoint sm
+
 # Generate dependency graph
 npx dcv graph --format mermaid > graph.mmd
 npx dcv graph --format dot > graph.dot
 npx dcv graph --format json > graph.json
+
+# Highlight violations computed from themed values (dependency graph is unthemed)
+npx dcv graph --hasse typography --highlight-violations --theme dark
 ```
 
 ### Building
