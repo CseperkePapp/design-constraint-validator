@@ -77,11 +77,15 @@ export interface GraphOptions extends GlobalOptions {
   focus?: string;
   radius?: number;
   tokens?: string;
+  theme?: string;
+  breakpoint?: 'sm' | 'md' | 'lg';
 }
 export interface WhyOptions extends GlobalOptions {
   tokenId: string;
   'constraints-dir'?: string;
   format?: 'json' | 'table';
+  theme?: string;
+  breakpoint?: 'sm' | 'md' | 'lg';
 }
 export interface PatchOptions extends GlobalOptions {
   overrides?: string; // path to flat overrides json or inline json

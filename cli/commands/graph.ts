@@ -80,8 +80,15 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
         if (focus) { const nodes = new Set<string>([...h.keys(), ...Array.from(h.values()).flatMap(s=>[...s])]); const seeds = pickSeedsByPattern(nodes, focus); h = khopSubgraph(h, seeds, radius); }
         let highlight: { nodes: Set<string>; edges: Set<string>; color?: string } | undefined; let edgeLabels: Map<string,string> | undefined;
         if (onlyViolations || highlightViolations || labelViolations) {
-          const { loadTokensWithBreakpoint } = await import('../../core/breakpoints.js');
-          const tokens = loadTokensWithBreakpoint(breakpoint, options.tokens);
+          const { loadTokensWithBreakpoint, mergeTokens } = await import('../../core/breakpoints.js');
+          let tokens = loadTokensWithBreakpoint(breakpoint, options.tokens);
+          // Theme overlay affects VALUES, so violation overlays must reflect it
+          // (TASK-025) — merge-then-flatten like build/validate. The dependency
+          // graph itself is value-independent and intentionally unthemed.
+          if (options.theme) {
+            const { loadThemeTokens } = await import('./utils.js');
+            tokens = mergeTokens(tokens, loadThemeTokens(options.theme));
+          }
           const { flattenTokens } = await import('../../core/flatten.js');
           const { Engine } = await import('../../core/engine.js');
           const { MonotonicPlugin, parseSize } = await import('../../core/constraints/monotonic.js');
