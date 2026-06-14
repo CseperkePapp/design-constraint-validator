@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { Engine } from '../core/engine.js';
 import { MonotonicPlugin, parseSize } from '../core/constraints/monotonic.js';
 import { ThresholdPlugin } from '../core/constraints/threshold.js';
-import { collectReferencedIds } from '../cli/constraint-registry.js';
+import { collectReferencedIds, discoverConstraints } from '../cli/constraint-registry.js';
 import { validate } from '../core/index.js';
 
 /**
@@ -67,6 +68,43 @@ describe('TASK-034: breakpoint falls back to the global order file', () => {
       expect(global.ok).toBe(false);
       expect(bp.ok).toBe(false); // was a false PASS before the fallback
       expect(bp.violations.some((v) => v.ruleId === 'monotonic')).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('TASK-038: absolute constraintsDir paths are honored', () => {
+  it('loads an absolute constraintsDir and catches an order violation', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dcv-abs-constraints-'));
+    writeFileSync(join(dir, 'spacing.order.json'), JSON.stringify({ order: [['s.b', '>=', 's.a']] }));
+    try {
+      const cfg = { enableBuiltInWcagDefaults: false, enableBuiltInThreshold: false };
+      const tokens = { s: { a: { $value: '4px' }, b: { $value: '2px' } } };
+      const result = validate({ tokens, constraints: cfg, constraintsDir: dir });
+      expect(result.ok).toBe(false);
+      expect(result.violations.some((v) => v.ruleId === 'monotonic')).toBe(true);
+      expect(result.note).toBeUndefined();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('discovers lightness and cross-axis files under an absolute constraintsDir', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dcv-abs-discovery-'));
+    writeFileSync(join(dir, 'color.order.json'), JSON.stringify({ order: [['color.a', '>=', 'color.b']] }));
+    writeFileSync(join(dir, 'cross-axis.rules.json'), JSON.stringify({ rules: [] }));
+    writeFileSync(join(dir, 'cross-axis.sm.rules.json'), JSON.stringify({ rules: [] }));
+    try {
+      const cfg = { constraints: { enableBuiltInWcagDefaults: false, enableBuiltInThreshold: false } };
+      const sources = discoverConstraints({ config: cfg, constraintsDir: dir, bp: 'sm' });
+      expect(sources).toContainEqual({
+        type: 'lightness-file',
+        orders: [['color.a', '>=', 'color.b']],
+        path: join(dir, 'color.order.json'),
+      });
+      expect(sources).toContainEqual({ type: 'cross-axis-file', path: join(dir, 'cross-axis.rules.json') });
+      expect(sources).toContainEqual({ type: 'cross-axis-file', path: join(dir, 'cross-axis.sm.rules.json'), bp: 'sm' });
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

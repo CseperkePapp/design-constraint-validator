@@ -12,7 +12,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import type { Engine } from '../core/engine.js';
 import type { Breakpoint } from '../core/breakpoints.js';
 import type { DcvConfig } from './types.js';
@@ -98,6 +98,7 @@ export function discoverConstraints(opts: DiscoveryOptions): ConstraintSource[] 
   const { config, basePath = '.', bp, constraintsDir = 'themes' } = opts;
   const sources: ConstraintSource[] = [];
   const constraintsCfg = config.constraints ?? {};
+  const constraintsRoot = isAbsolute(constraintsDir) ? constraintsDir : join(basePath, constraintsDir);
 
   // 1. Built-in WCAG defaults
   const enableBuiltInWcag =
@@ -143,9 +144,9 @@ export function discoverConstraints(opts: DiscoveryOptions): ConstraintSource[] 
   // lacking a per-bp file (e.g. spacing) contributed ZERO constraints under
   // --breakpoint/--all-breakpoints, a silent false-pass (TASK-034).
   const orderPathFor = (base: string): string | undefined => {
-    const bpPath = bp ? join(basePath, constraintsDir, `${base}.${bp}.order.json`) : undefined;
+    const bpPath = bp ? join(constraintsRoot, `${base}.${bp}.order.json`) : undefined;
     if (bpPath && existsSync(bpPath)) return bpPath;
-    const globalPath = join(basePath, constraintsDir, `${base}.order.json`);
+    const globalPath = join(constraintsRoot, `${base}.order.json`);
     return existsSync(globalPath) ? globalPath : undefined;
   };
 
@@ -181,14 +182,14 @@ export function discoverConstraints(opts: DiscoveryOptions): ConstraintSource[] 
   }
 
   // 7. Cross-axis rules (global)
-  const crossAxisPath = join(basePath, constraintsDir, 'cross-axis.rules.json');
+  const crossAxisPath = join(constraintsRoot, 'cross-axis.rules.json');
   if (existsSync(crossAxisPath)) {
     sources.push({ type: 'cross-axis-file', path: crossAxisPath });
   }
 
   // 8. Cross-axis rules (breakpoint-specific)
   if (bp) {
-    const crossAxisBpPath = join(basePath, constraintsDir, `cross-axis.${bp}.rules.json`);
+    const crossAxisBpPath = join(constraintsRoot, `cross-axis.${bp}.rules.json`);
     if (existsSync(crossAxisBpPath)) {
       sources.push({ type: 'cross-axis-file', path: crossAxisBpPath, bp });
     }
