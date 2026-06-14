@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -29,8 +29,8 @@ describe('TASK-032: CLI surface (registered flags + set arity)', () => {
   });
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
-  it('--version reports the package version (not "unknown")', async () => {
-    const { version } = (await import('../package.json', { with: { type: 'json' } })).default;
+  it('--version reports the package version (not "unknown")', () => {
+    const { version } = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
     const r = run(dir, '--version');
     expect(r.status).toBe(0);
     expect(r.out.trim()).toBe(version);
