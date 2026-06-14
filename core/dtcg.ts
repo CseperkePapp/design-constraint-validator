@@ -80,7 +80,12 @@ function isColorObject(obj: Record<string, unknown>, type?: string): boolean {
 }
 
 function isDimensionObject(obj: Record<string, unknown>, type?: string): boolean {
-  return (type ?? '').toLowerCase() === 'dimension' || ('value' in obj && 'unit' in obj);
+  if ((type ?? '').toLowerCase() === 'dimension') return true;
+  // A bare { value: <number> } (with or without `unit`) is a dimension even when
+  // $type is absent — normalizeDimension defaults the unit to px. Previously this
+  // required `unit` too, so a unit-less dimension became an <unsupported> sentinel
+  // (TASK-035 E). isColorObject runs first, so a numeric `value` here is a length.
+  return 'value' in obj && typeof obj.value === 'number';
 }
 
 /**

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { validate } from '../core/index.js';
+import { normalizeDtcgValue } from '../core/dtcg.js';
 
 /**
  * DTCG 2025.10 stable-spec compliance.
@@ -48,5 +49,17 @@ describe('DTCG 2025.10 stable-spec compliance', () => {
   it('tolerates $extensions without error', () => {
     // $extensions on color.text must not crash flattening/validation.
     expect(result.counts.checked).toBeGreaterThan(0);
+  });
+});
+
+describe('TASK-035 E: unit-less dimension defaults to px (not <unsupported>)', () => {
+  it('{ value: 16 } with no unit and no $type → "16px"', () => {
+    expect(normalizeDtcgValue({ value: 16 })).toBe('16px');
+  });
+  it('{ value: 16, unit: "rem" } still honors the unit', () => {
+    expect(normalizeDtcgValue({ value: 16, unit: 'rem' })).toBe('16rem');
+  });
+  it('a non-numeric value is not treated as a dimension', () => {
+    expect(String(normalizeDtcgValue({ value: 'nope' }))).toContain('unsupported');
   });
 });
