@@ -51,6 +51,13 @@ npm run check           # typecheck + lint + build + test (the full gate)
 > as are the `src/__tests__` integrity tests. External contributors can ignore the
 > ledger mechanics below; the load-bearing rules are one-branch-per-task and the
 > public gate (`npm run check`).
+>
+> **Policy (TASK-023):** this is deliberate — the ledger stays local/ignored.
+> Anything that must survive in the public repo (release notes, user-facing
+> behavior changes) belongs in **tracked** files — `CHANGELOG.md` for releases,
+> the relevant `docs/*.md` for behavior. Don't reference gitignored
+> `docs/project-management/*` files from tracked/public docs (dead links in
+> clones), and don't `git add -f` ledger files.
 
 - **One branch per task**, never bundle tasks: `task/NNN-short-description`. Base
   on latest `main`, or stack on a dependency's branch.
@@ -94,4 +101,3 @@ frontmatter, mirroring `.github/skills/`):
 - [docs/AI-GUIDE.md](docs/AI-GUIDE.md) — commands, JSON schema, MCP, programmatic API
 - [docs/CLI.md](docs/CLI.md), [docs/Configuration.md](docs/Configuration.md),
   [docs/Constraints.md](docs/Constraints.md), [docs/Adapters.md](docs/Adapters.md)
-- [docs/project-management/AI-CAPABILITY-ASSESSMENT.md](docs/project-management/AI-CAPABILITY-ASSESSMENT.md) — AI roadmap
