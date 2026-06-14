@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-06-14
+
+### Fixed
+
+- **MCP registry namespace casing.** `package.json` `mcpName` and `server.json`
+  `name` used the lowercase `io.github.cseperkepapp/…`, but the MCP registry
+  validates ownership against the GitHub identity's exact casing
+  (`io.github.CseperkePapp/…`) — so registry publish of 2.2.0 was rejected. Both
+  now use the correct casing. No code/behavior change; npm package contents are
+  otherwise identical to 2.2.0.
+
 ## [2.2.0] - 2026-06-14
 
 > **First npm publish since 2.0.1.** `2.0.2`, `2.1.0`, and `2.1.1` were tagged

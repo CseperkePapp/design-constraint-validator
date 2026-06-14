@@ -1,6 +1,6 @@
 {
   "name": "design-constraint-validator",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence",
   "type": "module",
   "engines": {
@@ -26,7 +26,7 @@
     "design-constraint-validator": "./cli/index.js",
     "dcv-mcp": "./mcp/index.js"
   },
-  "mcpName": "io.github.cseperkepapp/design-constraint-validator",
+  "mcpName": "io.github.CseperkePapp/design-constraint-validator",
   "scripts": {
     "test": "vitest run --exclude \"**/*.test.js\"",
     "test:watch": "vitest --exclude \"**/*.test.js\"",

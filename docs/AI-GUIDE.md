@@ -334,7 +334,7 @@ Local development config after `npm run build`:
 ```
 
 Registry metadata lives in `server.json` with MCP name
-`io.github.cseperkepapp/design-constraint-validator`.
+`io.github.CseperkePapp/design-constraint-validator`.
 
 ## Troubleshooting Quick Fixes
 
