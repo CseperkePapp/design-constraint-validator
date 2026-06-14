@@ -1,4 +1,4 @@
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, join } from 'node:path';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import { mergeTokens } from '../../core/breakpoints.js';
@@ -47,11 +47,13 @@ export async function buildCommand(options: BuildOptions & { [k: string]: any })
       console.log(js);
       return;
     }
-    const dir = 'dist'; if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    writeFileSync('dist/tokens.css', css, 'utf8');
-    writeFileSync('dist/tokens.json', json, 'utf8');
-    writeFileSync('dist/tokens.js', js, 'utf8');
-    console.log(`Tokens written (all formats) to dist/ (css/json/js)${manifest ? ' with mapper' : ''}`);
+    // --output is honored as the target DIRECTORY for --all-formats (TASK-035 C:
+    // it was previously ignored and dist/ hardcoded). Defaults to dist/.
+    const dir = options.output || 'dist'; if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'tokens.css'), css, 'utf8');
+    writeFileSync(join(dir, 'tokens.json'), json, 'utf8');
+    writeFileSync(join(dir, 'tokens.js'), js, 'utf8');
+    console.log(`Tokens written (all formats) to ${dir}/ (css/json/js)${manifest ? ' with mapper' : ''}`);
     return;
   }
   if (format === 'css') {

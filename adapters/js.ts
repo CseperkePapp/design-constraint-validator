@@ -1,10 +1,12 @@
 // adapters/js.ts
-import { buildVarMapping, defaultVarMapper, type ManifestRow } from './css.js';
+import { buildVarMapping, defaultVarMapper, assertNoVarCollisions, type ManifestRow } from './css.js';
 
 export function emitJS(values: Record<string, any>, manifest?: ManifestRow[]): string {
   const ids = Object.keys(values).sort();
   let mapping: Map<string, { canonical: string; aliases: string[] }> | undefined;
   if (manifest) mapping = buildVarMapping(ids, manifest);
+  // Distinct ids that collapse to the same key would silently overwrite (TASK-035 C).
+  assertNoVarCollisions(ids, (id) => (mapping ? mapping.get(id)!.canonical : defaultVarMapper(id)));
   const lines: string[] = [];
   for (const id of ids) {
     const canonical = mapping ? mapping.get(id)!.canonical : defaultVarMapper(id);

@@ -9,6 +9,38 @@ export type VarMapper = (id: TokenId) => string | null;
 export const defaultVarMapper: VarMapper = (id) =>
   `--${id.replace(/[^a-z0-9.]/gi, "-").replace(/\.+/g, "-").toLowerCase()}`;
 
+/**
+ * A CSS custom-property value derived from a token must not break out of its
+ * declaration (TASK-035 C). `;`, `{`, `}` and comment markers can't appear in a
+ * well-formed token value, so strip them — a malformed value can otherwise
+ * inject or corrupt sibling declarations.
+ */
+export function sanitizeCssValue(v: string): string {
+  return v.replace(/\/\*|\*\//g, "").replace(/[;{}]/g, "").trim();
+}
+
+/**
+ * Detect non-injective var mapping (TASK-035 C): `defaultVarMapper` collapses
+ * both `.` and other separators to `-`, so distinct ids like `a.b` and `a-b` map
+ * to the same `--a-b` and would silently overwrite each other in CSS/JSON/JS.
+ * Throw a clear error naming the colliding ids rather than dropping a token.
+ */
+export function assertNoVarCollisions(ids: Iterable<string>, resolve: (id: string) => string | null): void {
+  const seen = new Map<string, string>();
+  for (const id of ids) {
+    const v = resolve(id);
+    if (!v) continue; // intentionally unmapped
+    const prev = seen.get(v);
+    if (prev !== undefined && prev !== id) {
+      throw new Error(
+        `Variable name collision: tokens "${prev}" and "${id}" both map to "${v}". ` +
+        `Rename one id or provide a manifest with distinct canonicalVar values.`,
+      );
+    }
+    seen.set(v, id);
+  }
+}
+
 // Manifest driven mapping allowing canonical + legacy aliases.
 export type ManifestRow = { id: string; canonicalVar?: string | null; legacyVars?: string[] };
 
@@ -56,10 +88,11 @@ function buildCssBlock(
   const decls: string[] = [];
   if (opts.manifest) {
     const mapping = buildVarMapping(Object.keys(values), opts.manifest);
+    assertNoVarCollisions(Object.keys(values), (id) => mapping.get(id)?.canonical ?? null);
     for (const [id, val] of Object.entries(values)) {
       const m = mapping.get(id);
       if (!m) continue;
-      const v = String(val).trim();
+      const v = sanitizeCssValue(String(val));
       if (!v) continue;
       decls.push(`${m.canonical}: ${v};`);
       for (const alias of m.aliases) {
@@ -68,10 +101,11 @@ function buildCssBlock(
     }
   } else {
     const mapVar = opts.mapVar ?? defaultVarMapper;
+    assertNoVarCollisions(Object.keys(values), mapVar);
     for (const [id, val] of Object.entries(values)) {
       const cssVar = mapVar(id);
       if (!cssVar) continue; // skip if intentionally unmapped
-      const v = String(val).trim();
+      const v = sanitizeCssValue(String(val));
       if (v) decls.push(`${cssVar}: ${v};`);
     }
   }
