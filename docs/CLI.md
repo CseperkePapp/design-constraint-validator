@@ -359,7 +359,7 @@ dcv build [options]
 ```bash
 --format <fmt>        # Output format: css | json | js
 
---output <path>       # Output file path
+--output <path>       # Output file path (with --all-formats: target directory)
 
 --theme <name>       # Apply named theme
 
@@ -367,7 +367,7 @@ dcv build [options]
 
 --dry-run            # Print output without writing
 
---all-formats        # Generate all formats
+--all-formats        # Generate css + json + js (into --output dir, or dist/)
 
 --tokens <path>      # Tokens file (default: tokens/tokens.example.json)
 ```
@@ -384,8 +384,11 @@ dcv build --format js --output tokens.js
 # Build JSON
 dcv build --format json --output tokens.json
 
-# Build all formats
+# Build all formats (css/json/js) into dist/
 dcv build --all-formats
+
+# Build all formats into a chosen directory (--output is the target dir here)
+dcv build --all-formats --output build/tokens
 
 # Dry run (preview — prints to stdout, writes nothing)
 dcv build --format css --dry-run
