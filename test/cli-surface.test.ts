@@ -29,6 +29,13 @@ describe('TASK-032: CLI surface (registered flags + set arity)', () => {
   });
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
+  it('--version reports the package version (not "unknown")', async () => {
+    const { version } = (await import('../package.json', { with: { type: 'json' } })).default;
+    const r = run(dir, '--version');
+    expect(r.status).toBe(0);
+    expect(r.out.trim()).toBe(version);
+  });
+
   it('set --unset reaches the handler (optional positional)', () => {
     const r = run(dir, 'set --unset color.a --tokens tokens.json --dry-run');
     expect(r.status).toBe(0);
