@@ -6,6 +6,23 @@ import { type SetOptions, type BuildOptions, type ValidateOptions, type GraphOpt
 import { setCommand, buildCommand, validateCommand, graphCommand, whyCommand, patchCommand, patchApplyCommand } from './commands/index.js';
 import { getVersionInfo } from './version-banner.js';
 
+// Uniform handler wrapper (TASK-035 B): without this, a thrown IO/config error
+// in a command (e.g. patch:apply on a missing file) escapes as an unhandled
+// rejection — Node prints a raw stack trace and exits 1. Wrapping gives every
+// command the clean "exit 2 + one-line message" contract that `validate` already
+// has and docs/JSON-OUTPUT.md promises. Commands that call process.exit()
+// themselves are unaffected (they terminate before the catch).
+function run<T>(fn: (a: T) => void | Promise<void>): (a: T) => Promise<void> {
+  return async (a: T) => {
+    try {
+      await fn(a);
+    } catch (e) {
+      console.error(`dcv: ${e instanceof Error ? e.message : String(e)}`);
+      process.exit(2);
+    }
+  };
+}
+
 const cli = yargs(hideBin(process.argv))
   .scriptName('dcv')
   // camel-case-expansion is intentionally OFF, so the CLI delivers flags only
@@ -31,7 +48,7 @@ cli.command<SetOptions>('set [expressions..]', 'Set token values', y => y
   .option('theme', { type: 'string' })
   .option('debug-set', { type: 'boolean', hidden: true }) // hidden debug aid (also DCV_DEBUG_SET=1)
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
-  a => setCommand(a)
+  run(setCommand)
 );
 
 cli.command<BuildOptions>('build', 'Build token outputs', y => y
@@ -42,7 +59,7 @@ cli.command<BuildOptions>('build', 'Build token outputs', y => y
   .option('theme', { type: 'string' })
   .option('dry-run', { type: 'boolean', default: false })
   .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' }),
-  a => buildCommand(a)
+  run(buildCommand)
 );
 
 cli.command<ValidateOptions>('validate [tokens-path]', 'Validate constraints', y => y
@@ -55,13 +72,13 @@ cli.command<ValidateOptions>('validate [tokens-path]', 'Validate constraints', y
   .option('receipt', { type: 'string', describe: 'Generate validation receipt with audit trail' })
   .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' })
   .option('theme', { type: 'string', describe: 'Apply named theme tokens before validation' })
-  .option('breakpoint', { type: 'string' })
+  .option('breakpoint', { type: 'string', choices: ['sm','md','lg'] })
   .option('all-breakpoints', { type: 'boolean' })
   .option('cross-axis-debug', { type: 'boolean', hidden: true }) // hidden debug aid
   .option('perf', { type: 'boolean', describe: 'Print timing info' })
   .option('budget-total-ms', { type: 'number', describe: 'Fail if total validation exceeds this (ms)' })
   .option('budget-per-bp-ms', { type: 'number', describe: 'Fail if any single breakpoint exceeds this (ms)' }),
-  a => validateCommand(a)
+  run(validateCommand)
 );
 
 cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y => y
@@ -84,7 +101,7 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
   .option('focus', { type: 'string' })
   .option('radius', { type: 'number', default: 1 })
   .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' }),
-  a => graphCommand(a)
+  run(graphCommand)
 );
 
 cli.command<WhyOptions>('why <tokenId>', 'Explain token provenance', y => y
@@ -92,7 +109,7 @@ cli.command<WhyOptions>('why <tokenId>', 'Explain token provenance', y => y
   .option('format', { type: 'string', choices: ['json','table'], default: 'json' })
   .option('constraints-dir', { type: 'string', describe: 'Directory holding order / cross-axis constraint files for the constraint summary (default: themes)' })
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
-  a => whyCommand(a)
+  run(whyCommand)
 );
 
 cli.command<PatchOptions>('patch', 'Export patch (diff) from overrides', y => y
@@ -100,7 +117,7 @@ cli.command<PatchOptions>('patch', 'Export patch (diff) from overrides', y => y
   .option('format', { type: 'string', choices: ['json','css','js'], default: 'json' })
   .option('output', { type: 'string' })
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
-  a => patchCommand(a)
+  run(patchCommand)
 );
 
 cli.command<PatchApplyOptions>('patch:apply <patch>', 'Apply patch document to tokens', y => y
@@ -108,7 +125,7 @@ cli.command<PatchApplyOptions>('patch:apply <patch>', 'Apply patch document to t
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' })
   .option('output', { type: 'string', describe: 'Write updated tokens to this file' })
   .option('dry-run', { type: 'boolean', default: false }),
-  a => patchApplyCommand(a)
+  run(patchApplyCommand)
 );
 
 // Wire `--version` to the real package version (same source as the banner).

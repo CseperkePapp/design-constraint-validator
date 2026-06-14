@@ -4,11 +4,22 @@ import type { TokenNode } from "./flatten.js";
 
 export type Breakpoint = "sm" | "md" | "lg";
 
+export const BREAKPOINTS: readonly Breakpoint[] = ["sm", "md", "lg"];
+
 export function parseBreakpoints(argv: string[]): Breakpoint[] {
   const allIdx = argv.indexOf("--all-breakpoints");
   if (allIdx >= 0) return ["sm", "md", "lg"];
   const bpIdx = argv.indexOf("--breakpoint");
-  if (bpIdx >= 0) return [argv[bpIdx + 1] as Breakpoint];
+  if (bpIdx >= 0) {
+    // Validate the value (TASK-035 B): an unknown/missing breakpoint must not be
+    // accepted — it would load a non-existent override and validate the BASE
+    // tokens as if the breakpoint applied (a confident false green on a typo).
+    const val = argv[bpIdx + 1];
+    if (!val || !BREAKPOINTS.includes(val as Breakpoint)) {
+      throw new Error(`Invalid --breakpoint "${val ?? ""}". Expected one of: ${BREAKPOINTS.join(", ")}.`);
+    }
+    return [val as Breakpoint];
+  }
   return []; // no BP slicing requested
 }
 

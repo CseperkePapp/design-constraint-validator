@@ -11,8 +11,9 @@ import { printVersionBanner } from '../version-banner.js';
 import { loadThemeTokens } from './utils.js';
 
 export async function validateCommand(_options: ValidateOptions): Promise<void> {
-  // Show version banner (subtle, dimmed)
-  printVersionBanner({ quiet: _options.format === 'json' });
+  // Show version banner (subtle, dimmed). Stay quiet whenever stdout must be
+  // machine-parseable — JSON output OR a JSON summary (TASK-035 B).
+  printVersionBanner({ quiet: _options.format === 'json' || _options.summary === 'json' });
 
   try {
     const bps = parseBreakpoints(process.argv);
@@ -115,10 +116,13 @@ export async function validateCommand(_options: ValidateOptions): Promise<void> 
       const dur = globalThis.performance.now() - tStart;
       perBpTimings.push({ bp: bp ?? 'global', ms: dur });
       
-      // Only print text output if not in JSON mode
+      // Only print text output if not in JSON mode. When --summary json is set,
+      // route the human lines to STDERR so stdout carries only the parseable JSON
+      // summary (TASK-035 B: per-issue lines previously polluted the summary).
       if (outputFormat !== 'json') {
-        console.log(`validate${bp ? ` [bp=${bp}]` : ''}: ${errs.length} error(s), ${warns.length} warning(s)${_options.perf ? ` (${dur.toFixed(2)}ms)` : ''}`);
-        for (const it of issues) { const tag = it.level === 'error' ? 'ERROR' : 'WARN '; console.log(`${tag} ${it.rule}  ${it.id}${it.where ? ' @ ' + it.where : ''}${bp ? ` [${bp}]` : ''} — ${it.message}`); }
+        const line = summaryFmt === 'json' ? console.error : console.log;
+        line(`validate${bp ? ` [bp=${bp}]` : ''}: ${errs.length} error(s), ${warns.length} warning(s)${_options.perf ? ` (${dur.toFixed(2)}ms)` : ''}`);
+        for (const it of issues) { const tag = it.level === 'error' ? 'ERROR' : 'WARN '; line(`${tag} ${it.rule}  ${it.id}${it.where ? ' @ ' + it.where : ''}${bp ? ` [${bp}]` : ''} — ${it.message}`); }
       }
     }
     const totalMs = globalThis.performance.now() - tStartTotal;
