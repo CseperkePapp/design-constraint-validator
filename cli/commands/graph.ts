@@ -65,7 +65,11 @@ export async function graphCommand(options: GraphOptions): Promise<void> {
       const ext = baseFmt === 'mermaid' ? 'mmd' : 'dot';
       const outDir = 'dist/graphs'; const baseFile = `${outDir}/${name}${suffix}-hasse.${ext}`;
       try {
-        const src = `${constraintsDir}/${name}.order.json`;
+        // Mirror discoverConstraints (TASK-034/035 B): under --breakpoint use the
+        // per-bp order file when present, else fall back to the global one — so the
+        // bp-labeled Hasse output actually reflects the bp poset, not the global.
+        const bpSrc = breakpoint ? `${constraintsDir}/${name}.${breakpoint}.order.json` : undefined;
+        const src = bpSrc && existsSync(bpSrc) ? bpSrc : `${constraintsDir}/${name}.order.json`;
         if (!existsSync(src)) { console.error(`❌ Order constraint file not found: ${src}`); process.exit(1); }
         const { order } = JSON.parse(readFileSync(src, 'utf8'));
         const { buildPoset, transitiveReduction, toMermaidHasseStyled, toDotHasseStyled, filterByPrefix, filterExcludePrefix, khopSubgraph, pickSeedsByPattern } = await import('../../core/poset.js');

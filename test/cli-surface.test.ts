@@ -54,3 +54,37 @@ describe('TASK-032: CLI surface (registered flags + set arity)', () => {
     expect(r.out).not.toContain('Unknown argument');
   });
 }, 30000);
+
+/**
+ * TASK-035 Group B: CLI consistency — no false-green on a typo'd breakpoint,
+ * clean exit-2 (not a raw stack trace) on IO errors, and a parseable --summary json.
+ */
+describe('TASK-035 B: CLI consistency', () => {
+  let dir: string;
+  beforeAll(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'dcv-cliB-'));
+    writeFileSync(path.join(dir, 'tokens.json'), JSON.stringify({ color: { a: { $value: '#111' }, b: { $value: '#222' } } }));
+  });
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+  it('rejects an unknown --breakpoint instead of silently validating (false green)', () => {
+    const r = run(dir, 'validate --breakpoint nope --tokens tokens.json --fail-on off');
+    expect(r.status).not.toBe(0);
+    expect(r.out).toMatch(/Invalid|Choices|breakpoint/i);
+  });
+
+  it('patch:apply on a missing file exits 2 with a clean message, not a raw stack trace', () => {
+    const r = run(dir, 'patch:apply does-not-exist.json --tokens tokens.json');
+    expect(r.status).toBe(2);
+    expect(r.out).toMatch(/not found/i);
+    expect(r.out).not.toMatch(/\bat .+:\d+:\d+\)/); // no JS stack frames
+  });
+
+  it('--summary json emits parseable JSON on stdout (no banner / per-issue noise)', () => {
+    const out = execSync(`node "${cliJs}" validate --tokens tokens.json --summary json --fail-on off`, {
+      cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], // stdout only
+    });
+    const parsed = JSON.parse(out); // throws if stdout is polluted
+    expect(parsed).toHaveProperty('rows');
+  });
+}, 30000);
