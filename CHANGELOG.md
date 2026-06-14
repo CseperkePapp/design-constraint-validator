@@ -6,6 +6,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-06-14
+
+> Adds theme/breakpoint awareness to `why`/`graph` and clears the round-2 sweep
+> backlog (CLI consistency, adapter safety, patch correctness, DTCG). Several
+> changes make previously-silent wrong behavior **loud** — see **Changed**.
+
+### Added
+
+- **`why --theme <name>` / `why --breakpoint <sm|md|lg>`** — resolve themed /
+  breakpoint values, label `theme` provenance, and run the constraint summary
+  against those values (mirrors `validate`). Missing/malformed `--theme` fails closed.
+- **`graph --hasse … --theme <name>`** — violation overlays now reflect themed
+  values. (The plain dependency graph is value-independent and intentionally
+  unaffected by `--theme`.)
+- **`build --all-formats --output <dir>`** — `--output` is honored as the target
+  directory (was ignored; `dist/` hardcoded).
+
+### Changed
+
+- **Unknown `--breakpoint` is rejected** instead of silently validating the base
+  tokens as if scoped (a typo was a confident false green).
+- **CLI commands exit `2` with a one-line message** on IO/config errors instead
+  of a raw stack trace + exit `1` (`patch`/`patch:apply` were the worst). Matches
+  the contract `validate` already had.
+- **`validate --summary json` emits parseable JSON on stdout** — the banner is
+  suppressed and per-issue lines route to stderr.
+- **Output adapters error on variable-name collisions** (`a.b` and `a-b` both map
+  to `--a-b`) instead of silently dropping a token; CSS values are sanitized so a
+  malformed value can't break out of its declaration.
+
+### Fixed
+
+- `patch:apply` base-tokens-hash drift warning no longer false-fires every run
+  (build and apply now share one canonical hash).
+- `patch:apply` validates document shape (clear error instead of a raw
+  `SyntaxError`/`TypeError`); `remove` no longer leaves a dangling type-only node.
+- Unit-less DTCG dimension objects (`{ "value": 16 }`, no `unit`/`$type`) default
+  to `px` instead of an `<unsupported>` sentinel.
+- `graph --hasse --breakpoint <bp>` reads the per-breakpoint order file (falling
+  back to the global one), so the bp-labeled output reflects the bp poset.
+
 ## [2.2.1] - 2026-06-14
 
 ### Fixed
