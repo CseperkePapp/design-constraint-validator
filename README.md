@@ -18,6 +18,10 @@
 
 This is **not** a schema linter; it's a **reasoning validator** for values and relationships.
 
+![DCV at a glance — one engine with three entry points (CLI, Library API, MCP server) over a shared validation core that flattens tokens, builds the engine, loads constraints, runs plugins, and reports errors/warnings.](https://raw.githubusercontent.com/CseperkePapp/design-constraint-validator/main/images/dcv-at-a-glance.png)
+
+![DCV validation pipeline — token files → flatten & resolve → build engine → load constraints → run plugins → report results; CLI, API, and MCP all use the same flow.](https://raw.githubusercontent.com/CseperkePapp/design-constraint-validator/main/images/dcv-pipeline.png)
+
 ---
 
 ## Installation
@@ -183,6 +187,8 @@ Conventional linters catch **schema** issues ("has a value, has a type").
 
 This transforms tokens from "bags of numbers" into a **formal design system**.
 
+![What DCV checks — five plugin families: WCAG contrast, monotonic order, lightness ordering, thresholds, and cross-axis rules; every plugin returns a structured issue (rule, level, message, involved tokens, metadata).](https://raw.githubusercontent.com/CseperkePapp/design-constraint-validator/main/images/dcv-plugins.png)
+
 ---
 
 ## Comparison: Schema Linters vs DCV
@@ -193,6 +199,8 @@ This transforms tokens from "bags of numbers" into a **formal design system**.
 | **Catches** | Missing fields, wrong types | Contrast violations, hierarchy breaks |
 | **Purpose** | Format compliance | Design system integrity |
 | **Examples** | DTCG schema validator | WCAG checks, monotonic scales |
+
+![Mathematical Integrity for Design Systems — the DCV engine: the three core constraint types (accessibility & contrast, monotonic & lightness ordering, thresholds & cross-axis rules), one engine with three interfaces (CLI, library API, MCP server), and the difference between schema linters (format compliance) and DCV (mathematical relationships / design-system integrity).](https://raw.githubusercontent.com/CseperkePapp/design-constraint-validator/main/images/dcv-overview.png)
 
 > DCV is not affiliated with Anima's `design-tokens-validator` (schema-focused).
 
