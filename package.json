@@ -1,6 +1,6 @@
 {
   "name": "design-constraint-validator",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "Mathematical constraint validator for design systems — ensuring consistency, accessibility, and logical coherence",
   "type": "module",
   "engines": {
