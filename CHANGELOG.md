@@ -50,6 +50,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 - CLI surface: previously-dead flags are registered, `set` positional arity is
   corrected, and `explain` output is honest about what it computed.
+- `dcv --version` now reports the package version instead of `unknown` (yargs
+  could not locate `package.json` from the installed bin; it's now wired to the
+  same version source as the banner).
 - The "failing" example fixtures now genuinely fail, and the docs were swept for
   stale flags, paths, `npx` usage, and examples.
 

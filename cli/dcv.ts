@@ -4,6 +4,7 @@ import yargs from 'yargs/yargs';
 import { hideBin } from 'yargs/helpers';
 import { type SetOptions, type BuildOptions, type ValidateOptions, type GraphOptions, type WhyOptions, type PatchOptions, type PatchApplyOptions } from './types.js';
 import { setCommand, buildCommand, validateCommand, graphCommand, whyCommand, patchCommand, patchApplyCommand } from './commands/index.js';
+import { getVersionInfo } from './version-banner.js';
 
 const cli = yargs(hideBin(process.argv))
   .scriptName('dcv')
@@ -110,6 +111,10 @@ cli.command<PatchApplyOptions>('patch:apply <patch>', 'Apply patch document to t
   a => patchApplyCommand(a)
 );
 
+// Wire `--version` to the real package version (same source as the banner).
+// Without this, yargs can't locate package.json from the installed bin and
+// prints "unknown" (TASK-021 release smoke-test finding).
+cli.version(getVersionInfo().version);
 cli.help().alias('h','help').strict().wrap(cli.terminalWidth());
 cli.parse();
 
