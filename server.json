@@ -3,7 +3,7 @@
   "name": "io.github.cseperkepapp/design-constraint-validator",
   "title": "Design Constraint Validator",
   "description": "Validate design tokens for accessibility, scales, and design-system constraint consistency.",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "repository": {
     "url": "https://github.com/CseperkePapp/design-constraint-validator",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registryType": "npm",
       "identifier": "design-constraint-validator",
-      "version": "2.1.1",
+      "version": "2.2.0",
       "transport": {
         "type": "stdio"
       }

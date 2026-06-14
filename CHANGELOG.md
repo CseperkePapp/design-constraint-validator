@@ -6,6 +6,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-06-14
+
+> **First npm publish since 2.0.1.** `2.0.2`, `2.1.0`, and `2.1.1` were tagged
+> and/or prepared but never published (see their notes below); this release
+> bundles all of that work plus a round of **false-green correctness** fixes. For
+> a validator the cardinal failure is reporting `ok: true` when a constraint is
+> actually violated — every change below removes one way that could happen.
+
+### Security / correctness (false-green fixes)
+
+- **Absolute `--constraints-dir` / `constraintsDir` is honored.** On Windows an
+  absolute constraints directory was joined onto `"."`, producing a non-existent
+  relative path — so order/lightness/cross-axis files silently failed to load and
+  validation returned `ok: true, checked: 0`. Absolute roots now resolve
+  correctly.
+- **Breakpoint runs fall back to the global order file.** Under `--breakpoint` /
+  `--all-breakpoints`, any axis without a per-breakpoint `*.order.json` (e.g.
+  spacing) contributed zero constraints, so a real ordering violation passed.
+  Per-breakpoint files now fall back to the global order/lightness file.
+- **Typo'd or out-of-range config is rejected, not silently ignored.** The config
+  schema is now strict: a misspelled constraint block (`wcagg`) or rule field
+  (`levle`) errors instead of being dropped (which left the intended rule never
+  running). WCAG `ratio` is bounded to `(1, 21]` and `valuePx` to finite/≥0.
+- **Cross-axis rules are validated before they run.** Malformed rules (missing
+  `when`/`require` operands, non-numeric `fallback`/`delta`) are skipped with a
+  reason instead of compiling into always-true or `NaN` comparisons, and a
+  present-but-unusable rules file (bad JSON) is surfaced as a warning instead of
+  being treated as "no rules → green".
+- **Size values are parsed consistently and loudly.** Numbers and unitless
+  strings coerce to px and `em`/`rem` are 16px-relative across monotonic,
+  threshold, and cross-axis checks (cross-axis previously skipped `em`).
+  Degenerate numerics (`"."`, `"5."`, `"1.2.3px"`) are rejected, and a
+  present-but-unparseable operand now **warns** instead of being silently skipped.
+- **Configured `warn`-level thresholds stay warnings.** A custom threshold with
+  `level: "warn"` was promoted to an error because the level was dropped during
+  discovery.
+- **Coverage tracking mirrors what actually ran.** The "nothing was checked" note
+  is no longer suppressed by cross-axis rules that did not run (wrong breakpoint
+  or invalid), so a file that truly checked nothing is reported honestly.
+
+### Fixed
+
+- CLI surface: previously-dead flags are registered, `set` positional arity is
+  corrected, and `explain` output is honest about what it computed.
+- The "failing" example fixtures now genuinely fail, and the docs were swept for
+  stale flags, paths, `npx` usage, and examples.
+
 ## [2.1.1] - 2026-06-13
 
 > **Security/behavior fix.** The validator now **fails closed** on malformed
