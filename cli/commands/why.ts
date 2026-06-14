@@ -2,15 +2,26 @@ import { readFileSync } from 'node:fs';
 import { flattenTokens, type FlatToken } from '../../core/flatten.js';
 import { explain } from '../../core/why.js';
 import type { WhyOptions } from '../types.js';
-import { loadTokens } from './utils.js';
+import { loadThemeTokens } from './utils.js';
+import { loadTokensWithBreakpoint, mergeTokens, parseBreakpoints, type Breakpoint } from '../../core/breakpoints.js';
 import { Engine } from '../../core/engine.js';
 import { loadConfig } from '../config.js';
 import type { ConstraintIssue } from '../../core/engine.js';
 import { setupConstraints } from '../constraint-registry.js';
 
 export async function whyCommand(options: WhyOptions): Promise<void> {
-  const tokensPath = options.tokens || 'tokens/tokens.json';
-  const tokens = loadTokens(tokensPath);
+  const tokensPath = options.tokens || 'tokens/tokens.example.json';
+  // Theme/breakpoint awareness (TASK-025): mirror validate's merge-then-flatten so
+  // `why` resolves the same values a themed/breakpoint validate would. Both loaders
+  // fail closed on a missing/malformed file.
+  const bp = (options.breakpoint ?? parseBreakpoints(process.argv)[0]) as Breakpoint | undefined;
+  let tokens = loadTokensWithBreakpoint(bp, tokensPath);
+  let themeFlat: Record<string, FlatToken> | undefined;
+  if (options.theme) {
+    const themeTokens = loadThemeTokens(options.theme);
+    tokens = mergeTokens(tokens, themeTokens);
+    themeFlat = flattenTokens(themeTokens).flat as Record<string, FlatToken>;
+  }
   const { flat, edges } = flattenTokens(tokens);
   const target = options.tokenId;
 
@@ -50,6 +61,7 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
 
   const baseReport = explain(target, flat, edges, {
     overrides: (overrides as any)?.overrides ?? overrides,
+    theme: themeFlat,
   });
 
   // Best-effort constraint summary: which rules currently implicate this token
@@ -87,7 +99,7 @@ export async function whyCommand(options: WhyOptions): Promise<void> {
       // Honor --constraints-dir, matching `validate` (default: themes).
       setupConstraints(
         engine,
-        { config, constraintsDir: options['constraints-dir'] ?? 'themes' },
+        { config, constraintsDir: options['constraints-dir'] ?? 'themes', bp },
         { knownIds },
       );
 

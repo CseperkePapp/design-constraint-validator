@@ -100,6 +100,7 @@ cli.command<GraphOptions>('graph', 'Generate dependency / constraint graph', y =
   .option('image-from', { type: 'string', choices: ['mermaid','dot'], describe: 'Source format for svg/png export (default: mermaid)' })
   .option('focus', { type: 'string' })
   .option('radius', { type: 'number', default: 1 })
+  .option('theme', { type: 'string', describe: 'Apply named theme tokens before computing --hasse violation overlays (dependency graph is unaffected)' })
   .option('tokens', { type: 'string', describe: 'Path to a tokens file (defaults to tokens/tokens.example.json)' }),
   run(graphCommand)
 );
@@ -108,6 +109,8 @@ cli.command<WhyOptions>('why <tokenId>', 'Explain token provenance', y => y
   .positional('tokenId', { type: 'string', demandOption: true })
   .option('format', { type: 'string', choices: ['json','table'], default: 'json' })
   .option('constraints-dir', { type: 'string', describe: 'Directory holding order / cross-axis constraint files for the constraint summary (default: themes)' })
+  .option('theme', { type: 'string', describe: 'Apply named theme tokens (tokens/themes/<name>.json) before resolving values' })
+  .option('breakpoint', { type: 'string', choices: ['sm','md','lg'], describe: 'Resolve values for a breakpoint override' })
   .option('tokens', { type: 'string', default: 'tokens/tokens.example.json' }),
   run(whyCommand)
 );

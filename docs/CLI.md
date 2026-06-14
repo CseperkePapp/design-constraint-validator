@@ -183,15 +183,19 @@ dcv graph [options]
                            # (global option; an explicit invalid path errors)
 
 --constraints-dir <dir>    # Order/cross-axis dir for --hasse (default: themes)
+--theme <name>             # Theme overlay for --hasse violation overlays
 ```
 
 > **Loading parity:** `--tokens`, `--config`, and `--constraints-dir` mirror
-> `validate`. `--config` and `--constraints-dir` only affect the `--hasse`
-> violation overlays (`--highlight-violations` / `--only-violations` /
+> `validate`. `--config`, `--constraints-dir`, and `--theme` only affect the
+> `--hasse` violation overlays (`--highlight-violations` / `--only-violations` /
 > `--label-violations`); a plain dependency graph needs only tokens. An
 > explicitly-passed `--config` or `--hasse` order file that is missing or invalid
-> fails with a clear error rather than silently using defaults. Theme overlays
-> are not applied by `graph` (use `validate --theme` for theme-aware checks).
+> fails with a clear error rather than silently using defaults. **Theme and
+> breakpoint affect token VALUES**, so they change `--hasse` violation overlays
+> (`--theme` merges `tokens/themes/<name>.json`; `--breakpoint` flows as for
+> `validate`) — but the plain **dependency graph is value-independent** and is
+> intentionally unaffected by `--theme`.
 
 **Examples:**
 
@@ -280,15 +284,18 @@ dcv why <tokenId> [options]
 
 --constraints-dir <dir>   # Order/cross-axis dir for the constraint summary
                           # (default: themes)
+
+--theme <name>            # Apply tokens/themes/<name>.json before resolving
+--breakpoint <sm|md|lg>   # Resolve values for a breakpoint override
 ```
 
 > **Loading parity:** `--tokens`, `--config`, and `--constraints-dir` mirror
 > `validate`. The constraint summary (which rules implicate this token) is
 > best-effort: it appears when a config is present and a constraint references
-> the token. An explicitly-passed `--tokens` or `--config` that is missing or
-> invalid fails with a clear error. `why` reports base/override provenance only;
-> it does not apply visual theme overlays or breakpoint variants (use `validate`
-> for theme/breakpoint-aware checks).
+> the token. An explicitly-passed `--tokens` or `--config` (or a missing/malformed
+> `--theme`) fails with a clear error. `why` is **theme- and breakpoint-aware**:
+> `--theme` / `--breakpoint` resolve the merged values, label `theme` provenance,
+> and run the constraint summary against those values (TASK-025).
 
 **Examples:**
 
