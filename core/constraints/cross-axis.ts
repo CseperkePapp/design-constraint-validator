@@ -18,24 +18,41 @@ export type Ctx = {
   bp?: string;
 };
 
+// Shares the hardened finite-size policy used by monotonic/threshold (TASK-037):
+// bare numbers / unitless as px, `rem`/`em` as 16px-relative, real numbers only
+// (rejects ".", "5.", "1.2.3px"), and non-finite guarded. The one addition over
+// the canonical parser is a clamp()/min()/max()/calc() heuristic — but it is
+// gated on a `(` so a malformed bare value like "1.2.3px" is rejected rather
+// than silently yielding a partial parse.
 const px = (v: unknown): number | null => {
-  if (typeof v === 'number') return v;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
   if (typeof v !== 'string') return null;
   const trimmed = v.trim();
-  // Direct simple form
-  let m = trimmed.match(/^([0-9.]+)\s*(px|rem)?$/i);
+  // Direct simple form: bare number / px / rem / em.
+  const m = trimmed.match(/^(\d*\.?\d+)\s*(px|rem|em)?$/i);
   if (m) {
     const n = parseFloat(m[1]);
-    return (m[2] || 'px').toLowerCase() === 'rem' ? n * 16 : n;
+    if (!Number.isFinite(n)) return null;
+    const unit = (m[2] || 'px').toLowerCase();
+    return unit === 'rem' || unit === 'em' ? n * 16 : n;
   }
-  // Heuristic: extract first numeric size token (px or rem) inside complex expressions (e.g., clamp())
-  const inner = trimmed.match(/([0-9.]+)\s*(px|rem)/i);
-  if (inner) {
-    const n = parseFloat(inner[1]);
-    return inner[2].toLowerCase() === 'rem' ? n * 16 : n;
+  // Heuristic: first px/rem/em token inside a CSS function expression (clamp(),
+  // min(), max(), calc(), …). Gated on `(` so garbage simple values don't leak.
+  if (trimmed.includes('(')) {
+    const inner = trimmed.match(/(\d*\.?\d+)\s*(px|rem|em)/i);
+    if (inner) {
+      const n = parseFloat(inner[1]);
+      if (!Number.isFinite(n)) return null;
+      return inner[2].toLowerCase() === 'px' ? n : n * 16;
+    }
   }
   return null;
 };
+
+// Distinguish "operand absent" (skip silently) from "operand present but
+// unparseable" (warn loudly) — a silent skip of a present value is a false green.
+const presentButUnparseable = (raw: unknown): boolean =>
+  raw != null && raw !== '' && px(raw) === null;
 
 export function CrossAxisPlugin(rules: CrossAxisRule[], bp?: string): ConstraintPlugin {
   return {
@@ -57,6 +74,17 @@ export function CrossAxisPlugin(rules: CrossAxisRule[], bp?: string): Constraint
         if ("when" in r) {
           // Evaluate if either referenced id is among candidates (looser gating so global validate works)
           if (!candidates.has(r.when.id) && !candidates.has(r.require.id)) continue;
+          // Present-but-unparseable operand → warn, don't silently skip (TASK-037).
+          if (presentButUnparseable(ctx.get(r.when.id)) || presentButUnparseable(ctx.get(r.require.id))) {
+            issues.push({
+              id: r.require.id,
+              rule: "cross-axis",
+              level: "warn",
+              where: r.where,
+              message: `Cannot check cross-axis rule "${r.id}": unparseable size value(s)`
+            });
+            continue;
+          }
           const wv = ctx.getPx(r.when.id);
           // compare-style loader rules set when.id = a, require.id = a; use same value if second missing
           let rv = ctx.getPx(r.require.id);

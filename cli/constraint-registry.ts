@@ -13,7 +13,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import type { Engine } from '../core/engine.js';
+import type { Engine, ConstraintIssue, ConstraintPlugin } from '../core/engine.js';
 import type { Breakpoint } from '../core/breakpoints.js';
 import type { DcvConfig } from './types.js';
 import { MonotonicPlugin, parseSize as parseSizePx } from '../core/constraints/monotonic.js';
@@ -21,7 +21,17 @@ import { MonotonicLightness } from '../core/constraints/monotonic-lightness.js';
 import { WcagContrastPlugin } from '../core/constraints/wcag.js';
 import { ThresholdPlugin } from '../core/constraints/threshold.js';
 import { CrossAxisPlugin } from '../core/constraints/cross-axis.js';
-import { loadCrossAxisRules, loadCrossAxisRulesFromFile } from './cross-axis-loader.js';
+import { loadCrossAxisRulesDetailed, referencedIdsForFile } from './cross-axis-loader.js';
+
+/**
+ * A plugin that emits a fixed set of pre-computed issues unconditionally (it
+ * ignores the candidate set). Used to surface cross-axis loader notices —
+ * present-but-unusable files and skipped invalid rules (TASK-037) — through the
+ * normal issue channel so they appear as warnings instead of vanishing.
+ */
+function noticePlugin(notices: ConstraintIssue[]): ConstraintPlugin {
+  return { id: 'cross-axis-notices', evaluate: () => notices };
+}
 
 // ============================================================================
 // Types
@@ -135,6 +145,9 @@ export function discoverConstraints(opts: DiscoveryOptions): ConstraintSource[] 
       op: r.op,
       valuePx: r.valuePx,
       where: r.where,
+      // Preserve configured severity (TASK-037): the core plugin honors `level`,
+      // but dropping it here silently promoted a `warn` threshold to an error.
+      level: r.level,
     }));
     sources.push({ type: 'custom-threshold', rules });
   }
@@ -254,13 +267,16 @@ export function attachConstraints(engine: Engine, sources: ConstraintSource[], o
         }
 
         case 'cross-axis-file': {
-          // Phase 3B: Load rules from filesystem in CLI layer, pass to core plugin
-          const rules = loadCrossAxisRules(source.path, {
+          // Phase 3B: Load rules from filesystem in CLI layer, pass to core plugin.
+          // Detailed load also surfaces notices (unusable file / skipped invalid
+          // rules) as warnings so they are never silently dropped (TASK-037).
+          const { rules, notices } = loadCrossAxisRulesDetailed(source.path, {
             bp: source.bp,
             knownIds,
             debug: crossAxisDebug,
           });
           engine.use(CrossAxisPlugin(rules, source.bp));
+          if (notices.length) engine.use(noticePlugin(notices));
           break;
         }
       }
@@ -339,22 +355,17 @@ export function collectReferencedIds(sources: ConstraintSource[]): { ids: Set<st
         addOrders(source.orders);
         break;
       case 'cross-axis-file': {
-        // TASK-031: enumerate the cross-axis rules' referenced ids so coverage
-        // stays KNOWN. Previously this blanket-set coverageKnown=false, which
-        // suppressed the "nothing was checked" note whenever a cross-axis file
-        // existed — masking the silent-pass the note exists to catch.
-        const rules = loadCrossAxisRulesFromFile(source.path);
-        if (!rules) {
-          coverageKnown = false; // unreadable/unparseable → stay conservative
+        // TASK-031/037: enumerate referenced ids so coverage stays KNOWN, but
+        // MIRROR attach exactly — same `source.bp` filter and same shape
+        // validation. A rule that did not run (wrong breakpoint, or invalid)
+        // must not make coverage look "matched" and suppress the no-match note.
+        // An unusable file stays conservative (coverageKnown=false).
+        const { ids: caIds, coverageKnown: known } = referencedIdsForFile(source.path, source.bp);
+        if (!known) {
+          coverageKnown = false;
           break;
         }
-        for (const r of rules) {
-          if (r.when?.id) ids.add(r.when.id);
-          if (r.require?.id) ids.add(r.require.id);
-          if (r.require?.ref) ids.add(r.require.ref);
-          if (r.compare?.a) ids.add(r.compare.a);
-          if (r.compare?.b) ids.add(r.compare.b);
-        }
+        for (const id of caIds) ids.add(id);
         break;
       }
     }
