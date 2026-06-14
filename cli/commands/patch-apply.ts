@@ -2,8 +2,7 @@ import { loadTokens, outputResult } from './utils.js';
 import type { PatchApplyOptions } from '../types.js';
 import type { TokenNode } from '../../core/flatten.js';
 import fs from 'node:fs';
-import { flattenTokens } from '../../core/flatten.js';
-import { createHash } from 'node:crypto';
+import { computeBaseTokensHash } from '../../core/patch.js';
 
 interface PatchDocumentV1 {
   version: 1;
@@ -20,7 +19,11 @@ function applyChange(root: any, id: string, to: any, type: 'modify'|'add'|'remov
     if (i === parts.length - 1) {
       if (type === 'remove') {
         if (cur[p] && typeof cur[p] === 'object') {
-          delete cur[p].$value; // delete leaf value
+          delete cur[p].$value;
+          delete cur[p].$type; // drop the now-orphaned type with the value
+          // Remove the node entirely if nothing else remains (no dangling
+          // type-only node left behind — TASK-035 D).
+          if (Object.keys(cur[p]).length === 0) delete cur[p];
         }
       } else {
         if (!cur[p] || typeof cur[p] !== 'object') cur[p] = {};
@@ -35,27 +38,32 @@ function applyChange(root: any, id: string, to: any, type: 'modify'|'add'|'remov
 
 export async function patchApplyCommand(opts: PatchApplyOptions): Promise<void> {
   const tokens: TokenNode = loadTokens(opts.tokens || 'tokens/tokens.example.json');
-  // Compute current base tokens hash for drift detection (same logic as buildPatch)
-  function computeBaseHash(toks: TokenNode): string {
-    const flat = flattenTokens(JSON.parse(JSON.stringify(toks))).flat as Record<string, any>;
-    const values: Record<string, any> = {};
-    Object.keys(flat).sort().forEach(id => { values[id] = flat[id]?.value; });
-    // Keep deterministic ordering
-    const ordered = Object.keys(values).sort().reduce((acc, k) => { acc[k] = values[k]; return acc; }, {} as Record<string, any>);
-    return createHash('sha256').update(JSON.stringify(ordered)).digest('hex');
-  }
-  // Parse patch
-  let patchDoc: PatchDocumentV1;
+  // Parse patch (friendly errors instead of a raw SyntaxError/TypeError — TASK-035 D)
+  let raw: string;
   if (fs.existsSync(opts.patch)) {
-    patchDoc = JSON.parse(fs.readFileSync(opts.patch, 'utf8'));
+    raw = fs.readFileSync(opts.patch, 'utf8');
   } else if (opts.patch.trim().startsWith('{')) {
-    patchDoc = JSON.parse(opts.patch);
+    raw = opts.patch;
   } else {
     throw new Error(`Patch not found: ${opts.patch}`);
   }
-  if (patchDoc.version !== 1) throw new Error('Unsupported patch version');
+  let patchDoc: PatchDocumentV1;
+  try {
+    patchDoc = JSON.parse(raw);
+  } catch (e) {
+    throw new Error(`Patch is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  // Shape validation before use, so a malformed doc gives a clear message rather
+  // than "changes is not iterable" / a raw TypeError (TASK-035 D).
+  if (!patchDoc || typeof patchDoc !== 'object' || Array.isArray(patchDoc)) {
+    throw new Error('Patch document must be a JSON object.');
+  }
+  if (patchDoc.version !== 1) throw new Error(`Unsupported patch version: ${(patchDoc as any).version}. Expected 1.`);
+  if (!Array.isArray(patchDoc.changes)) {
+    throw new Error('Patch document is missing a "changes" array.');
+  }
   if (patchDoc.baseTokensHash) {
-    const currentHash = computeBaseHash(tokens);
+    const currentHash = computeBaseTokensHash(tokens);
     if (currentHash !== patchDoc.baseTokensHash) {
       console.warn(`⚠ Base tokens hash mismatch. Patch built against ${patchDoc.baseTokensHash} but current base is ${currentHash}. Proceeding (use --dry-run to inspect first).`);
     }

@@ -33,6 +33,19 @@ function canonicalString(obj: any): string {
   return JSON.stringify(obj, Object.keys(obj).sort(), 2);
 }
 
+/**
+ * Canonical hash of a token set's flattened id→value map. Shared by buildPatch
+ * (to stamp baseTokensHash) and patch:apply (to detect drift). They MUST use the
+ * exact same serialization — previously patch:apply used a different
+ * JSON.stringify form, so the drift warning fired on every apply (TASK-035 D).
+ */
+export function computeBaseTokensHash(tokens: TokenNode): string {
+  const flat = flattenTokens(JSON.parse(JSON.stringify(tokens))).flat as Record<string, any>;
+  const values: Record<string, any> = {};
+  Object.keys(flat).sort().forEach((id) => { values[id] = flat[id]?.value; });
+  return createHash('sha256').update(canonicalString(values)).digest('hex');
+}
+
 export function applyFlatOverrides(tokens: TokenNode, overrides?: Record<string, any>): void {
   if (!overrides) return;
   for (const [id, val] of Object.entries(overrides)) {
@@ -62,10 +75,9 @@ export function buildPatch(opts: BuildPatchOptions): PatchDocument {
   const cloned = JSON.parse(JSON.stringify(opts.tokens));
   // Flatten original
   const baseFlat = flattenTokens(cloned as any).flat as Record<string, any>;
-  // Canonical base tokens hash (id -> value) for drift detection when applying patch later
-  const baseFlatValues: Record<string, any> = {};
-  Object.keys(baseFlat).sort().forEach(id => { baseFlatValues[id] = baseFlat[id]?.value; });
-  const baseTokensHash = createHash('sha256').update(canonicalString(baseFlatValues)).digest('hex');
+  // Canonical base tokens hash (id -> value) for drift detection when applying
+  // the patch later — uses the SHARED hash so patch:apply agrees (TASK-035 D).
+  const baseTokensHash = computeBaseTokensHash(opts.tokens);
   // Apply overrides on a fresh clone for diffing
   const modified = JSON.parse(JSON.stringify(opts.tokens));
   const removalIds = new Set<string>();
